@@ -5,7 +5,6 @@ import {
   Edit,
   Trash2,
   Plus,
-  Upload,
   Save,
   LinkIcon,
   ChevronLeft,
@@ -93,13 +92,7 @@ interface PropertyFormData extends Partial<Property> {
   newImages?: File[]; // 👈 for newly uploaded images
 }
 // Constants
-const CATEGORIES = [
-  { _id: "68de651e54859517744aa8f8", name: "PG/Hostel" },
-  { _id: "68de658f54859517744aa90e", name: "Flat/Apartment" },
-  { _id: "68de57ee22d6206bc4564263", name: "Land" },
-  { _id: "68dcccd771afa460402c3651", name: "Villa/Houses" },
-  { _id: "68de1c35f11084356eafd988", name: "Commercial" },
-];
+// Note: categories are fetched from the API at runtime
 
 const INITIAL_FORM_STATE: PropertyFormData = {
   title: "",
@@ -147,6 +140,7 @@ const PropertyForm = ({
   notification,
   locations,
   propertyTypes,
+  apiCategories,
 }: {
   formData: PropertyFormData;
   onChange: (
@@ -188,6 +182,7 @@ const PropertyForm = ({
   notification: string;
   locations: Location[];
   propertyTypes: PropertyType[];
+  apiCategories: { _id: string; name: string }[];
 }) => (
   <div className="space-y-4 max-h-[70vh] overflow-y-auto px-1">
     {/* Property Code - Only show for editing existing properties */}
@@ -245,7 +240,7 @@ const PropertyForm = ({
         name="category"
         value={formData.category?._id}
         onChange={(e) => {
-          const selected = CATEGORIES.find((c) => c._id === e.target.value);
+          const selected = apiCategories.find((c) => c._id === e.target.value);
           setFormData({
             ...formData,
             category: selected || { _id: "", name: "" },
@@ -254,7 +249,7 @@ const PropertyForm = ({
         className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/50"
       >
         <option value="">Select category</option>
-        {CATEGORIES.map((cat) => (
+        {apiCategories.map((cat) => (
           <option key={cat._id} value={cat._id}>
             {cat.name}
           </option>
@@ -597,11 +592,10 @@ const PropertyCard = ({
             </div>
             {property.status && (
               <span
-                className={`px-2 py-1 rounded-lg text-xs font-medium whitespace-nowrap ${
-                  property.status === "active"
-                    ? "bg-green-500/10 text-green-600"
-                    : "bg-red-500/10 text-red-600"
-                }`}
+                className={`px-2 py-1 rounded-lg text-xs font-medium whitespace-nowrap ${property.status === "active"
+                  ? "bg-green-500/10 text-green-600"
+                  : "bg-red-500/10 text-red-600"
+                  }`}
               >
                 {property.status}
               </span>
@@ -637,11 +631,10 @@ const PropertyCard = ({
               {property.vacancyCount !== undefined && (
                 <div className="flex items-center">
                   <span
-                    className={`px-2 py-0.5 rounded-md text-xs font-medium ${
-                      property.vacancyCount > 0
-                        ? "bg-green-50 text-green-700 border border-green-200"
-                        : "bg-gray-100 text-gray-600 border border-gray-200"
-                    }`}
+                    className={`px-2 py-0.5 rounded-md text-xs font-medium ${property.vacancyCount > 0
+                      ? "bg-green-50 text-green-700 border border-green-200"
+                      : "bg-gray-100 text-gray-600 border border-gray-200"
+                      }`}
                   >
                     {property.vacancyCount > 0
                       ? `${property.vacancyCount} Vacancies`
@@ -744,6 +737,7 @@ const AdminPropertiesPage = () => {
   const [notification, setNotification] = useState<string | null>(null);
   const [locations, setLocations] = useState<Location[]>([]);
   const [propertyTypes, setPropertyTypes] = useState<PropertyType[]>([]);
+  const [apiCategories, setApiCategories] = useState<{ _id: string; name: string }[]>([]);
   const [searchQuery, setSearchQuery] = useState<string>("");
 
   // Pagination State
@@ -774,6 +768,7 @@ const AdminPropertiesPage = () => {
   useEffect(() => {
     fetchLocations();
     fetchPropertyTypes();
+    instance.get("/category").then((res) => setApiCategories(res.data.data || [])).catch(() => { });
   }, []);
 
   // Fetch properties when page or search changes
@@ -862,8 +857,8 @@ const AdminPropertiesPage = () => {
   };
 
   const handleEdit = (property: Property, mobile = false) => {
-    // Ensure category is a full object from CATEGORIES
-    const category = CATEGORIES.find(
+    // Match the category from the live API categories list
+    const category = apiCategories.find(
       (c) => c._id === property.category?._id
     ) || {
       _id: property.category?._id || "",
@@ -985,7 +980,7 @@ const AdminPropertiesPage = () => {
         newImages: [...(prev.newImages || []), ...Array.from(files)],
       }));
     } else if (name === "category") {
-      const category = CATEGORIES.find((c) => c._id === value);
+      const category = apiCategories.find((c) => c._id === value);
       setFormData((prev) => ({
         ...prev,
         category: category || { _id: "", name: "" },
@@ -1156,10 +1151,14 @@ const AdminPropertiesPage = () => {
           typeof formData.location === "string"
             ? formData.location
             : (formData.location as Location)?._id || "",
-        propertyTypeCategory:
-          typeof formData.propertyTypeCategory === "string"
-            ? formData.propertyTypeCategory
-            : (formData.propertyTypeCategory as PropertyType)?._id || "",
+        propertyTypeCategory: (() => {
+          const val =
+            typeof formData.propertyTypeCategory === "string"
+              ? formData.propertyTypeCategory
+              : (formData.propertyTypeCategory as PropertyType)?._id || "";
+          // Send undefined (omit) if empty so MongoDB doesn't try to cast "" to ObjectId
+          return val.trim() ? val : undefined;
+        })(),
         images: [...(formData.images || []), ...imageUrls], // merge old + new
       };
 
@@ -1270,6 +1269,7 @@ const AdminPropertiesPage = () => {
               notification={notification || ""}
               locations={locations}
               propertyTypes={propertyTypes}
+              apiCategories={apiCategories}
             />
           </DialogContent>
         </Dialog>
@@ -1317,6 +1317,10 @@ const AdminPropertiesPage = () => {
               notification={notification}
               locations={locations}
               propertyTypes={propertyTypes}
+              onVacancyChange={handleVacancyChange}
+              onAddVacancy={addVacancy}
+              onRemoveVacancy={removeVacancy}
+              apiCategories={apiCategories}
             />
           </DrawerContent>
         </Drawer>
@@ -1405,9 +1409,8 @@ const AdminPropertiesPage = () => {
                 variant={currentPage === page ? "default" : "ghost"}
                 size="sm"
                 onClick={() => handlePageChange(page)}
-                className={`h-10 w-10 rounded-full ${
-                  currentPage === page ? "pointer-events-none" : ""
-                }`}
+                className={`h-10 w-10 rounded-full ${currentPage === page ? "pointer-events-none" : ""
+                  }`}
               >
                 {page}
               </Button>

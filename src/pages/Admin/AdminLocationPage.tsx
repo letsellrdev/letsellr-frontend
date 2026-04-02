@@ -19,6 +19,21 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { LocationSkeleton } from "@/components/skeletons";
 import { toast } from "sonner";
+import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from 'react-leaflet';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
+
+// Fix for default marker icon issues in some build environments
+import markerIcon from 'leaflet/dist/images/marker-icon.png';
+import markerShadow from 'leaflet/dist/images/marker-shadow.png';
+
+let DefaultIcon = L.icon({
+  iconUrl: markerIcon,
+  shadowUrl: markerShadow,
+  iconSize: [25, 41],
+  iconAnchor: [12, 41]
+});
+L.Marker.prototype.options.icon = DefaultIcon;
 
 // Types
 interface Location {
@@ -27,9 +42,41 @@ interface Location {
   description: string;
   googleMapUrl: string;
   importantLocation: boolean;
+  latitude: number | null;
+  longitude: number | null;
 }
 
 interface LocationFormData extends Partial<Location> { }
+
+const extractCoords = (url: string) => {
+  if (!url) return null;
+  const regex = /@(-?\d+\.\d+),(-?\d+\.\d+)|q=(-?\d+\.\d+),(-?\d+\.\d+)|ll=(-?\d+\.\d+),(-?\d+\.\d+)/;
+  const match = url.match(regex);
+  if (match) {
+    const lat = match[1] || match[3] || match[5];
+    const lng = match[2] || match[4] || match[6];
+    return { lat: parseFloat(lat), lng: parseFloat(lng) };
+  }
+  return null;
+};
+
+const ChangeView = ({ center }: { center: [number, number] }) => {
+  const map = useMap();
+  useEffect(() => {
+    map.setView(center);
+  }, [center, map]);
+  return null;
+};
+
+const LocationPicker = ({ lat, lng, onPick }: { lat: number | null, lng: number | null, onPick: (lat: number, lng: number) => void }) => {
+  useMapEvents({
+    click(e) {
+      onPick(e.latlng.lat, e.latlng.lng);
+    },
+  });
+
+  return lat && lng ? <Marker position={[lat, lng]} /> : null;
+};
 
 const AdminLocationPage = () => {
   const [locations, setLocations] = useState<Location[]>([]);
@@ -42,6 +89,8 @@ const AdminLocationPage = () => {
     description: "",
     googleMapUrl: "",
     importantLocation: false,
+    latitude: null,
+    longitude: null,
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -67,6 +116,13 @@ const AdminLocationPage = () => {
   // Handle form input changes
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
+    if (name === "googleMapUrl") {
+      const coords = extractCoords(value);
+      if (coords) {
+        setFormData(prev => ({ ...prev, googleMapUrl: value, latitude: coords.lat, longitude: coords.lng }));
+        return;
+      }
+    }
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
@@ -87,7 +143,7 @@ const AdminLocationPage = () => {
       await instance.post("/location", formData);
       await fetchLocations();
       setIsAddDialogOpen(false);
-      setFormData({ title: "", description: "", googleMapUrl: "", importantLocation: false });
+      setFormData({ title: "", description: "", googleMapUrl: "", importantLocation: false, latitude: null, longitude: null });
       toast.success("Location added successfully");
     } catch (error: any) {
       console.error("Error adding location:", error);
@@ -110,7 +166,7 @@ const AdminLocationPage = () => {
       await fetchLocations();
       setIsEditDialogOpen(false);
       setEditingLocation(null);
-      setFormData({ title: "", description: "", googleMapUrl: "", importantLocation: false });
+      setFormData({ title: "", description: "", googleMapUrl: "", importantLocation: false, latitude: null, longitude: null });
       toast.success("Location updated successfully");
     } catch (error: any) {
       console.error("Error updating location:", error);
@@ -146,6 +202,8 @@ const AdminLocationPage = () => {
       description: location.description,
       googleMapUrl: location.googleMapUrl,
       importantLocation: location.importantLocation,
+      latitude: location.latitude,
+      longitude: location.longitude,
     });
     setIsEditDialogOpen(true);
   };
@@ -186,15 +244,69 @@ const AdminLocationPage = () => {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="googleMapUrl">Google Map URL *</Label>
+                <Label htmlFor="googleMapUrl">Google Map URL (Optional auto-fill)</Label>
                 <Input
                   id="googleMapUrl"
                   name="googleMapUrl"
-                  placeholder="e.g., https://maps.google.com/?q=..."
+                  placeholder="Paste Google Maps link to auto-detect coordinates..."
                   value={formData.googleMapUrl || ""}
                   onChange={handleInputChange}
                 />
+                {formData.googleMapUrl && (
+                  <p className="text-[10px] mt-1">
+                    {extractCoords(formData.googleMapUrl) ? (
+                      <span className="text-green-600 font-medium">✨ Coordinates detected and applied</span>
+                    ) : (
+                      <span className="text-amber-600">⚠️ No coordinates found in this URL.</span>
+                    )}
+                  </p>
+                )}
               </div>
+
+              <div className="space-y-2">
+                <Label>Pick Location on Map *</Label>
+                <div className="h-[250px] w-full rounded-md border border-gray-200 overflow-hidden relative z-0">
+                  <MapContainer
+                    center={[formData.latitude || 20.5937, formData.longitude || 78.9629]}
+                    zoom={formData.latitude ? 13 : 4}
+                    scrollWheelZoom={true}
+                    className="h-full w-full"
+                  >
+                    <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+                    {formData.latitude && formData.longitude && (
+                      <ChangeView center={[formData.latitude, formData.longitude]} />
+                    )}
+                    <LocationPicker
+                      lat={formData.latitude}
+                      lng={formData.longitude}
+                      onPick={(lat, lng) => setFormData(p => ({ ...p, latitude: lat, longitude: lng }))}
+                    />
+                  </MapContainer>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <Label htmlFor="latitude" className="text-xs">Latitude</Label>
+                    <Input
+                      id="latitude"
+                      type="number"
+                      step="any"
+                      value={formData.latitude ?? ""}
+                      onChange={(e) => setFormData(p => ({ ...p, latitude: parseFloat(e.target.value) || null }))}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label htmlFor="longitude" className="text-xs">Longitude</Label>
+                    <Input
+                      id="longitude"
+                      type="number"
+                      step="any"
+                      value={formData.longitude ?? ""}
+                      onChange={(e) => setFormData(p => ({ ...p, longitude: parseFloat(e.target.value) || null }))}
+                    />
+                  </div>
+                </div>
+              </div>
+
               <div className="flex items-center space-x-2">
                 <Checkbox id="importantLocation" checked={formData.importantLocation || false} onCheckedChange={handleCheckboxChange} />
                 <Label htmlFor="importantLocation" className="flex items-center gap-2 cursor-pointer">
@@ -239,6 +351,13 @@ const AdminLocationPage = () => {
                     {location.description && (
                       <p className="text-sm text-muted-foreground line-clamp-2">{location.description}</p>
                     )}
+                    {(location.latitude && location.longitude) && (
+                      <div className="flex items-center gap-1 mt-1">
+                        <span className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded flex items-center gap-1 font-mono">
+                          📍 {location.latitude.toFixed(6)}, {location.longitude.toFixed(6)}
+                        </span>
+                      </div>
+                    )}
                   </div>
                 </div>
                 <div className="flex gap-2">
@@ -261,7 +380,7 @@ const AdminLocationPage = () => {
           <DialogHeader>
             <DialogTitle>Edit Location</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4 py-4">
+          <div className="space-y-4 py-4 max-h-[70vh] overflow-y-auto pr-2">
             <div className="space-y-2">
               <Label htmlFor="edit-title">Location Title *</Label>
               <Input
@@ -284,15 +403,69 @@ const AdminLocationPage = () => {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="edit-googleMapUrl">Google Map URL *</Label>
+              <Label htmlFor="edit-googleMapUrl">Google Map URL (Optional auto-fill)</Label>
               <Input
                 id="edit-googleMapUrl"
                 name="googleMapUrl"
-                placeholder="e.g., https://maps.google.com/?q=..."
+                placeholder="Paste Google Maps link to auto-detect coordinates..."
                 value={formData.googleMapUrl || ""}
                 onChange={handleInputChange}
               />
+              {formData.googleMapUrl && (
+                <p className="text-[10px] mt-1">
+                  {extractCoords(formData.googleMapUrl) ? (
+                    <span className="text-green-600 font-medium">✨ Coordinates detected and applied</span>
+                  ) : (
+                    <span className="text-amber-600">⚠️ No coordinates found in this URL.</span>
+                  )}
+                </p>
+              )}
             </div>
+
+            <div className="space-y-2">
+              <Label>Pick Location on Map *</Label>
+              <div className="h-[250px] w-full rounded-md border border-gray-200 overflow-hidden relative z-0">
+                <MapContainer
+                  center={[formData.latitude || 20.5937, formData.longitude || 78.9629]}
+                  zoom={formData.latitude ? 13 : 4}
+                  scrollWheelZoom={true}
+                  className="h-full w-full"
+                >
+                  <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+                  {formData.latitude && formData.longitude && (
+                    <ChangeView center={[formData.latitude, formData.longitude]} />
+                  )}
+                  <LocationPicker
+                    lat={formData.latitude}
+                    lng={formData.longitude}
+                    onPick={(lat, lng) => setFormData(p => ({ ...p, latitude: lat, longitude: lng }))}
+                  />
+                </MapContainer>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <Label htmlFor="edit-latitude" className="text-xs">Latitude</Label>
+                  <Input
+                    id="edit-latitude"
+                    type="number"
+                    step="any"
+                    value={formData.latitude ?? ""}
+                    onChange={(e) => setFormData(p => ({ ...p, latitude: parseFloat(e.target.value) || null }))}
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="edit-longitude" className="text-xs">Longitude</Label>
+                  <Input
+                    id="edit-longitude"
+                    type="number"
+                    step="any"
+                    value={formData.longitude ?? ""}
+                    onChange={(e) => setFormData(p => ({ ...p, longitude: parseFloat(e.target.value) || null }))}
+                  />
+                </div>
+              </div>
+            </div>
+
             <div className="flex items-center space-x-2">
               <Checkbox id="edit-importantLocation" checked={formData.importantLocation || false} onCheckedChange={handleCheckboxChange} />
               <Label htmlFor="edit-importantLocation" className="flex items-center gap-2 cursor-pointer">

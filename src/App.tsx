@@ -18,6 +18,7 @@ import AdminPropertyTypePage from "./pages/Admin/AdminPropertyTypePage";
 import AdminSetupPage from "./pages/Admin/AdminSetupPage";
 import AdminStatisticsPage from "./pages/Admin/AdminStatisticsPage";
 import AdminTestimonialsPage from "./pages/Admin/AdminTestimonialsPage";
+import AdminCategoryPage from "./pages/Admin/AdminCategoryPage";
 import { PropertyProvider } from "./contexts/PropertyContext";
 // import AdminUsersPage from "./pages/Admin/AdminUsersPage";
 import FloatingContactIcons from "./components/FloatingContactIcons";
@@ -53,7 +54,7 @@ const App = () => (
               <Route path="statistics" element={<AdminStatisticsPage />} />
               <Route path="testimonials" element={<AdminTestimonialsPage />} />
               {/* <Route path="users" element={<AdminUsersPage />} /> */}
-              {/* <Route path="categories" element={<AdminCategory />} /> */}
+              <Route path="categories" element={<AdminCategoryPage />} />
             </Route>
 
             {/* Catch-all */}

@@ -13,6 +13,7 @@ import {
   MapPin,
   Tag,
   BarChart,
+  LayoutGrid,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -36,6 +37,12 @@ export const menuItems = [
     path: "/admin/property-types",
     icon: Tag,
     label: "Property Types",
+  },
+  {
+    id: "categories",
+    path: "/admin/categories",
+    icon: LayoutGrid,
+    label: "Categories",
   },
   {
     id: "reviews",
@@ -102,9 +109,8 @@ const AdminLayout = () => {
 
       {/* Sidebar */}
       <aside
-        className={`fixed top-0 left-0 h-full bg-card border-r border-border z-40 transition-transform duration-300 ${
-          isSidebarOpen ? "translate-x-0" : "-translate-x-full"
-        } lg:translate-x-0 w-64`}
+        className={`fixed top-0 left-0 h-full bg-card border-r border-border z-40 transition-transform duration-300 ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"
+          } lg:translate-x-0 w-64`}
       >
         {/* Logo */}
         <div className="h-16 flex items-center justify-center border-b border-border px-6">
@@ -133,11 +139,10 @@ const AdminLayout = () => {
                   navigate(item.path);
                   setIsSidebarOpen(false);
                 }}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
-                  isActive
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${isActive
                     ? "bg-primary text-primary-foreground shadow-md"
                     : "hover:bg-primary/5 text-muted-foreground hover:text-primary"
-                }`}
+                  }`}
               >
                 <Icon className="h-5 w-5" />
                 <span className="font-medium">{item.label}</span>

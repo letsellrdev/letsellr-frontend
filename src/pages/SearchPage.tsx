@@ -4,7 +4,6 @@ import Navbar from "@/components/Navbar";
 import PropertyCard from "@/components/PropertyCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { categories } from "@/db";
 import instance from "@/lib/axios";
 import {
   Search,
@@ -13,9 +12,168 @@ import {
   X,
   ChevronLeft,
   ChevronRight,
+  Building2,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import type { ChangeEvent, KeyboardEvent } from "react";
 import { Link, useSearchParams } from "react-router-dom";
+
+interface Suggestion {
+  _id: string;
+  title: string;
+  locationTitle?: string;
+}
+
+/* ─── Self-contained search input with live auto-suggestions ─────────────── */
+function SearchAutocomplete({
+  value,
+  onChange,
+  placeholder = "Search properties…",
+  className = "",
+  selectedLocationId = "",
+  locations = [] as { _id: string; title: string }[],
+}: {
+  value: string;
+  onChange: (val: string) => void;
+  placeholder?: string;
+  className?: string;
+  selectedLocationId?: string;
+  locations?: { _id: string; title: string }[];
+}) {
+  const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
+  const [open, setOpen] = useState(false);
+  const [highlighted, setHighlighted] = useState(-1);
+  const [loading, setLoading] = useState(false);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const wrapperRef = useRef<HTMLDivElement>(null);
+
+  const fetchSuggestions = useCallback(
+    async (q: string) => {
+      if (!q || q.length < 2) {
+        setSuggestions([]);
+        setOpen(false);
+        return;
+      }
+      setLoading(true);
+      try {
+        const params = new URLSearchParams({ query: q, limit: "8" });
+        if (selectedLocationId) params.append("locationId", selectedLocationId);
+        const res = await instance.get(`/property?${params.toString()}`);
+        const props: any[] = res.data.properties || [];
+        const mapped: Suggestion[] = props.map((p) => ({
+          _id: p._id,
+          title: p.title ?? p.name ?? "",
+          locationTitle:
+            p.location?.title ??
+            p.locationId?.title ??
+            locations.find(
+              (l) => l._id === (p.location ?? p.locationId)
+            )?.title ??
+            "",
+        }));
+        setSuggestions(mapped);
+        setOpen(mapped.length > 0);
+      } catch {
+        setSuggestions([]);
+        setOpen(false);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [selectedLocationId, locations]
+  );
+
+  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const v = e.target.value;
+    onChange(v);
+    setHighlighted(-1);
+    if (timer.current) clearTimeout(timer.current);
+    timer.current = setTimeout(() => fetchSuggestions(v), 300);
+  };
+
+  const select = (s: Suggestion) => {
+    onChange(s.title);
+    setSuggestions([]);
+    setOpen(false);
+    setHighlighted(-1);
+  };
+
+  const onKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (!open || suggestions.length === 0) return;
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setHighlighted((i) => Math.min(i + 1, suggestions.length - 1));
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setHighlighted((i) => Math.max(i - 1, -1));
+    } else if (e.key === "Enter" && highlighted >= 0) {
+      e.preventDefault();
+      select(suggestions[highlighted]);
+    } else if (e.key === "Escape") {
+      setOpen(false);
+      setHighlighted(-1);
+    }
+  };
+
+  // Close on outside click
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  return (
+    <div ref={wrapperRef} className={`relative ${className}`}>
+      <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5 pointer-events-none z-10" />
+      <Input
+        type="text"
+        placeholder={placeholder}
+        value={value}
+        onChange={handleChange}
+        onKeyDown={onKeyDown}
+        onFocus={() => { if (suggestions.length > 0) setOpen(true); }}
+        className={`pl-12 h-14 rounded-2xl border-gray-200`}
+        autoComplete="off"
+      />
+      {open && (
+        <div className="absolute top-full mt-1 left-0 w-full bg-white rounded-2xl shadow-xl border border-gray-200 z-50 overflow-hidden">
+          {loading ? (
+            <div className="px-4 py-3 text-sm text-gray-500 flex items-center gap-2">
+              <span className="inline-block w-3 h-3 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+              Searching…
+            </div>
+          ) : (
+            suggestions.map((s, idx) => (
+              <button
+                key={s._id}
+                type="button"
+                onMouseDown={(e) => { e.preventDefault(); select(s); }}
+                onMouseEnter={() => setHighlighted(idx)}
+                className={`w-full flex items-center gap-3 px-4 py-3 text-left text-sm transition-colors ${highlighted === idx
+                  ? "bg-primary/10 text-primary"
+                  : "hover:bg-gray-50 text-gray-800"
+                  }`}
+              >
+                <Building2 className="w-4 h-4 shrink-0 text-gray-400" />
+                <span className="flex-1 font-medium truncate">{s.title}</span>
+                {s.locationTitle && (
+                  <span className="flex items-center gap-1 text-xs text-gray-500 shrink-0">
+                    <MapPin className="w-3 h-3" />
+                    {s.locationTitle}
+                  </span>
+                )}
+              </button>
+            ))
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
 
 interface Location {
   _id: string;
@@ -86,7 +244,7 @@ export default function SearchPage() {
     searchParams.get("category") || ""
   );
   const [selectedPropertyType, setSelectedPropertyType] = useState(
-    searchParams.get("propertyType") || searchParams.get("property_type") || ""
+    searchParams.get("propertyType") || ""
   );
   const [selectedPropertyTypeCategory, setSelectedPropertyTypeCategory] =
     useState(searchParams.get("propertyTypeCategory") || "");
@@ -99,9 +257,11 @@ export default function SearchPage() {
   const [showMobileFilters, setShowMobileFilters] = useState(false);
   const [properties, setProperties] = useState([]);
   const [locations, setLocations] = useState<Location[]>([]);
-  const [propertyTypes, setPropertyTypes] = useState<PropertyType[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
+  const [categories, setCategories] = useState<{ _id: string; name: string }[]>([]);
+  const [transactionTypes, setTransactionTypes] = useState<PropertyType[]>([]);
+  const [tenantTypes, setTenantTypes] = useState<PropertyType[]>([]);
 
   // Pagination State
   const [currentPage, setCurrentPage] = useState(
@@ -126,25 +286,26 @@ export default function SearchPage() {
     }
   };
 
-  // Fetch property types from API and filter for Male/Female only
   const fetchPropertyTypes = async () => {
     try {
       const res = await instance.get("/propertytype");
-      const allTypes = res.data.data || [];
+      const allTypes: PropertyType[] = res.data.data || [];
 
-      // Filter to only show Male and Female by their IDs
-      const allowedIds = [
-        "691af1bfaf170e0a594e3ebe",
-        "691af1c3af170e0a594e3ec1",
-      ];
-      const filteredTypes = allTypes.filter((type: PropertyType) =>
-        allowedIds.includes(type._id)
+      // Separate types based on name
+      const transactionNames = ["rent", "buy", "lease"];
+      const txTypes = allTypes.filter((type) =>
+        transactionNames.includes(type.name.toLowerCase())
+      );
+      const ttTypes = allTypes.filter(
+        (type) => !transactionNames.includes(type.name.toLowerCase())
       );
 
-      setPropertyTypes(filteredTypes);
+      setTransactionTypes(txTypes);
+      setTenantTypes(ttTypes);
     } catch (error) {
       console.error("Error fetching property types:", error);
-      setPropertyTypes([]);
+      setTransactionTypes([]);
+      setTenantTypes([]);
     }
   };
 
@@ -157,9 +318,7 @@ export default function SearchPage() {
       if (selectedLocation) params.append("locationId", selectedLocation);
       if (selectedCategory) params.append("category", selectedCategory);
       if (selectedPropertyType) {
-        params.append("propertyType", selectedPropertyType);
-        // Backward compatibility with existing links
-        params.append("property_type", selectedPropertyType);
+        params.append("propertyType", selectedPropertyType.toLowerCase());
       }
       if (selectedPropertyTypeCategory)
         params.append("propertyTypeCategory", selectedPropertyTypeCategory);
@@ -226,6 +385,8 @@ export default function SearchPage() {
     }
   };
 
+  console.log(properties)
+
   // Initialize from URL params only once when locations are loaded
   useEffect(() => {
     if (locations.length > 0 && !isInitialized) {
@@ -260,7 +421,6 @@ export default function SearchPage() {
     if (selectedCategory) params.set("category", selectedCategory);
     if (selectedPropertyType) {
       params.set("propertyType", selectedPropertyType);
-      params.set("property_type", selectedPropertyType);
     }
     if (selectedPropertyTypeCategory)
       params.set("propertyTypeCategory", selectedPropertyTypeCategory);
@@ -341,12 +501,12 @@ export default function SearchPage() {
 
   const hasActiveFilters = Boolean(
     searchQuery ||
-      selectedLocation ||
-      selectedCategory ||
-      selectedPropertyType ||
-      selectedPropertyTypeCategory ||
-      minPrice ||
-      maxPrice
+    selectedLocation ||
+    selectedCategory ||
+    selectedPropertyType ||
+    selectedPropertyTypeCategory ||
+    minPrice ||
+    maxPrice
   );
   const activeFilterCount = [
     searchQuery,
@@ -362,6 +522,7 @@ export default function SearchPage() {
     window.scrollTo({ top: 0, behavior: "instant" });
     fetchLocations();
     fetchPropertyTypes();
+    instance.get("/category").then((res) => setCategories(res.data.data || [])).catch(() => { });
   }, []);
 
   return (
@@ -379,18 +540,15 @@ export default function SearchPage() {
           <div className="hidden md:flex flex-col gap-4">
             {/* Top row: Search + Location */}
             <div className="flex gap-3">
-              {/* Search Input */}
-              <div className="flex-1 relative">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
-                <Input
-                  type="text"
-                  placeholder="Search for PG, Hostels, Apartments..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-12 h-14 rounded-2xl border-gray-200"
-                  // disabled={isLoading}
-                />
-              </div>
+              {/* Search Input with auto-suggestions */}
+              <SearchAutocomplete
+                value={searchQuery}
+                onChange={setSearchQuery}
+                placeholder="Search for PG, Hostels, Apartments..."
+                className="flex-1"
+                selectedLocationId={selectedLocation}
+                locations={locations}
+              />
 
               {/* Location Select */}
               <div className="w-64 relative">
@@ -413,25 +571,70 @@ export default function SearchPage() {
 
             {/* Bottom row: Other filters + Search button */}
             <div className="flex gap-3 items-center flex-wrap">
-              {/* Property Type Select */}
-              <div className="w-48 relative">
-                <Filter className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5 pointer-events-none z-10" />
-                <select
-                  value={selectedPropertyType}
-                  onChange={(e) => setSelectedPropertyType(e.target.value)}
-                  disabled={isLoading}
-                  className="w-full h-14 pl-12 pr-4 rounded-2xl border border-gray-200 bg-white cursor-pointer appearance-none focus:outline-none focus:ring-2 focus:ring-primary/50 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <option value="">All Types</option>
-                  <option value="buy">Buy</option>
-                  <option value="rent">Rent</option>
-                  <option value="lease">Lease</option>
-                </select>
+              {/* Categories Grouped by Transaction Type */}
+              <div className="flex flex-col gap-2">
+                <div className="flex gap-4 items-center">
+                  {transactionTypes.map((tx) => (
+                    <div key={tx._id} className="flex flex-col gap-2">
+                      <span className="text-xs font-bold text-gray-500 uppercase tracking-wider px-2">
+                        {tx.name}
+                      </span>
+                      <div className="flex gap-2 flex-wrap">
+                        {categories.map((category) => {
+                          const isActive =
+                            selectedPropertyType.toLowerCase() === tx.name.toLowerCase() &&
+                            selectedCategory === category._id;
+                          return (
+                            <Button
+                              key={`${tx._id}-${category._id}`}
+                              variant={isActive ? "default" : "outline"}
+                              size="sm"
+                              className="rounded-full h-8 px-3"
+                              onClick={() => {
+                                if (isActive) {
+                                  setSelectedPropertyType("");
+                                  setSelectedCategory("");
+                                } else {
+                                  setSelectedPropertyType(tx.name.toLowerCase());
+                                  setSelectedCategory(category._id);
+                                }
+                              }}
+                            >
+                              {category.name}
+                            </Button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ))}
+                  
+                  {/* General Category Selection (when no transaction type is selected or for all) */}
+                  <div className="flex flex-col gap-2">
+                    <span className="text-xs font-bold text-gray-500 uppercase tracking-wider px-2">
+                      All Categories
+                    </span>
+                    <select
+                      value={selectedCategory}
+                      onChange={(e) => {
+                        setSelectedCategory(e.target.value);
+                      }}
+                      className="h-8 px-2 rounded-full border border-gray-200 bg-white text-xs focus:outline-none"
+                    >
+                      <option value="">Any</option>
+                      {categories.map((category) => (
+                        <option key={category._id} value={category._id}>
+                          {category.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
               </div>
 
-              {/* Property Type Category Chips */}
+              {/* Tenant Type Chips (Male, Female, etc.) */}
               <div className="flex items-center gap-2 flex-wrap">
-                {propertyTypes.map((type) => (
+                <span className="text-xs font-medium text-gray-500 mr-1">For:</span>
+                {tenantTypes.map((type) => (
                   <Button
                     key={type._id}
                     type="button"
@@ -448,29 +651,11 @@ export default function SearchPage() {
                           : type._id
                       )
                     }
-                    className="h-10 rounded-full"
+                    className="h-8 rounded-full px-4 text-xs"
                   >
                     {type.name}
                   </Button>
                 ))}
-              </div>
-
-              {/* Category Select */}
-              <div className="w-64 relative">
-                <Filter className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5 pointer-events-none z-10" />
-                <select
-                  value={selectedCategory}
-                  onChange={(e) => setSelectedCategory(e.target.value)}
-                  disabled={isLoading}
-                  className="w-full h-14 pl-12 pr-4 rounded-2xl border border-gray-200 bg-white cursor-pointer appearance-none focus:outline-none focus:ring-2 focus:ring-primary/50 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <option value="">All Categories</option>
-                  {categories.map((category) => (
-                    <option key={category.value} value={category.value}>
-                      {category.title}
-                    </option>
-                  ))}
-                </select>
               </div>
 
               {/* Price Min/Max */}
@@ -515,18 +700,14 @@ export default function SearchPage() {
 
           {/* Mobile Filters */}
           <div className="md:hidden flex flex-col gap-3">
-            {/* Search Input */}
-            <div className="relative">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
-              <Input
-                type="text"
-                placeholder="Search properties..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-12 h-14 rounded-2xl border-gray-200"
-                // disabled={isLoading}
-              />
-            </div>
+            {/* Search Input with auto-suggestions (mobile) */}
+            <SearchAutocomplete
+              value={searchQuery}
+              onChange={setSearchQuery}
+              placeholder="Search properties..."
+              selectedLocationId={selectedLocation}
+              locations={locations}
+            />
 
             {/* Filter Toggle */}
             <button
@@ -583,42 +764,58 @@ export default function SearchPage() {
                     >
                       <option value="">All Categories</option>
                       {categories.map((category) => (
-                        <option key={category.value} value={category.value}>
-                          {category.title}
+                        <option key={category._id} value={category._id}>
+                          {category.name}
                         </option>
                       ))}
                     </select>
                   </div>
                 </div>
 
-                {/* Property Type */}
-                <div>
-                  <label className="block text-sm font-medium mb-2">
-                    Property Type
-                  </label>
-                  <div className="relative">
-                    <Filter className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5 pointer-events-none z-10" />
-                    <select
-                      value={selectedPropertyType}
-                      onChange={(e) => setSelectedPropertyType(e.target.value)}
-                      disabled={isLoading}
-                      className="w-full h-12 pl-12 pr-4 rounded-2xl border border-gray-200 bg-white cursor-pointer appearance-none focus:outline-none focus:ring-2 focus:ring-primary/50 disabled:opacity-50"
-                    >
-                      <option value="">All Types</option>
-                      <option value="buy">Buy</option>
-                      <option value="rent">Rent</option>
-                      <option value="lease">Lease</option>
-                    </select>
-                  </div>
+                {/* Property Type Grouped Categories */}
+                <div className="flex flex-col gap-4">
+                  {transactionTypes.map((tx) => (
+                    <div key={tx._id} className="flex flex-col gap-2">
+                      <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider">
+                        {tx.name}
+                      </label>
+                      <div className="flex gap-2 flex-wrap">
+                        {categories.map((category) => {
+                          const isActive =
+                            selectedPropertyType.toLowerCase() === tx.name.toLowerCase() &&
+                            selectedCategory === category._id;
+                          return (
+                            <Button
+                              key={`${tx._id}-${category._id}`}
+                              variant={isActive ? "default" : "outline"}
+                              size="sm"
+                              className="rounded-full h-8 px-3 text-xs"
+                              onClick={() => {
+                                if (isActive) {
+                                  setSelectedPropertyType("");
+                                  setSelectedCategory("");
+                                } else {
+                                  setSelectedPropertyType(tx.name.toLowerCase());
+                                  setSelectedCategory(category._id);
+                                }
+                              }}
+                            >
+                              {category.name}
+                            </Button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ))}
                 </div>
 
-                {/* Property Type Category */}
+                {/* Tenant Type Category */}
                 <div>
                   <label className="block text-sm font-medium mb-2">
-                    Property Type Category
+                    Tenant Type (For)
                   </label>
                   <div className="flex items-center gap-2 flex-wrap">
-                    {propertyTypes.map((type) => (
+                    {tenantTypes.map((type) => (
                       <Button
                         key={type._id}
                         type="button"
@@ -635,7 +832,7 @@ export default function SearchPage() {
                               : type._id
                           )
                         }
-                        className="h-9 rounded-full"
+                        className="h-9 rounded-full px-4 text-xs"
                       >
                         {type.name}
                       </Button>
@@ -686,29 +883,7 @@ export default function SearchPage() {
           </div>
         </div>
 
-        {/* Property Type Category - Mobile */}
-        <div className="md:hidden flex items-center gap-2 flex-wrap">
-          {propertyTypes.map((type) => (
-            <Button
-              key={type._id}
-              type="button"
-              variant={
-                selectedPropertyTypeCategory === type._id
-                  ? "default"
-                  : "outline"
-              }
-              disabled={isLoading}
-              onClick={() =>
-                setSelectedPropertyTypeCategory(
-                  selectedPropertyTypeCategory === type._id ? "" : type._id
-                )
-              }
-              className="h-10 rounded-full"
-            >
-              {type.name}
-            </Button>
-          ))}
-        </div>
+
 
         {/* Loading State */}
         {isLoading ? (
@@ -765,9 +940,8 @@ export default function SearchPage() {
                             variant={currentPage === page ? "default" : "ghost"}
                             size="sm"
                             onClick={() => handlePageChange(page)}
-                            className={`h-10 w-10 rounded-full ${
-                              currentPage === page ? "pointer-events-none" : ""
-                            }`}
+                            className={`h-10 w-10 rounded-full ${currentPage === page ? "pointer-events-none" : ""
+                              }`}
                           >
                             {page}
                           </Button>

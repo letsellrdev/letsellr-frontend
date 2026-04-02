@@ -3,10 +3,12 @@ import { Mail, Phone, MapPin, Instagram, MessageCircle, Youtube, MessageCircleMo
 import { Link } from "react-router-dom";
 
 interface Category {
-  title: string;
-  description: string;
-  count: string;
-  value: string;
+  _id: string;
+  name: string;
+  title?: string;   // legacy compat
+  value?: string;   // legacy compat
+  description?: string;
+  count?: string;
 }
 
 export const Footer = ({ categories }: { categories: Category[] }) => {
@@ -74,13 +76,14 @@ export const Footer = ({ categories }: { categories: Category[] }) => {
               <h3 className="font-semibold text-foreground mb-5">Categories</h3>
               <ul className="space-y-3.5">
                 {categories.map((category, i) => {
-                  // Build search URL with category parameter
-                  const categoryValue = category?.value;
-                  const searchUrl = `/search?category=${encodeURIComponent(categoryValue)}`;
+                  // Support both API shape (_id/name) and legacy shape (value/title)
+                  const catId = category?._id || category?.value || String(i);
+                  const catName = category?.name || category?.title || "";
+                  const searchUrl = `/search?category=${encodeURIComponent(catId)}`;
                   return (
-                    <li key={category?.value || i}>
-                      <Link to={searchUrl || "#"} className="text-muted-foreground hover:text-primary transition-colors text-sm">
-                        {category?.title}
+                    <li key={catId}>
+                      <Link to={searchUrl} className="text-muted-foreground hover:text-primary transition-colors text-sm">
+                        {catName}
                       </Link>
                     </li>
                   );

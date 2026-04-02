@@ -18,7 +18,7 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from "@/components/ui/drawer";
-import { categories, letsellr, sampleProperties } from "@/db";
+import { letsellr, sampleProperties } from "@/db";
 import { cn } from "@/lib/utils";
 import {
   AirVent,
@@ -238,6 +238,7 @@ export default function PropertyPage() {
   const [allReviews, setAllReviews] = useState<Review[]>([]);
   const [showAllReviews, setShowAllReviews] = useState<boolean>(false);
   const [phoneNumber, setPhoneNumber] = useState("");
+  const [categories, setCategories] = useState<{ _id: string; name: string }[]>([]);
   const { setCurrentProduct } = useProperty();
 
   // State for selected vacancy and price options
@@ -309,6 +310,7 @@ export default function PropertyPage() {
     fetchProperty();
     fetchreviews();
     fetchPhoneNumber();
+    instance.get("/category").then((res) => setCategories(res.data.data || [])).catch(() => { });
 
     // Cleanup: Clear current product when leaving the page
     return () => {
@@ -598,11 +600,10 @@ ${propertyTypeCategory ? `Type: ${propertyTypeCategory}\n` : ""}`;
             )}
             <div className="flex items-center">
               <span
-                className={`px-3 py-2 rounded-lg text-sm font-medium w-full text-center ${
-                  product.vacancyCount > 0
+                className={`px-3 py-2 rounded-lg text-sm font-medium w-full text-center ${product.vacancyCount > 0
                     ? "bg-green-50 text-green-700 border border-green-200"
                     : "bg-gray-100 text-gray-600 border border-gray-200"
-                }`}
+                  }`}
               >
                 {product.vacancyCount > 0
                   ? `${product.vacancyCount} Vacancies Available`
@@ -661,26 +662,23 @@ ${propertyTypeCategory ? `Type: ${propertyTypeCategory}\n` : ""}`;
                               amount: priceOption.amount,
                             })
                           }
-                          className={`flex items-center justify-between p-3 rounded-xl border-2 transition-all duration-200 cursor-pointer ${
-                            isSelected
+                          className={`flex items-center justify-between p-3 rounded-xl border-2 transition-all duration-200 cursor-pointer ${isSelected
                               ? "bg-primary/10 border-primary shadow-md"
                               : "bg-primary/5 border-gray-200"
-                          }`}
+                            }`}
                         >
                           <div
-                            className={`font-medium text-sm capitalize ${
-                              isSelected
+                            className={`font-medium text-sm capitalize ${isSelected
                                 ? "text-primary font-bold"
                                 : "text-gray-700"
-                            }`}
+                              }`}
                           >
                             {isSelected && "✓ "}
                             {priceOption?.type}
                           </div>
                           <div
-                            className={`font-bold text-lg ${
-                              isSelected ? "text-primary" : ""
-                            }`}
+                            className={`font-bold text-lg ${isSelected ? "text-primary" : ""
+                              }`}
                           >
                             ₹{priceOption?.amount}
                           </div>
@@ -706,30 +704,27 @@ ${propertyTypeCategory ? `Type: ${propertyTypeCategory}\n` : ""}`;
                           setSelectedVacancy(v.count > 0 ? v.type : "")
                         }
                         disabled={v.count === 0}
-                        className={`flex justify-between items-center p-3 rounded-lg border-2 transition-all duration-200 ${
-                          v.count === 0
+                        className={`flex justify-between items-center p-3 rounded-lg border-2 transition-all duration-200 ${v.count === 0
                             ? "bg-gray-100 border-gray-200 cursor-not-allowed opacity-60"
                             : selectedVacancy === v.type
-                            ? "bg-primary/10 border-primary shadow-md"
-                            : "bg-gray-50 border-gray-200"
-                        }`}
+                              ? "bg-primary/10 border-primary shadow-md"
+                              : "bg-gray-50 border-gray-200"
+                          }`}
                       >
                         <span
-                          className={`text-sm font-medium ${
-                            selectedVacancy === v.type
+                          className={`text-sm font-medium ${selectedVacancy === v.type
                               ? "text-primary font-bold"
                               : "text-gray-700"
-                          }`}
+                            }`}
                         >
                           {selectedVacancy === v.type && "✓ "}
                           {v.type}
                         </span>
                         <span
-                          className={`text-xs font-bold px-2 py-1 rounded-md ${
-                            v.count > 0
+                          className={`text-xs font-bold px-2 py-1 rounded-md ${v.count > 0
                               ? "bg-green-100 text-green-700"
                               : "bg-red-100 text-red-700"
-                          }`}
+                            }`}
                         >
                           {v.count > 0 ? `${v.count} left` : "Full"}
                         </span>
@@ -1061,30 +1056,27 @@ ${propertyTypeCategory ? `Type: ${propertyTypeCategory}\n` : ""}`;
                               setSelectedVacancy(v.count > 0 ? v.type : "")
                             }
                             disabled={v.count === 0}
-                            className={`flex justify-between items-center p-3 rounded-lg border-2 transition-all duration-200 ${
-                              v.count === 0
+                            className={`flex justify-between items-center p-3 rounded-lg border-2 transition-all duration-200 ${v.count === 0
                                 ? "bg-gray-100 border-gray-200 cursor-not-allowed opacity-60"
                                 : selectedVacancy === v.type
-                                ? "bg-primary/10 border-primary shadow-md"
-                                : "bg-gray-50 border-gray-200 hover:border-primary/50 hover:bg-primary/5 cursor-pointer"
-                            }`}
+                                  ? "bg-primary/10 border-primary shadow-md"
+                                  : "bg-gray-50 border-gray-200 hover:border-primary/50 hover:bg-primary/5 cursor-pointer"
+                              }`}
                           >
                             <span
-                              className={`text-sm font-medium ${
-                                selectedVacancy === v.type
+                              className={`text-sm font-medium ${selectedVacancy === v.type
                                   ? "text-primary"
                                   : "text-gray-700"
-                              }`}
+                                }`}
                             >
                               {selectedVacancy === v.type && "✓ "}
                               {v.type}
                             </span>
                             <span
-                              className={`text-xs font-bold px-2 py-1 rounded-md ${
-                                v.count > 0
+                              className={`text-xs font-bold px-2 py-1 rounded-md ${v.count > 0
                                   ? "bg-green-100 text-green-700"
                                   : "bg-red-100 text-red-700"
-                              }`}
+                                }`}
                             >
                               {v.count > 0 ? `${v.count} left` : "Full"}
                             </span>
@@ -1102,18 +1094,16 @@ ${propertyTypeCategory ? `Type: ${propertyTypeCategory}\n` : ""}`;
                     ) : (
                       /* Fallback to simple count if no details */
                       <div
-                        className={`p-3 rounded-xl border ${
-                          product.vacancyCount > 0
+                        className={`p-3 rounded-xl border ${product.vacancyCount > 0
                             ? "bg-green-50 border-green-200"
                             : "bg-red-50 border-red-200"
-                        }`}
+                          }`}
                       >
                         <p
-                          className={`text-center font-bold ${
-                            product.vacancyCount > 0
+                          className={`text-center font-bold ${product.vacancyCount > 0
                               ? "text-green-700"
                               : "text-red-700"
-                          }`}
+                            }`}
                         >
                           {product.vacancyCount > 0
                             ? `${product.vacancyCount} Vacancies Available`
@@ -1144,18 +1134,16 @@ ${propertyTypeCategory ? `Type: ${propertyTypeCategory}\n` : ""}`;
                               amount: priceOption.amount,
                             })
                           }
-                          className={`group flex items-center gap-3 p-3 rounded-xl border-2 transition-all duration-200 cursor-pointer ${
-                            isSelected
+                          className={`group flex items-center gap-3 p-3 rounded-xl border-2 transition-all duration-200 cursor-pointer ${isSelected
                               ? "bg-primary/10 border-primary shadow-md"
                               : "bg-primary/5 border-gray-200 hover:border-primary/50 hover:bg-primary/10"
-                          }`}
+                            }`}
                         >
                           <div
-                            className={`p-1.5 rounded-md transition-all duration-300 ${
-                              isSelected
+                            className={`p-1.5 rounded-md transition-all duration-300 ${isSelected
                                 ? "relative flex items-center justify-center "
                                 : "bg-gray-800/70 group-hover:bg-gray-900"
-                            }`}
+                              }`}
                           >
                             {isSelected && (
                               <span className="text-primary absolute text-xs">
@@ -1165,19 +1153,17 @@ ${propertyTypeCategory ? `Type: ${propertyTypeCategory}\n` : ""}`;
                           </div>
                           <div className="flex items-center justify-between w-full">
                             <div
-                              className={`font-medium text-sm transition-colors duration-300 capitalize ${
-                                isSelected
+                              className={`font-medium text-sm transition-colors duration-300 capitalize ${isSelected
                                   ? "text-primary font-bold"
                                   : "text-gray-700 group-hover:text-gray-900"
-                              }`}
+                                }`}
                             >
                               {/* Use type instead of description */}
                               {priceOption?.type}
                             </div>
                             <div
-                              className={`font-bold text-md ${
-                                isSelected ? "text-primary" : ""
-                              }`}
+                              className={`font-bold text-md ${isSelected ? "text-primary" : ""
+                                }`}
                             >
                               ₹{priceOption?.amount}
                             </div>

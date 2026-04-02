@@ -1,7 +1,7 @@
 import * as React from "react";
 import { type DialogProps } from "@radix-ui/react-dialog";
 import { Command as CommandPrimitive } from "cmdk";
-import { Search } from "lucide-react";
+import { Search, ArrowLeft, X } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
@@ -33,10 +33,25 @@ const CommandDialog = ({ children, ...props }: CommandDialogProps) => {
 
 const CommandInput = React.forwardRef<
   React.ElementRef<typeof CommandPrimitive.Input>,
-  React.ComponentPropsWithoutRef<typeof CommandPrimitive.Input>
->(({ className, ...props }, ref) => (
+  React.ComponentPropsWithoutRef<typeof CommandPrimitive.Input> & { 
+    wrapperPrefix?: React.ReactNode;
+    onBack?: () => void;
+    onClose?: () => void;
+  }
+>(({ className, wrapperPrefix, onBack, onClose, ...props }, ref) => (
   <div className="flex items-center border-b px-3" cmdk-input-wrapper="">
-    <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
+    {onBack ? (
+      <button 
+        type="button"
+        onClick={onBack}
+        className="mr-2 h-9 w-9 flex items-center justify-center rounded-full hover:bg-accent transition-colors shrink-0"
+      >
+        <ArrowLeft className="h-4 w-4 opacity-70" />
+      </button>
+    ) : (
+      <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
+    )}
+    {wrapperPrefix}
     <CommandPrimitive.Input
       ref={ref}
       className={cn(
@@ -45,6 +60,15 @@ const CommandInput = React.forwardRef<
       )}
       {...props}
     />
+    {onClose && (
+      <button 
+        type="button"
+        onClick={onClose}
+        className="ml-2 h-9 w-9 flex items-center justify-center rounded-full hover:bg-accent transition-colors shrink-0"
+      >
+        <X className="h-4 w-4 opacity-70" />
+      </button>
+    )}
   </div>
 ));
 

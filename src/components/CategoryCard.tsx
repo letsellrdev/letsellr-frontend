@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { ArrowUpRight } from "lucide-react";
+import { useState } from "react";
 
 interface CategoryCardProps {
   title: string;
@@ -47,15 +48,28 @@ function CardContent({
   size = "default",
 }: Pick<CategoryCardProps, "title" | "description" | "image" | "count" | "size">) {
   const isHero = size === "hero";
+  const [isLoaded, setIsLoaded] = useState(false);
 
   return (
     <div className={`category-bento-card group ${isHero ? "category-bento-hero" : "category-bento-default"}`}>
-      {/* Background image with gradient overlay */}
-      <div className="category-bento-bg" style={{ transform: "translateZ(0)" }}>
-        <img
+      {/* Background image with gradient overlay & shimmer loading state */}
+      <div 
+        className={`category-bento-bg transition-colors duration-500 ${!isLoaded ? "shimmer bg-muted/30" : ""}`} 
+        style={{ transform: "translateZ(0)" }}
+      >
+        <motion.img
+          initial={{ opacity: 0, scale: 1.1 }}
+          animate={{ 
+            opacity: isLoaded ? 1 : 0,
+            scale: isLoaded ? 1 : 1.1
+          }}
+          transition={{ duration: 0.6, ease: "easeOut" }}
+          onLoad={() => setIsLoaded(true)}
           src={image || (isHero ? "/images/category-card-big.png" : "/images/category-card-hotel.png")}
           alt={title}
-          className="category-bento-img group-hover:scale-110 transition-transform duration-700 ease-out will-change-transform"
+          loading="lazy"
+          decoding="async"
+          className="category-bento-img group-hover:scale-110 !transition-transform duration-700 ease-out will-change-transform"
         />
         <div className="category-bento-overlay" />
       </div>
@@ -105,7 +119,7 @@ export const CategoryCardBig = ({
     return (
       <motion.div
         whileHover={{ y: -4 }}
-        transition={{ type: "spring", stiffness: 300, damping: 25 }}
+        transition={{ type: "spring", stiffness: 400, damping: 30 }}
         className="w-full h-full cursor-pointer"
         onClick={onClick}
       >
@@ -138,7 +152,7 @@ export const CategoryCard = ({
     return (
       <motion.div
         whileHover={{ y: -4 }}
-        transition={{ type: "spring", stiffness: 300, damping: 25 }}
+        transition={{ type: "spring", stiffness: 400, damping: 30 }}
         className="w-full h-full cursor-pointer"
         onClick={onClick}
       >

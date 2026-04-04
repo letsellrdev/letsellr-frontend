@@ -1,10 +1,12 @@
 import React, { useState, useCallback, useEffect } from "react";
-import { Swiper, SwiperSlide } from "swiper/react";
-import { Navigation, Pagination } from "swiper/modules";
+import { 
+  Carousel, 
+  CarouselContent, 
+  CarouselItem, 
+  CarouselNext, 
+  CarouselPrevious 
+} from "@/components/ui/carousel";
 import { ChevronLeft, ChevronRight, X, Plus } from "lucide-react";
-import "swiper/css";
-import "swiper/css/navigation";
-import "swiper/css/pagination";
 
 // Fullscreen Image Gallery Component
 interface FullscreenGalleryProps {
@@ -143,31 +145,28 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({ images }) => {
 
   return (
     <>
-      {/* Mobile Swiper */}
+      {/* Mobile Carousel */}
       <div className="md:hidden mb-8">
-        <Swiper
-          modules={[Navigation, Pagination]}
-          spaceBetween={10}
-          slidesPerView={1}
-          navigation
-          pagination={{ clickable: true }}
-          className="rounded-xl overflow-hidden shadow-lg h-80"
-        >
-          {images.map((img, i) => (
-            <SwiperSlide key={i}>
-              <div 
-                className="w-full h-full cursor-pointer"
-                onClick={() => openFullscreen(i)}
-              >
-                <img 
-                  src={img} 
-                  alt={`View ${i + 1}`} 
-                  className="w-full h-full object-cover"
-                />
-              </div>
-            </SwiperSlide>
-          ))}
-        </Swiper>
+        <Carousel className="w-full">
+          <CarouselContent>
+            {images.map((img, i) => (
+              <CarouselItem key={i}>
+                <div 
+                  className="w-full h-80 cursor-pointer overflow-hidden rounded-xl shadow-lg"
+                  onClick={() => openFullscreen(i)}
+                >
+                  <img 
+                    src={img} 
+                    alt={`View ${i + 1}`} 
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              </CarouselItem>
+            ))}
+          </CarouselContent>
+          <CarouselPrevious className="left-2" />
+          <CarouselNext className="right-2" />
+        </Carousel>
       </div>
 
       {/* Desktop Grid */}

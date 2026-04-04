@@ -2,43 +2,22 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Hide scrollbar for horizontal scroll sections */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
 /* 
   🎨 Design System
   --------------------------------------------------------------------
   All design tokens (colors, gradients, shadows, etc.) are defined here.
   All colors use HSL for easier theming and dynamic manipulation.
 */
-.swiper-button-next,
-.swiper-button-prev {
-  color: white !important;
-  background: transparent !important;
-  width: auto !important;
-  height: auto !important;
-}
-
-.swiper-button-next:after,
-.swiper-button-prev:after {
-  font-size: 24px !important;
-  font-weight: bold;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
-}
-
-.swiper-button-next:hover,
-.swiper-button-prev:hover {
-  background: transparent !important;
-  color: #f0f0f0 !important;
-}
-
-/* Swiper Pagination Dots */
-.swiper-pagination-bullet {
-  background: white !important;
-  opacity: 0.5;
-}
-
-.swiper-pagination-bullet-active {
-  background: white !important;
-  opacity: 1;
-}
+/* Redundant swiper styles removed */
 
 @layer base {
   :root {
@@ -176,6 +155,23 @@
   /* 🌈 Subtle Background Effects */
   .bg-gradient-soft {
     background: linear-gradient(135deg, hsl(174 45% 35% / 0.03) 0%, hsl(174 50% 45% / 0.05) 100%);
+  }
+
+  /* ✨ Premium Shimmer Animation */
+  .shimmer {
+    background: linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0) 0%,
+      rgba(255, 255, 255, 0.4) 50%,
+      rgba(255, 255, 255, 0) 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite linear;
+  }
+
+  @keyframes shimmer {
+    from { background-position: 200% 0; }
+    to { background-position: -200% 0; }
   }
 }
 
@@ -331,4 +327,26 @@
   .category-bento-grid-small {
     grid-column: auto;
   }
+}
+
+/* 🌊 Lenis Smooth Scroll Integration */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+
+.lenis.lenis-scrolling iframe {
+  pointer-events: none;
 }

@@ -16,6 +16,7 @@ interface Testimonial {
 
 export const TestimonialsSection = () => {
   const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
+  const [isPaused, setIsPaused] = useState(false);
 
   useEffect(() => {
     const fetchTestimonials = async () => {
@@ -50,45 +51,55 @@ export const TestimonialsSection = () => {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-6 md:gap-8">
-            {testimonials.slice(0, 3).map((testimonial, idx) => (
-              <Card
-                key={idx}
-                className="p-6 md:p-8 border border-border bg-card shadow-sm hover:shadow-md transition-all duration-300 animate-fade-in"
-                style={{ animationDelay: `${idx * 100}ms` }}
-              >
-                <div className="space-y-6">
-                  <div className="flex gap-1">
-                    {[...Array(testimonial.rating)].map((_, i) => (
-                      <Star
-                        key={i}
-                        className="h-5 w-5 fill-accent text-accent"
-                      />
-                    ))}
-                  </div>
+          <div 
+            className="relative overflow-hidden marquee-mask py-4 cursor-grab active:cursor-grabbing"
+            onMouseEnter={() => setIsPaused(true)}
+            onMouseLeave={() => setIsPaused(false)}
+            onTouchStart={() => setIsPaused(true)}
+            onTouchEnd={() => setIsPaused(false)}
+          >
+            <div 
+              className="animate-marquee flex gap-6 md:gap-8"
+              style={{ animationPlayState: isPaused ? 'paused' : 'running' }}
+            >
+              {[...testimonials, ...testimonials].map((testimonial, idx) => (
+                <Card
+                  key={idx}
+                  className="w-[320px] md:w-[400px] flex-shrink-0 p-6 md:p-8 border border-border bg-card shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-1"
+                >
+                  <div className="space-y-6">
+                    <div className="flex gap-1">
+                      {[...Array(testimonial.rating)].map((_, i) => (
+                        <Star
+                          key={i}
+                          className="h-5 w-5 fill-accent text-accent"
+                        />
+                      ))}
+                    </div>
 
-                  <p className="text-foreground leading-relaxed">
-                    "{testimonial.content}"
-                  </p>
+                    <p className="text-foreground leading-relaxed italic line-clamp-4">
+                      "{testimonial.content}"
+                    </p>
 
-                  <div className="flex items-center gap-4 pt-4 border-t border-border">
-                    <Avatar className="h-12 w-12 bg-primary">
-                      <AvatarFallback className="bg-primary text-primary-foreground font-semibold">
-                        {testimonial.initials}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <div className="font-semibold text-foreground">
-                        {testimonial.name}
-                      </div>
-                      <div className="text-sm text-muted-foreground">
-                        {testimonial.role}
+                    <div className="flex items-center gap-4 pt-4 border-t border-border mt-auto">
+                      <Avatar className="h-12 w-12 bg-primary">
+                        <AvatarFallback className="bg-primary text-primary-foreground font-semibold">
+                          {testimonial.initials}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="min-w-0">
+                        <div className="font-semibold text-foreground truncate">
+                          {testimonial.name}
+                        </div>
+                        <div className="text-sm text-muted-foreground truncate">
+                          {testimonial.role}
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              </Card>
-            ))}
+                </Card>
+              ))}
+            </div>
           </div>
         </div>
       </div>

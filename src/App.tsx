@@ -1,7 +1,6 @@
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
@@ -23,47 +22,42 @@ import { PropertyProvider } from "./contexts/PropertyContext";
 // import AdminUsersPage from "./pages/Admin/AdminUsersPage";
 import FloatingContactIcons from "./components/FloatingContactIcons";
 
-const queryClient = new QueryClient();
-
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <PropertyProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <FloatingContactIcons />
-          <Routes>
-            {/* Public Routes */}
-            <Route path="/" element={<Index />} />
-            <Route path="/search" element={<SearchPage />} />
-            <Route path="/property/:propertyId" element={<PropertyPage />} />
+  <PropertyProvider>
+    <TooltipProvider>
+      <Toaster />
+      <BrowserRouter>
+        <FloatingContactIcons />
+        <Routes>
+          {/* Public Routes */}
+          <Route path="/" element={<Index />} />
+          <Route path="/search" element={<SearchPage />} />
+          <Route path="/property/:propertyId" element={<PropertyPage />} />
 
-            {/* Admin Layout with Nested Routes */}
-            <Route path="/admin/login" element={<AdminLogin />} />
-            <Route path="/admin" element={<AdminLayout />}>
-              <Route index element={<AdminDashboardPage />} />
-              <Route path="properties" element={<AdminPropertiesPage />} />
-              <Route path="locations" element={<AdminLocationPage />} />
-              <Route
-                path="property-types"
-                element={<AdminPropertyTypePage />}
-              />
-              <Route path="reviews" element={<AdminReviewsPage />} />
-              <Route path="setup" element={<AdminSetupPage />} />
-              <Route path="statistics" element={<AdminStatisticsPage />} />
-              <Route path="testimonials" element={<AdminTestimonialsPage />} />
-              {/* <Route path="users" element={<AdminUsersPage />} /> */}
-              <Route path="categories" element={<AdminCategoryPage />} />
-            </Route>
+          {/* Admin Layout with Nested Routes */}
+          <Route path="/admin/login" element={<AdminLogin />} />
+          <Route path="/admin" element={<AdminLayout />}>
+            <Route index element={<AdminDashboardPage />} />
+            <Route path="properties" element={<AdminPropertiesPage />} />
+            <Route path="locations" element={<AdminLocationPage />} />
+            <Route
+              path="property-types"
+              element={<AdminPropertyTypePage />}
+            />
+            <Route path="reviews" element={<AdminReviewsPage />} />
+            <Route path="setup" element={<AdminSetupPage />} />
+            <Route path="statistics" element={<AdminStatisticsPage />} />
+            <Route path="testimonials" element={<AdminTestimonialsPage />} />
+            {/* <Route path="users" element={<AdminUsersPage />} /> */}
+            <Route path="categories" element={<AdminCategoryPage />} />
+          </Route>
 
-            {/* Catch-all */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </TooltipProvider>
-    </PropertyProvider>
-  </QueryClientProvider>
+          {/* Catch-all */}
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </BrowserRouter>
+    </TooltipProvider>
+  </PropertyProvider>
 );
 
 export default App;

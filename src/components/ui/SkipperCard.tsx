@@ -113,10 +113,8 @@ const SkipperCard = ({
       const wrapper = mobileWrapperRef.current;
       if (!track || !wrapper) return;
 
-      // Calculate how far the track needs to slide
       const scrollAmount = track.scrollWidth - wrapper.offsetWidth;
 
-      // Animate cards in on load
       const cards = track.querySelectorAll(".gsap-card");
       gsap.fromTo(
         cards,
@@ -130,7 +128,6 @@ const SkipperCard = ({
         }
       );
 
-      // Horizontal scroll on vertical scroll
       const tween = gsap.to(track, {
         x: -scrollAmount,
         ease: "none",
@@ -182,11 +179,6 @@ const SkipperCard = ({
         </div>
       </div>
 
-      {/* ═══════════════════════════════════════════
-          🖥️ Desktop: Bento Grid — All cards in one view
-          Layout: [ Hero (2 rows) ] [ sm ] [ sm ]
-                                    [ sm ] [ sm ]
-         ═══════════════════════════════════════════ */}
       <div className="hidden md:grid md:grid-cols-3 lg:grid-cols-[1.3fr_1fr_1fr] gap-3 lg:gap-4 bento-section">
         {/* Hero card — tall, left column, spans 2 rows */}
         {cards[0] && (

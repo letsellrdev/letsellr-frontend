@@ -2,22 +2,43 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Hide scrollbar for horizontal scroll sections */
-.scrollbar-hide {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
-.scrollbar-hide::-webkit-scrollbar {
-  display: none;
-}
-
 /* 
   🎨 Design System
   --------------------------------------------------------------------
   All design tokens (colors, gradients, shadows, etc.) are defined here.
   All colors use HSL for easier theming and dynamic manipulation.
 */
-/* Redundant swiper styles removed */
+.swiper-button-next,
+.swiper-button-prev {
+  color: white !important;
+  background: transparent !important;
+  width: auto !important;
+  height: auto !important;
+}
+
+.swiper-button-next:after,
+.swiper-button-prev:after {
+  font-size: 24px !important;
+  font-weight: bold;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.swiper-button-next:hover,
+.swiper-button-prev:hover {
+  background: transparent !important;
+  color: #f0f0f0 !important;
+}
+
+/* Swiper Pagination Dots */
+.swiper-pagination-bullet {
+  background: white !important;
+  opacity: 0.5;
+}
+
+.swiper-pagination-bullet-active {
+  background: white !important;
+  opacity: 1;
+}
 
 @layer base {
   :root {
@@ -159,19 +180,22 @@
 
   /* ✨ Premium Shimmer Animation */
   .shimmer {
-    background: linear-gradient(
-      90deg,
-      rgba(255, 255, 255, 0) 0%,
-      rgba(255, 255, 255, 0.4) 50%,
-      rgba(255, 255, 255, 0) 100%
-    );
+    background: linear-gradient(90deg,
+        rgba(255, 255, 255, 0) 0%,
+        rgba(255, 255, 255, 0.4) 50%,
+        rgba(255, 255, 255, 0) 100%);
     background-size: 200% 100%;
     animation: shimmer 1.5s infinite linear;
   }
 
   @keyframes shimmer {
-    from { background-position: 200% 0; }
-    to { background-position: -200% 0; }
+    from {
+      background-position: 200% 0;
+    }
+
+    to {
+      background-position: -200% 0;
+    }
   }
 }
 
@@ -189,7 +213,7 @@
   isolation: isolate;
   border: 1px solid rgba(255, 255, 255, 0.12);
   box-shadow:
-    0 0 0 1px rgba(255,255,255,0.06) inset,
+    0 0 0 1px rgba(255, 255, 255, 0.06) inset,
     0 8px 32px rgba(0, 0, 0, 0.18);
 }
 
@@ -197,6 +221,7 @@
 .category-bento-hero {
   min-height: 360px;
 }
+
 .category-bento-default {
   min-height: 220px;
 }
@@ -207,6 +232,7 @@
   inset: 0;
   z-index: 0;
 }
+
 .category-bento-img {
   width: 100%;
   height: 100%;
@@ -219,13 +245,11 @@
 .category-bento-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(
-    to bottom,
-    transparent 0%,
-    transparent 40%,
-    hsla(var(--primary) / 0.05) 75%,
-    hsla(var(--primary) / 0.15) 100%
-  );
+  background: linear-gradient(to bottom,
+      transparent 0%,
+      transparent 40%,
+      hsla(var(--primary) / 0.05) 75%,
+      hsla(var(--primary) / 0.15) 100%);
 }
 
 /* ── Availability badge — top right ── */
@@ -290,8 +314,9 @@
 .category-bento-card {
   transition: box-shadow 0.4s ease;
 }
+
 .group:hover .category-bento-card {
-  box-shadow: 
+  box-shadow:
     0 25px 50px -12px hsla(var(--primary) / 0.15),
     0 0 0 1px hsla(var(--primary) / 0.1) inset;
 }
@@ -308,9 +333,11 @@
     grid-template-columns: 1.15fr 1fr;
     grid-template-rows: auto;
   }
+
   .category-bento-grid-hero {
     grid-row: 1 / 3;
   }
+
   .category-bento-grid-small {
     grid-column: 2;
   }
@@ -320,10 +347,12 @@
   .category-bento-grid {
     grid-template-columns: 1.2fr 1fr 1fr;
   }
+
   .category-bento-grid-hero {
     grid-row: 1 / 3;
     grid-column: 1;
   }
+
   .category-bento-grid-small {
     grid-column: auto;
   }
@@ -349,4 +378,30 @@ html.lenis body {
 
 .lenis.lenis-scrolling iframe {
   pointer-events: none;
+}
+
+/* 🌀 Infinite Marquee Animation */
+@keyframes marquee {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-marquee {
+  display: flex;
+  width: max-content;
+  animation: marquee var(--marquee-duration, 40s) linear infinite;
+}
+
+.pause-on-hover:hover .animate-marquee {
+  animation-play-state: paused;
+}
+
+/* Subtle gradient mask to fade edges of the marquee */
+.marquee-mask {
+  mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+  -webkit-mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
 }

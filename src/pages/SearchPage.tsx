@@ -607,7 +607,7 @@ export default function SearchPage() {
                       </div>
                     </div>
                   ))}
-                  
+
                   {/* General Category Selection (when no transaction type is selected or for all) */}
                   <div className="flex flex-col gap-2">
                     <span className="text-xs font-bold text-gray-500 uppercase tracking-wider px-2">

@@ -1,23 +1,39 @@
-import { lazy, Suspense, useEffect, useState } from "react";
-const StatsSection = lazy(() => import("@/components/StatsSection").then(m => ({ default: m.StatsSection })));
-const TestimonialsSection = lazy(() => import("@/components/TestimonialsSection").then(m => ({ default: m.TestimonialsSection })));
-const FaqSection = lazy(() => import("@/components/FaqSection"));
-const Footer = lazy(() => import("@/components/Footer").then(m => ({ default: m.Footer })));
-import Navbar from "@/components/Navbar";
 import { SearchBar } from "@/components/SearchBar";
 import { SkipperCard } from "@/components/ui/SkipperCard";
+import { StatsSection } from "@/components/StatsSection";
+import { TestimonialsSection } from "@/components/TestimonialsSection";
+import { Footer } from "@/components/Footer";
+import FaqSection from "@/components/FaqSection";
+import Navbar from "@/components/Navbar";
+import { useEffect, useState } from "react";
 import instance from "@/lib/axios";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import heroVideo from "@/assets/hero.webm";
 import { ReactLenis } from 'lenis/react';
-
-// Note: In a real app, I'd fetch a specific JSON or use a local one.
+import { Helmet } from "react-helmet-async";
 
 const Index = () => {
   const [propertyType, setPropertyType] = useState("rent");
   const [locationId, setLocationId] = useState("");
   const [locations, setLocations] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
+
+  // Structured Data (JSON-LD) for Local Business
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@type": "RealEstateAgent",
+    "name": "Letsellr Calicut",
+    "description": "Premium rental listings for PGs, hostels, and apartments in Calicut (Kozhikode). Verified properties for students and professionals.",
+    "url": "https://letsellr.in",
+    "logo": "https://letsellr.in/favicon.ico",
+    "areaServed": "Calicut, Kozhikode, Kerala",
+    "address": {
+      "@type": "PostalAddress",
+      "addressLocality": "Calicut",
+      "addressRegion": "Kerala",
+      "addressCountry": "IN"
+    }
+  };
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -46,6 +62,14 @@ const Index = () => {
 
   return (
     <ReactLenis root>
+      <Helmet>
+        <title>Letsellr - Verified PGs, Hostels & Apartments for Rent in Calicut / Kozhikode</title>
+        <meta name="description" content="Discover premium, verified properties for students and professionals in Calicut (Kozhikode). We offer the best PGs, hostels, and flats for rent with modern amenities." />
+        <meta name="keywords" content="rentals in calicut, pgs in kozhikode, hostels in kozhikode, apartments for rent calicut, flats near mavoor road, pgs near kottooli, student hostels kozhikode" />
+        <script type="application/ld+json">
+          {JSON.stringify(structuredData)}
+        </script>
+      </Helmet>
       <div className="min-h-screen bg-background/80 selection:bg-primary/20">
         <Navbar />
         <main className="relative overflow-hidden">
@@ -85,7 +109,7 @@ const Index = () => {
               >
 
                 <div className="space-y-4 pt-10 sm:pt-16 md:pt-0">
-                  <h1 className="text-5xl md:text-7xl lg:text-[3.5rem] xl:text-[4rem] 2xl:text-[4.5rem] lg:whitespace-nowrap font-bold tracking-tight text-foreground leading-[1.1]">
+                  <h1 className="text-3xl sm:text-5xl md:text-7xl lg:text-[3.5rem] xl:text-[4rem] 2xl:text-[4.5rem] lg:whitespace-nowrap font-bold tracking-tight text-foreground leading-[1.1]">
                     Choose your next <span className="text-primary italic">home</span>
                   </h1>
 
@@ -188,21 +212,18 @@ const Index = () => {
               </motion.div>
 
               {/* ── Sticky Scroll Cards ── */}
-              <SkipperCard 
-                categories={categories} 
-                propertyType={propertyType} 
-                locationId={locationId} 
+              <SkipperCard
+                categories={categories}
+                propertyType={propertyType}
+                locationId={locationId}
               />
             </div>
           </section>
         </main>
 
-        <Suspense fallback={<div className="h-40" />}>
-          {/* <StatsSection /> */}
-          <TestimonialsSection />
-          <FaqSection />
-          <Footer categories={categories} />
-        </Suspense>
+        <TestimonialsSection />
+        <FaqSection />
+        <Footer categories={categories} />
       </div>
     </ReactLenis>
   );

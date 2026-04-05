@@ -1,12 +1,10 @@
 import React, { useState, useCallback, useEffect } from "react";
-import { 
-  Carousel, 
-  CarouselContent, 
-  CarouselItem, 
-  CarouselNext, 
-  CarouselPrevious 
-} from "@/components/ui/carousel";
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Navigation, Pagination } from "swiper/modules";
 import { ChevronLeft, ChevronRight, X, Plus } from "lucide-react";
+import "swiper/css";
+import "swiper/css/navigation";
+import "swiper/css/pagination";
 
 // Fullscreen Image Gallery Component
 interface FullscreenGalleryProps {
@@ -16,11 +14,11 @@ interface FullscreenGalleryProps {
   initialIndex?: number;
 }
 
-const FullscreenGallery: React.FC<FullscreenGalleryProps> = ({ 
-  images, 
-  isOpen, 
-  onClose, 
-  initialIndex = 0 
+const FullscreenGallery: React.FC<FullscreenGalleryProps> = ({
+  images,
+  isOpen,
+  onClose,
+  initialIndex = 0
 }) => {
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
 
@@ -104,9 +102,8 @@ const FullscreenGallery: React.FC<FullscreenGalleryProps> = ({
             <button
               key={index}
               onClick={() => setCurrentIndex(index)}
-              className={`flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition ${
-                index === currentIndex ? 'border-white' : 'border-transparent opacity-70 hover:opacity-100'
-              }`}
+              className={`flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition ${index === currentIndex ? 'border-white' : 'border-transparent opacity-70 hover:opacity-100'
+                }`}
             >
               <img
                 src={img}
@@ -145,72 +142,75 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({ images }) => {
 
   return (
     <>
-      {/* Mobile Carousel */}
+      {/* Mobile Swiper */}
       <div className="md:hidden mb-8">
-        <Carousel className="w-full">
-          <CarouselContent>
-            {images.map((img, i) => (
-              <CarouselItem key={i}>
-                <div 
-                  className="w-full h-80 cursor-pointer overflow-hidden rounded-xl shadow-lg"
-                  onClick={() => openFullscreen(i)}
-                >
-                  <img 
-                    src={img} 
-                    alt={`View ${i + 1}`} 
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-              </CarouselItem>
-            ))}
-          </CarouselContent>
-          <CarouselPrevious className="left-2" />
-          <CarouselNext className="right-2" />
-        </Carousel>
+        <Swiper
+          modules={[Navigation, Pagination]}
+          spaceBetween={10}
+          slidesPerView={1}
+          navigation
+          pagination={{ clickable: true }}
+          className="rounded-xl overflow-hidden shadow-lg h-80"
+        >
+          {images.map((img, i) => (
+            <SwiperSlide key={i}>
+              <div
+                className="w-full h-full cursor-pointer"
+                onClick={() => openFullscreen(i)}
+              >
+                <img
+                  src={img}
+                  alt={`View ${i + 1}`}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            </SwiperSlide>
+          ))}
+        </Swiper>
       </div>
 
       {/* Desktop Grid */}
       <div className="hidden md:block mb-12">
         <div className="grid grid-cols-4 grid-rows-2 gap-4 h-[550px] rounded-2xl overflow-hidden">
           {/* Main large image */}
-          <div 
+          <div
             className="col-span-2 row-span-2 cursor-pointer bg-gray-100 relative group"
             onClick={() => openFullscreen(0)}
           >
-            <img 
-              src={images[0]} 
-              alt="Main view" 
+            <img
+              src={images[0]}
+              alt="Main view"
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
             />
           </div>
-          
+
           {/* First 3 smaller images */}
           {images.slice(1, 4).map((img, i) => (
-            <div 
-              key={i} 
+            <div
+              key={i}
               className="cursor-pointer bg-gray-100 overflow-hidden relative group"
               onClick={() => openFullscreen(i + 1)}
             >
-              <img 
-                src={img} 
-                alt={`Thumbnail ${i + 1}`} 
+              <img
+                src={img}
+                alt={`Thumbnail ${i + 1}`}
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
               />
             </div>
           ))}
-          
+
           {/* Last image with "View All Photos" overlay */}
           {images.length > 4 && (
-            <div 
+            <div
               className="cursor-pointer bg-gray-100 overflow-hidden relative group"
               onClick={() => openFullscreen(3)}
             >
-              <img 
-                src={images[3]} 
-                alt="Thumbnail 4" 
+              <img
+                src={images[3]}
+                alt="Thumbnail 4"
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
               />
-              
+
               {/* Overlay for "View All Photos" */}
               <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
                 <div className="text-center text-white">
@@ -225,13 +225,13 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({ images }) => {
 
           {/* If there are exactly 4 images, show the 4th without overlay */}
           {images.length === 4 && (
-            <div 
+            <div
               className="cursor-pointer bg-gray-100 overflow-hidden relative group"
               onClick={() => openFullscreen(3)}
             >
-              <img 
-                src={images[3]} 
-                alt="Thumbnail 4" 
+              <img
+                src={images[3]}
+                alt="Thumbnail 4"
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
               />
             </div>

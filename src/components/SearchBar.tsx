@@ -157,8 +157,8 @@ export const SearchBar = ({
       if (currentStep === 1) {
         const matchedLocs = trimmed
           ? locations.filter((l) =>
-              l.title.toLowerCase().includes(trimmed.toLowerCase())
-            )
+            l.title.toLowerCase().includes(trimmed.toLowerCase())
+          )
           : locations; // Show all (up to 5) when empty
         setLocSuggestions(matchedLocs.slice(0, 5));
       } else {
@@ -252,7 +252,7 @@ export const SearchBar = ({
   };
 
   return (
-    <div className="w-full max-w-3xl mx-auto px-4 flex flex-col gap-4">
+    <div className="w-full max-w-3xl mx-auto px-4 pt-6 flex flex-col gap-4">
       {/* ── Property Type Tabs ── */}
       <div className="flex w-full justify-center gap-2 md:gap-3">
         {TABS.map(({ type, label, active }) =>
@@ -294,7 +294,7 @@ export const SearchBar = ({
           <div className="bg-primary/5 p-2 rounded-xl shrink-0 group-hover:scale-105 transition-transform duration-300">
             <Search className="h-4 w-4 text-primary" />
           </div>
-          
+
           <div className="flex flex-col items-start flex-1 min-w-0">
             <span className="text-sm font-medium text-foreground">
               {step === 2 && selectedLocationName ? `Searching in ${selectedLocationName}...` : "Find your next home..."}

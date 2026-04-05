@@ -43,6 +43,7 @@ import { useParams } from "react-router-dom";
 import instance from "@/lib/axios";
 import ImageGallery from "@/components/Imageswiper";
 import { useProperty } from "@/contexts/PropertyContext";
+import { Helmet } from "react-helmet-async";
 const iconMappings = [
   { keywords: ["wifi", "wi-fi"], icon: Wifi },
   { keywords: ["kettle", "coffee"], icon: Coffee },
@@ -571,9 +572,39 @@ ${propertyTypeCategory ? `Type: ${propertyTypeCategory}\n` : ""}`;
     );
   }
 
+  // Structured Data for Property
+  const propertyStructuredData = product ? {
+    "@context": "https://schema.org",
+    "@type": "Accommodation",
+    "name": product.title,
+    "description": product.description,
+    "image": product.images?.[0],
+    "address": {
+      "@type": "PostalAddress",
+      "addressLocality": typeof product.location === "string" ? product.location : product.location?.title || "Calicut",
+      "addressRegion": "Kerala",
+      "addressCountry": "IN"
+    },
+    "amenityFeature": product.amenity?.split(",").map((a: string) => ({
+      "@type": "LocationFeatureSpecification",
+      "name": a.trim(),
+      "value": true
+    }))
+  } : null;
+
   // Main Content (when data is loaded)
   return (
     <div className="relative">
+      <Helmet>
+        <title>{`${product?.title} - Rentals in Calicut / Kozhikode | Letsellr`}</title>
+        <meta name="description" content={product?.description?.substring(0, 160)} />
+        <meta name="keywords" content={`${product?.title}, rentals in calicut, pgs in kozhikode, ${typeof product?.location === "string" ? product.location : product?.location?.title}, hostles in calicut`} />
+        {propertyStructuredData && (
+          <script type="application/ld+json">
+            {JSON.stringify(propertyStructuredData)}
+          </script>
+        )}
+      </Helmet>
       <div className="absolute hidden md:flex inset-0 z-0">
         <BackgroundDotPattern />
       </div>

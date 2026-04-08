@@ -680,7 +680,7 @@ ${propertyTypeCategory ? `Type: ${propertyTypeCategory}\n` : ""}`;
             </div>
 
             {/* Pricing & Availability Card - Mobile Only */}
-            <div className="md:hidden overflow-hidden rounded-sm w-full border bg-white/5 backdrop-blur-sm flex flex-col gap-4">
+            <div className="md:hidden px-4 py-4 overflow-hidden rounded-sm w-full border bg-white/5 backdrop-blur-sm flex flex-col gap-4">
               <h2 className="text-xl font-semibold">Pricing & Availability</h2>
 
               {/* Price Options */}

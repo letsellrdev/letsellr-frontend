@@ -8,6 +8,7 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogHeader,
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
@@ -225,7 +226,7 @@ function SidebarSkeleton() {
 
 export default function PropertyPage() {
   const { propertyId } = useParams();
-  const [product, setProduct] = useState(null);
+  const [product, setProduct] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedRating, setSelectedRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
@@ -287,7 +288,11 @@ export default function PropertyPage() {
   const fetchreviews = async () => {
     try {
       const response = await instance.get(`/feedback/property/${propertyId}`);
-      setAllReviews(response.data.data);
+      if (response.data && Array.isArray(response.data.data)) {
+        setAllReviews(response.data.data);
+      } else {
+        setAllReviews([]);
+      }
       console.log(response.data.data);
     } catch (err) {
       console.error("Error fetching reviews:", err);
@@ -311,7 +316,13 @@ export default function PropertyPage() {
     fetchProperty();
     fetchreviews();
     fetchPhoneNumber();
-    instance.get("/category").then((res) => setCategories(res.data.data || [])).catch(() => { });
+    instance.get("/category")
+      .then((res) => {
+        if (res.data && Array.isArray(res.data.data)) {
+          setCategories(res.data.data);
+        }
+      })
+      .catch(() => { });
 
     // Cleanup: Clear current product when leaving the page
     return () => {
@@ -589,7 +600,7 @@ ${propertyTypeCategory ? `Type: ${propertyTypeCategory}\n` : ""}`;
       "@type": "LocationFeatureSpecification",
       "name": a.trim(),
       "value": true
-    }))
+    })) || []
   } : null;
 
   // Main Content (when data is loaded)
@@ -632,8 +643,8 @@ ${propertyTypeCategory ? `Type: ${propertyTypeCategory}\n` : ""}`;
             <div className="flex items-center">
               <span
                 className={`px-3 py-2 rounded-lg text-sm font-medium w-full text-center ${product.vacancyCount > 0
-                    ? "bg-green-50 text-green-700 border border-green-200"
-                    : "bg-gray-100 text-gray-600 border border-gray-200"
+                  ? "bg-green-50 text-green-700 border border-green-200"
+                  : "bg-gray-100 text-gray-600 border border-gray-200"
                   }`}
               >
                 {product.vacancyCount > 0
@@ -646,12 +657,12 @@ ${propertyTypeCategory ? `Type: ${propertyTypeCategory}\n` : ""}`;
 
         <ImageGallery images={product?.images || []} />
 
-        <div className="grid grid-cols-10 gap-5">
-          <div className="col-span-10 md:col-span-6 flex flex-col gap-4 md:gap-5">
+        <div className="w-full mx-auto flex flex-col gap-8 md:gap-10">
+          <div className="flex flex-col gap-6 md:gap-8">
             {/* Description */}
             <div className="border rounded-md p-4 md:p-6 bg-white/5 backdrop-blur-sm flex flex-col gap-2">
               <h1 className="text-xl md:text-3xl">About this Place</h1>
-              <p className="text-md font-medium text-gray-900 flex items-center gap-2">
+              <div className="text-md font-medium text-gray-900 flex items-center gap-2">
                 Rating :
                 <div className="flex gap-1">
                   {[...Array(5)].map((_, i) => (
@@ -664,12 +675,12 @@ ${propertyTypeCategory ? `Type: ${propertyTypeCategory}\n` : ""}`;
                     />
                   ))}
                 </div>
-              </p>
+              </div>
               <p>{product?.description}</p>
             </div>
 
             {/* Pricing & Availability Card - Mobile Only */}
-            <div className="md:hidden overflow-hidden rounded-sm w-full border p-4 bg-white/5 backdrop-blur-sm flex flex-col gap-4">
+            <div className="md:hidden overflow-hidden rounded-sm w-full border bg-white/5 backdrop-blur-sm flex flex-col gap-4">
               <h2 className="text-xl font-semibold">Pricing & Availability</h2>
 
               {/* Price Options */}
@@ -694,14 +705,14 @@ ${propertyTypeCategory ? `Type: ${propertyTypeCategory}\n` : ""}`;
                             })
                           }
                           className={`flex items-center justify-between p-3 rounded-xl border-2 transition-all duration-200 cursor-pointer ${isSelected
-                              ? "bg-primary/10 border-primary shadow-md"
-                              : "bg-primary/5 border-gray-200"
+                            ? "bg-primary/10 border-primary shadow-md"
+                            : "bg-primary/5 border-gray-200"
                             }`}
                         >
                           <div
                             className={`font-medium text-sm capitalize ${isSelected
-                                ? "text-primary font-bold"
-                                : "text-gray-700"
+                              ? "text-primary font-bold"
+                              : "text-gray-700"
                               }`}
                           >
                             {isSelected && "✓ "}
@@ -736,16 +747,16 @@ ${propertyTypeCategory ? `Type: ${propertyTypeCategory}\n` : ""}`;
                         }
                         disabled={v.count === 0}
                         className={`flex justify-between items-center p-3 rounded-lg border-2 transition-all duration-200 ${v.count === 0
-                            ? "bg-gray-100 border-gray-200 cursor-not-allowed opacity-60"
-                            : selectedVacancy === v.type
-                              ? "bg-primary/10 border-primary shadow-md"
-                              : "bg-gray-50 border-gray-200"
+                          ? "bg-gray-100 border-gray-200 cursor-not-allowed opacity-60"
+                          : selectedVacancy === v.type
+                            ? "bg-primary/10 border-primary shadow-md"
+                            : "bg-gray-50 border-gray-200"
                           }`}
                       >
                         <span
                           className={`text-sm font-medium ${selectedVacancy === v.type
-                              ? "text-primary font-bold"
-                              : "text-gray-700"
+                            ? "text-primary font-bold"
+                            : "text-gray-700"
                             }`}
                         >
                           {selectedVacancy === v.type && "✓ "}
@@ -753,8 +764,8 @@ ${propertyTypeCategory ? `Type: ${propertyTypeCategory}\n` : ""}`;
                         </span>
                         <span
                           className={`text-xs font-bold px-2 py-1 rounded-md ${v.count > 0
-                              ? "bg-green-100 text-green-700"
-                              : "bg-red-100 text-red-700"
+                            ? "bg-green-100 text-green-700"
+                            : "bg-red-100 text-red-700"
                             }`}
                         >
                           {v.count > 0 ? `${v.count} left` : "Full"}
@@ -810,6 +821,95 @@ ${propertyTypeCategory ? `Type: ${propertyTypeCategory}\n` : ""}`;
                       </div>
                     );
                   })}
+              </div>
+            </div>
+
+            <div className="hidden md:flex flex-col overflow-hidden rounded-xl border sm:px-8  px-4 p-8 bg-white/5 backdrop-blur-sm gap-6 shadow-sm border-gray-100">
+              <div className="flex items-center justify-between">
+                <div className="space-y-1">
+                  <h2 className="text-2xl font-bold tracking-tight">Pricing & Availability</h2>
+                  <p className="text-sm text-muted-foreground italic">Select your preferred plan and check availability</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-xs text-gray-500 uppercase font-bold tracking-wider mb-1">Starting From</p>
+                  <h1 className="text-4xl font-extrabold text-primary flex items-end justify-end gap-1">
+                    ₹{product?.price?.[0]?.amount || 0}
+                    <span className="text-sm font-normal text-gray-400 mb-1.5">/mo</span>
+                  </h1>
+                </div>
+              </div>
+
+              <hr className="opacity-10" />
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                {/* Price Options */}
+                {product?.price?.length > 0 && (
+                  <div className="space-y-4">
+                    <p className="text-sm font-bold text-gray-400 uppercase tracking-widest">Select Plan</p>
+                    <div className="flex flex-col gap-3">
+                      {product.price.map((priceOption, i) => {
+                        const isSelected = selectedPrice?.type === priceOption.type && selectedPrice?.amount === priceOption.amount;
+                        return (
+                          <button
+                            key={priceOption._id || i}
+                            type="button"
+                            onClick={() => setSelectedPrice({ type: priceOption.type, amount: priceOption.amount })}
+                            className={`group flex items-center justify-between p-4 rounded-xl border-2 transition-all duration-300 ${isSelected ? "bg-primary/5 border-primary shadow-[0_0_20px_rgba(var(--primary),0.1)]" : "bg-white border-gray-100 hover:border-primary/30"}`}
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className={`w-2 h-2 rounded-full transition-colors ${isSelected ? "bg-primary" : "bg-gray-200"}`} />
+                              <span className={`font-bold text-sm capitalize ${isSelected ? "text-primary" : "text-gray-600"}`}>{priceOption?.type}</span>
+                            </div>
+                            <span className={`font-extrabold ${isSelected ? "text-primary" : "text-gray-900"}`}>₹{priceOption?.amount}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* Availability */}
+                {product?.vacancies && product.vacancies.length > 0 && (
+                  <div className="space-y-4">
+                    <p className="text-sm font-bold text-gray-400 uppercase tracking-widest">Availability</p>
+                    <div className="flex flex-col gap-3">
+                      {product.vacancies.map((v, idx) => (
+                        <button
+                          key={idx}
+                          type="button"
+                          onClick={() => setSelectedVacancy(v.count > 0 ? v.type : "")}
+                          disabled={v.count === 0}
+                          className={`flex justify-between items-center p-4 rounded-xl border-2 transition-all duration-300 ${v.count === 0 ? "bg-gray-50 border-gray-100 opacity-50 grayscale" : selectedVacancy === v.type ? "bg-primary/5 border-primary shadow-[0_0_20px_rgba(var(--primary),0.1)]" : "bg-white border-gray-100 hover:border-primary/30"}`}
+                        >
+                          <span className={`font-bold text-sm ${selectedVacancy === v.type ? "text-primary" : "text-gray-600"}`}>{v.type}</span>
+                          <span className={`text-xs font-black px-2.5 py-1 rounded-lg ${v.count > 0 ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>
+                            {v.count > 0 ? `${v.count} LEFT` : "FULL"}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+              <div className="mt-4 flex justify-center pb-10">
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button className="w-full md:w-auto px-12 py-7 text-lg rounded-2xl shadow-lg transition-all font-bold">
+                      Contact Host & Book Now
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-[425px] flex flex-col gap-5">
+                    <DialogHeader>
+                      <DialogTitle className="text-center text-2xl font-bold">Contact now</DialogTitle>
+                    </DialogHeader>
+                    <div className="flex flex-col gap-2">
+                      <ContactComp />
+                    </div>
+                    <DialogDescription className="text-center font-medium">
+                      Contact the host and book your slot now
+                    </DialogDescription>
+                  </DialogContent>
+                </Dialog>
               </div>
             </div>
 
@@ -1035,200 +1135,10 @@ ${propertyTypeCategory ? `Type: ${propertyTypeCategory}\n` : ""}`;
                 </Button>
               </form>
             </section>
-          </div>
-
-          <div className="relative hidden md:block col-span-4 h-full">
-            <div className="sticky top-24 overflow-hidden rounded-sm w-full border p-6 bg-white/5 backdrop-blur-sm flex flex-col gap-3">
-              <p className="flex items-center gap-1">Starting Price</p>
-              <h1 className="text-3xl flex items-end gap-1">
-                {/* Access the first price option's amount */}₹
-                {product?.price?.[0]?.amount || 0}
-                <span className="text-sm text-black/50">/ Month</span>{" "}
-                {product?.price?.length > 1 && (
-                  <span className="text-xs text-primary">
-                    (+Others price options)
-                  </span>
-                )}
-              </h1>
-
-              {/* Fixed: Changed p to div to avoid nesting issues */}
-              <div className="text-md font-medium text-gray-900 flex items-center gap-2">
-                Rating :
-                <div className="flex gap-1">
-                  {[...Array(5)].map((_, i) => (
-                    <Star
-                      key={i}
-                      className={cn(
-                        "h-3 w-3 text-accent",
-                        i < product?.rating ? "fill-accent" : ""
-                      )}
-                    />
-                  ))}
-                </div>
-              </div>
-
-              {/* Vacancy Count Display */}
-              {product?.vacancyCount !== undefined && (
-                <>
-                  <hr />
-                  <div className="flex flex-col gap-2">
-                    <p className="text-sm font-medium text-gray-600">
-                      Availability
-                    </p>
-
-                    {/* Detailed Vacancies */}
-                    {product.vacancies && product.vacancies.length > 0 ? (
-                      <div className="flex flex-col gap-2">
-                        {product.vacancies.map((v, idx) => (
-                          <button
-                            key={idx}
-                            type="button"
-                            onClick={() =>
-                              setSelectedVacancy(v.count > 0 ? v.type : "")
-                            }
-                            disabled={v.count === 0}
-                            className={`flex justify-between items-center p-3 rounded-lg border-2 transition-all duration-200 ${v.count === 0
-                                ? "bg-gray-100 border-gray-200 cursor-not-allowed opacity-60"
-                                : selectedVacancy === v.type
-                                  ? "bg-primary/10 border-primary shadow-md"
-                                  : "bg-gray-50 border-gray-200 hover:border-primary/50 hover:bg-primary/5 cursor-pointer"
-                              }`}
-                          >
-                            <span
-                              className={`text-sm font-medium ${selectedVacancy === v.type
-                                  ? "text-primary"
-                                  : "text-gray-700"
-                                }`}
-                            >
-                              {selectedVacancy === v.type && "✓ "}
-                              {v.type}
-                            </span>
-                            <span
-                              className={`text-xs font-bold px-2 py-1 rounded-md ${v.count > 0
-                                  ? "bg-green-100 text-green-700"
-                                  : "bg-red-100 text-red-700"
-                                }`}
-                            >
-                              {v.count > 0 ? `${v.count} left` : "Full"}
-                            </span>
-                          </button>
-                        ))}
-                        <div className="flex justify-between items-center mt-1 pt-2 border-t border-dashed">
-                          <span className="text-sm font-bold text-gray-900">
-                            Total Vacancies
-                          </span>
-                          <span className="text-sm font-bold text-green-600">
-                            {product.vacancyCount}
-                          </span>
-                        </div>
-                      </div>
-                    ) : (
-                      /* Fallback to simple count if no details */
-                      <div
-                        className={`p-3 rounded-xl border ${product.vacancyCount > 0
-                            ? "bg-green-50 border-green-200"
-                            : "bg-red-50 border-red-200"
-                          }`}
-                      >
-                        <p
-                          className={`text-center font-bold ${product.vacancyCount > 0
-                              ? "text-green-700"
-                              : "text-red-700"
-                            }`}
-                        >
-                          {product.vacancyCount > 0
-                            ? `${product.vacancyCount} Vacancies Available`
-                            : "No Vacancies Available"}
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                </>
-              )}
-
-              {/* Map the price array instead of priceOptions */}
-              {product?.price?.length > 0 && (
-                <>
-                  <hr />
-                  <div className="flex flex-col gap-3 mt-1">
-                    {product.price.map((priceOption, i) => {
-                      const isSelected =
-                        selectedPrice?.type === priceOption.type &&
-                        selectedPrice?.amount === priceOption.amount;
-                      return (
-                        <button
-                          key={priceOption._id || i}
-                          type="button"
-                          onClick={() =>
-                            setSelectedPrice({
-                              type: priceOption.type,
-                              amount: priceOption.amount,
-                            })
-                          }
-                          className={`group flex items-center gap-3 p-3 rounded-xl border-2 transition-all duration-200 cursor-pointer ${isSelected
-                              ? "bg-primary/10 border-primary shadow-md"
-                              : "bg-primary/5 border-gray-200 hover:border-primary/50 hover:bg-primary/10"
-                            }`}
-                        >
-                          <div
-                            className={`p-1.5 rounded-md transition-all duration-300 ${isSelected
-                                ? "relative flex items-center justify-center "
-                                : "bg-gray-800/70 group-hover:bg-gray-900"
-                              }`}
-                          >
-                            {isSelected && (
-                              <span className="text-primary absolute text-xs">
-                                ✓
-                              </span>
-                            )}
-                          </div>
-                          <div className="flex items-center justify-between w-full">
-                            <div
-                              className={`font-medium text-sm transition-colors duration-300 capitalize ${isSelected
-                                  ? "text-primary font-bold"
-                                  : "text-gray-700 group-hover:text-gray-900"
-                                }`}
-                            >
-                              {/* Use type instead of description */}
-                              {priceOption?.type}
-                            </div>
-                            <div
-                              className={`font-bold text-md ${isSelected ? "text-primary" : ""
-                                }`}
-                            >
-                              ₹{priceOption?.amount}
-                            </div>
-                          </div>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </>
-              )}
-
-              <div className="">
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <Button className="w-full py-6">Contact now</Button>
-                  </DialogTrigger>
-                  <DialogContent className="sm:max-w-[425px] flex flex-col gap-5">
-                    <AlertDialogHeader>
-                      <DialogTitle className="text-center">
-                        Contact now
-                      </DialogTitle>
-                    </AlertDialogHeader>
-                    <div className="flex flex-col gap-2">
-                      <ContactComp />
-                    </div>
-                    <DialogDescription className="text-center">
-                      Contact the host and book your slot now
-                    </DialogDescription>
-                  </DialogContent>
-                </Dialog>
-              </div>
             </div>
           </div>
-        </div>
+
+          {/* Contact Action */}
       </div>
 
       {/* Mobile Bottom Bar - Shows selection summary */}

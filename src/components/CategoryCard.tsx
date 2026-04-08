@@ -21,6 +21,8 @@ interface CategoryCardProps {
   size?: "hero" | "default";
 }
 
+
+
 /* ─── helpers ─── */
 function buildSearchUrl(
   value: string | undefined,
@@ -54,9 +56,15 @@ function CardContent({
     <div className={`category-bento-card group ${isHero ? "category-bento-hero" : "category-bento-default"}`}>
       {/* Background image with gradient overlay & shimmer loading state */}
       <div 
-        className={`category-bento-bg transition-colors duration-500 ${!isLoaded ? "shimmer bg-muted/30" : ""}`} 
+        className={`category-bento-bg transition-colors duration-500 ${!isLoaded ? "bg-muted/30" : ""}`} 
         style={{ transform: "translateZ(0)" }}
       >
+        <AnimatePresence>
+          {!isLoaded && (
+            <div className="absolute inset-0 z-20 bg-muted/10 backdrop-blur-[2px]" />
+          )}
+        </AnimatePresence>
+        
         <motion.img
           initial={{ opacity: 0, scale: 1.1 }}
           animate={{ 

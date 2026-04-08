@@ -17,6 +17,7 @@ import {
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { ChangeEvent, KeyboardEvent } from "react";
 import { Link, useSearchParams } from "react-router-dom";
+import { SyncLoader } from "react-spinners";
 
 interface Suggestion {
   _id: string;
@@ -142,9 +143,8 @@ function SearchAutocomplete({
       {open && (
         <div className="absolute top-full mt-1 left-0 w-full bg-white rounded-2xl shadow-xl border border-gray-200 z-50 overflow-hidden">
           {loading ? (
-            <div className="px-4 py-3 text-sm text-gray-500 flex items-center gap-2">
-              <span className="inline-block w-3 h-3 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-              Searching…
+            <div className="px-4 py-8 flex items-center justify-center">
+              <SyncLoader color="#328378" size={6} margin={2} />
             </div>
           ) : (
             suggestions.map((s, idx) => (
@@ -886,17 +886,11 @@ export default function SearchPage() {
 
 
         {/* Loading State */}
-        {isLoading ? (
-          <>
-            <div className="flex items-center gap-2">
-              <div className="h-4 w-32 bg-gray-200 rounded animate-pulse" />
-            </div>
-            <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {[...Array(8)].map((_, i) => (
-                <PropertyCardSkeleton key={i} />
-              ))}
-            </div>
-          </>
+        {isLoading || !isInitialized ? (
+          <div className="flex flex-col items-center justify-center min-h-[400px] gap-4 w-full">
+            <SyncLoader color="#328378" size={12} margin={3} />
+            <p className="text-muted-foreground animate-pulse text-sm">Searching properties...</p>
+          </div>
         ) : (
           <>
             {/* Results Count */}

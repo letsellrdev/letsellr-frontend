@@ -398,7 +398,7 @@ const AdminCategoryPage = () => {
 
                                         {/* Actions */}
                                         <TableCell className="text-right pr-4">
-                                            <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <div className="flex justify-end gap-2 transition-opacity">
                                                 <Button
                                                     variant="outline"
                                                     size="icon"

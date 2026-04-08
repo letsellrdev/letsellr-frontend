@@ -1,13 +1,12 @@
 import { SearchBar } from "@/components/SearchBar";
 import { SkipperCard } from "@/components/ui/SkipperCard";
-import { StatsSection } from "@/components/StatsSection";
 import { TestimonialsSection } from "@/components/TestimonialsSection";
 import { Footer } from "@/components/Footer";
 import FaqSection from "@/components/FaqSection";
 import Navbar from "@/components/Navbar";
 import { useEffect, useState } from "react";
 import instance from "@/lib/axios";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import heroVideo from "@/assets/hero.webm";
 import { ReactLenis } from 'lenis/react';
 import { Helmet } from "react-helmet-async";
@@ -17,6 +16,7 @@ const Index = () => {
   const [locationId, setLocationId] = useState("");
   const [locations, setLocations] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
+  const [isCategoriesLoading, setIsCategoriesLoading] = useState(false);
 
   // Structured Data (JSON-LD) for Local Business
   const structuredData = {
@@ -43,10 +43,13 @@ const Index = () => {
 
   const fetchCategories = async () => {
     try {
+      setIsCategoriesLoading(true);
       const res = await instance.get("/category");
       setCategories(res.data.data || []);
     } catch (error) {
       console.error("Error fetching categories:", error);
+    } finally {
+      setIsCategoriesLoading(false);
     }
   };
 
@@ -61,7 +64,7 @@ const Index = () => {
   };
 
   return (
-    <ReactLenis root>
+    <ReactLenis root options={{ lerp: 0.08, duration: 1.5, smoothWheel: true }}>
       <Helmet>
         <title>Letsellr - Verified PGs, Hostels & Apartments for Rent in Calicut / Kozhikode</title>
         <meta name="description" content="Discover premium, verified properties for students and professionals in Calicut (Kozhikode). We offer the best PGs, hostels, and flats for rent with modern amenities." />
@@ -216,6 +219,7 @@ const Index = () => {
                 categories={categories}
                 propertyType={propertyType}
                 locationId={locationId}
+                isLoading={isCategoriesLoading}
               />
             </div>
           </section>

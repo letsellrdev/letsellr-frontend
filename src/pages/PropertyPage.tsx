@@ -480,20 +480,13 @@ ${propertyTypeCategory ? `Type: ${propertyTypeCategory}\n` : ""}`;
     return (
       <>
         <a
-          href={`https://wa.me/91${contactPhone}?text=${getWhatsAppMessage()}`}
+          href={`https://wa.me/91${contactPhone.replace(/\s+/g, "")}?text=${getWhatsAppMessage()}`}
           target="_blank"
           rel="noopener noreferrer"
           className="flex items-center justify-center gap-3 w-full bg-primary hover:bg-green-600 text-white font-bold py-3 rounded-xl transition-all duration-200 shadow-md"
         >
           <MessageSquare className="w-5 h-5" />
           WhatsApp Chat
-        </a>
-        <a
-          href={`tel:+91${contactPhone}`}
-          className="flex items-center justify-center gap-3 w-full bg-primary/5 border border-primary/70 text-primary font-bold py-3 rounded-xl transition-all duration-200 shadow-md"
-        >
-          <Phone className="w-5 h-5" />
-          Call Host Directly
         </a>
       </>
     );

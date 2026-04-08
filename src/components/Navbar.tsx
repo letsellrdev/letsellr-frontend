@@ -1,15 +1,14 @@
 import { Link } from "react-router-dom";
-import { Button } from "./ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogTitle, DialogTrigger } from "./ui/dialog";
 import { AlertDialogHeader } from "./ui/alert-dialog";
 import { letsellr } from "@/db";
-import { LucidePhoneMissed, MessageSquare, Phone, PhoneCall } from "lucide-react";
+import { MessageSquare, Phone, PhoneCall } from "lucide-react";
 
 function ContactComp() {
   return (
     <>
       <a
-        href={`https://wa.me/91${letsellr?.contactNumber}`}
+        href={`https://wa.me/91${letsellr?.contactNumber?.replace(/\s+/g, "")}`}
         target="_blank"
         rel="noopener noreferrer"
         className="flex items-center justify-center gap-3 w-full bg-primary hover:bg-green-600 text-white font-bold py-3 rounded-xl transition-all duration-200 shadow-md"
@@ -18,7 +17,7 @@ function ContactComp() {
         WhatsApp Chat
       </a>
       <a
-        href={`tel:+91${letsellr?.contactNumber}`}
+        href={`tel:+91${letsellr?.contactNumber?.replace(/\s+/g, "")}`}
         className="flex items-center justify-center gap-3 w-full bg-primary/5 border border-primary/70 text-primary font-bold py-3 rounded-xl transition-all duration-200 shadow-md"
       >
         <Phone className="w-5 h-5" />
@@ -39,23 +38,15 @@ export default function Navbar() {
               <h1 className="text-2xl font-bold text-primary">Letsellr</h1>
             </div>
           </Link>
-          <Dialog>
-            <DialogTrigger asChild>
-              <div className="flex items-center gap-2 cursor-pointer text-primary">
-                <PhoneCall className="w-4 h-4" />
-                Contact Us
-              </div>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[425px] flex flex-col gap-5">
-              <AlertDialogHeader>
-                <DialogTitle className="text-center">Contact now</DialogTitle>
-              </AlertDialogHeader>
-              <div className="flex flex-col gap-2">
-                <ContactComp />
-              </div>
-              <DialogDescription className="text-center">Contact the host and book your slot now</DialogDescription>
-            </DialogContent>
-          </Dialog>
+          <a
+            href={`https://wa.me/91${letsellr?.contactNumber?.replace(/\s+/g, "")}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-2 cursor-pointer text-primary hover:text-primary/80 transition-colors"
+          >
+            <PhoneCall className="w-4 h-4" />
+            Contact Us
+          </a>
         </div>
       </nav>
       <div className="relative h-16 md:h-20"></div>

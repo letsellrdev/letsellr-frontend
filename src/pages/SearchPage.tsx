@@ -13,7 +13,30 @@ import {
   ChevronLeft,
   ChevronRight,
   Building2,
+  ArrowLeft,
 } from "lucide-react";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerTrigger,
+  DrawerHeader,
+  DrawerTitle,
+} from "@/components/ui/drawer";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { ChangeEvent, KeyboardEvent } from "react";
 import { Link, useSearchParams } from "react-router-dom";
@@ -26,13 +49,12 @@ interface Suggestion {
 }
 
 /* ─── Self-contained search input with live auto-suggestions ─────────────── */
+/* ─── Self-contained search input with mobile Drawer and Desktop Autocomplete ─── */
 function SearchAutocomplete({
   value,
   onChange,
-  placeholder = "Search properties…",
+  placeholder = "Search properties...",
   className = "",
-  selectedLocationId = "",
-  locations = [] as { _id: string; title: string }[],
 }: {
   value: string;
   onChange: (val: string) => void;
@@ -41,136 +63,84 @@ function SearchAutocomplete({
   selectedLocationId?: string;
   locations?: { _id: string; title: string }[];
 }) {
-  const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
-  const [open, setOpen] = useState(false);
-  const [highlighted, setHighlighted] = useState(-1);
-  const [loading, setLoading] = useState(false);
-  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const wrapperRef = useRef<HTMLDivElement>(null);
-
-  const fetchSuggestions = useCallback(
-    async (q: string) => {
-      if (!q || q.length < 2) {
-        setSuggestions([]);
-        setOpen(false);
-        return;
-      }
-      setLoading(true);
-      try {
-        const params = new URLSearchParams({ query: q, limit: "8" });
-        if (selectedLocationId) params.append("locationId", selectedLocationId);
-        const res = await instance.get(`/property?${params.toString()}`);
-        const props: any[] = res.data.properties || [];
-        const mapped: Suggestion[] = props.map((p) => ({
-          _id: p._id,
-          title: p.title ?? p.name ?? "",
-          locationTitle:
-            p.location?.title ??
-            p.locationId?.title ??
-            locations.find(
-              (l) => l._id === (p.location ?? p.locationId)
-            )?.title ??
-            "",
-        }));
-        setSuggestions(mapped);
-        setOpen(mapped.length > 0);
-      } catch {
-        setSuggestions([]);
-        setOpen(false);
-      } finally {
-        setLoading(false);
-      }
-    },
-    [selectedLocationId, locations]
-  );
-
-  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const v = e.target.value;
-    onChange(v);
-    setHighlighted(-1);
-    if (timer.current) clearTimeout(timer.current);
-    timer.current = setTimeout(() => fetchSuggestions(v), 300);
-  };
-
-  const select = (s: Suggestion) => {
-    onChange(s.title);
-    setSuggestions([]);
-    setOpen(false);
-    setHighlighted(-1);
-  };
-
-  const onKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
-    if (!open || suggestions.length === 0) return;
-    if (e.key === "ArrowDown") {
-      e.preventDefault();
-      setHighlighted((i) => Math.min(i + 1, suggestions.length - 1));
-    } else if (e.key === "ArrowUp") {
-      e.preventDefault();
-      setHighlighted((i) => Math.max(i - 1, -1));
-    } else if (e.key === "Enter" && highlighted >= 0) {
-      e.preventDefault();
-      select(suggestions[highlighted]);
-    } else if (e.key === "Escape") {
-      setOpen(false);
-      setHighlighted(-1);
-    }
-  };
-
-  // Close on outside click
-  useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
-        setOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, []);
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
   return (
-    <div ref={wrapperRef} className={`relative ${className}`}>
-      <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5 pointer-events-none z-10" />
-      <Input
-        type="text"
-        placeholder={placeholder}
-        value={value}
-        onChange={handleChange}
-        onKeyDown={onKeyDown}
-        onFocus={() => { if (suggestions.length > 0) setOpen(true); }}
-        className={`pl-12 h-14 rounded-2xl border-gray-200`}
-        autoComplete="off"
-      />
-      {open && (
-        <div className="absolute top-full mt-1 left-0 w-full bg-white rounded-2xl shadow-xl border border-gray-200 z-50 overflow-hidden">
-          {loading ? (
-            <div className="px-4 py-8 flex items-center justify-center">
-              <SyncLoader color="#328378" size={6} margin={2} />
-            </div>
-          ) : (
-            suggestions.map((s, idx) => (
-              <button
-                key={s._id}
-                type="button"
-                onMouseDown={(e) => { e.preventDefault(); select(s); }}
-                onMouseEnter={() => setHighlighted(idx)}
-                className={`w-full flex items-center gap-3 px-4 py-3 text-left text-sm transition-colors ${highlighted === idx
-                  ? "bg-primary/10 text-primary"
-                  : "hover:bg-gray-50 text-gray-800"
-                  }`}
-              >
-                <Building2 className="w-4 h-4 shrink-0 text-gray-400" />
-                <span className="flex-1 font-medium truncate">{s.title}</span>
-                {s.locationTitle && (
-                  <span className="flex items-center gap-1 text-xs text-gray-500 shrink-0">
-                    <MapPin className="w-3 h-3" />
-                    {s.locationTitle}
-                  </span>
-                )}
-              </button>
-            ))
+    <div className={`relative ${className}`}>
+      {/* ── Desktop View: Clean Input ── */}
+      <div className="hidden md:block w-full">
+        <div className="relative group">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5 pointer-events-none z-10 group-focus-within:text-primary transition-colors" />
+          <Input
+            type="text"
+            placeholder={placeholder}
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+            className="pl-12 h-14 rounded-2xl border-gray-200 focus-visible:ring-primary/20 focus-visible:border-primary transition-all shadow-sm hover:shadow-md bg-white text-base"
+            autoComplete="off"
+          />
+          {value && (
+             <button 
+              onClick={() => onChange("")}
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors bg-white/50 backdrop-blur-sm p-1 rounded-full"
+             >
+               <X className="w-4 h-4" />
+             </button>
           )}
         </div>
-      )}
+      </div>
+
+      {/* ── Mobile View: Search Trigger + Drawer ── */}
+      <div className="md:hidden w-full">
+        <Drawer open={drawerOpen} onOpenChange={setDrawerOpen}>
+          <DrawerTrigger asChild>
+            <button className="flex items-center gap-3 w-full px-4 h-14 rounded-2xl border border-gray-100 bg-white/50 backdrop-blur-sm text-gray-500 shadow-sm active:scale-[0.98] transition-all text-left group">
+              <Search className="w-5 h-5 text-gray-400 group-active:text-primary" />
+              <span className="flex-1 truncate text-sm font-medium">
+                {value || placeholder}
+              </span>
+              {value && (
+                <div 
+                  className="bg-gray-100 p-1 rounded-full cursor-pointer"
+                  onClick={(e) => { e.stopPropagation(); onChange(""); }}
+                >
+                  <X className="w-3.5 h-3.5 text-gray-500" />
+                </div>
+              )}
+            </button>
+          </DrawerTrigger>
+          <DrawerContent className="h-[25vh] sm:h-[30vh] flex flex-col focus:outline-none rounded-t-3xl">
+            <DrawerHeader className="px-4 pt-6 flex items-center gap-3 border-none">
+              <div className="flex-1 relative group bg-gray-50 rounded-2xl border border-gray-100 px-4 flex items-center">
+                <Search className="w-5 h-5 text-gray-400" />
+                <Input
+                  autoFocus
+                  placeholder="Type to search..."
+                  value={value}
+                  onChange={(e) => onChange(e.target.value)}
+                  className="border-none focus-visible:ring-0 text-lg h-14 bg-transparent pl-3 pr-0"
+                />
+                {value && (
+                  <button onClick={() => onChange("")} className="ml-2 bg-gray-200 p-1.5 rounded-full">
+                    <X className="w-4 h-4 text-gray-600" />
+                  </button>
+                )}
+              </div>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={() => setDrawerOpen(false)}
+                className="h-12 w-12 rounded-2xl bg-gray-50 border border-gray-100"
+              >
+                <ArrowLeft className="w-6 h-6" />
+              </Button>
+            </DrawerHeader>
+            <div className="px-6 py-6 border-none">
+               <p className="text-xs text-muted-foreground font-semibold uppercase tracking-widest text-center opacity-60">Results reflect as you type</p>
+            </div>
+          </DrawerContent>
+        </Drawer>
+      </div>
     </div>
   );
 }
@@ -262,6 +232,8 @@ export default function SearchPage() {
   const [categories, setCategories] = useState<{ _id: string; name: string }[]>([]);
   const [transactionTypes, setTransactionTypes] = useState<PropertyType[]>([]);
   const [tenantTypes, setTenantTypes] = useState<PropertyType[]>([]);
+  const [totalProperties, setTotalProperties] = useState(0);
+  const [sortBy, setSortBy] = useState(searchParams.get("sort") || "");
 
   // Pagination State
   const [currentPage, setCurrentPage] = useState(
@@ -317,6 +289,7 @@ export default function SearchPage() {
       if (searchQuery) params.append("query", searchQuery);
       if (selectedLocation) params.append("locationId", selectedLocation);
       if (selectedCategory) params.append("category", selectedCategory);
+      if (sortBy) params.append("sort", sortBy);
       if (selectedPropertyType) {
         params.append("propertyType", selectedPropertyType.toLowerCase());
       }
@@ -363,6 +336,7 @@ export default function SearchPage() {
       // Update state
       setProperties(fetchedProperties);
       setTotalPages(fetchedTotalPages);
+      setTotalProperties(response.data.totalproperty || fetchedProperties.length);
 
       // Save to cache
       searchCacheRef.set(cacheKey, {
@@ -426,6 +400,7 @@ export default function SearchPage() {
       params.set("propertyTypeCategory", selectedPropertyTypeCategory);
     if (minPrice) params.set("minPrice", minPrice);
     if (maxPrice) params.set("maxPrice", maxPrice);
+    if (sortBy) params.set("sort", sortBy);
 
     // Sync page to URL
     if (currentPage > 1) params.set("page", currentPage.toString());
@@ -446,6 +421,7 @@ export default function SearchPage() {
     selectedPropertyTypeCategory,
     minPrice,
     maxPrice,
+    sortBy,
     currentPage,
   ]);
 
@@ -463,6 +439,7 @@ export default function SearchPage() {
     selectedPropertyTypeCategory,
     minPrice,
     maxPrice,
+    sortBy,
     currentPage,
   ]);
 
@@ -479,6 +456,7 @@ export default function SearchPage() {
     selectedPropertyTypeCategory,
     minPrice,
     maxPrice,
+    sortBy,
   ]);
 
   const clearFilters = () => {
@@ -489,6 +467,7 @@ export default function SearchPage() {
     setSelectedPropertyTypeCategory("");
     setMinPrice("");
     setMaxPrice("");
+    setSortBy("");
     setCurrentPage(1);
   };
 
@@ -551,21 +530,25 @@ export default function SearchPage() {
               />
 
               {/* Location Select */}
-              <div className="w-64 relative">
-                <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5 pointer-events-none z-10" />
-                <select
-                  value={selectedLocation}
-                  onChange={(e) => setSelectedLocation(e.target.value)}
+              <div className="w-64 relative group">
+                <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5 pointer-events-none z-10 group-focus-within:text-primary transition-colors" />
+                <Select
+                  value={selectedLocation || "all-locations"}
+                  onValueChange={(val) => setSelectedLocation(val === "all-locations" ? "" : val)}
                   disabled={isLoading}
-                  className="w-full h-14 pl-12 pr-4 rounded-2xl border border-gray-200 bg-white cursor-pointer appearance-none focus:outline-none focus:ring-2 focus:ring-primary/50 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <option value="">All Locations</option>
-                  {locations.map((loc) => (
-                    <option key={loc._id} value={loc._id}>
-                      {loc.title}
-                    </option>
-                  ))}
-                </select>
+                  <SelectTrigger className="w-full h-14 pl-12 rounded-2xl border-gray-200 focus:ring-primary/20 focus:border-primary transition-all shadow-sm hover:shadow-md bg-white">
+                    <SelectValue placeholder="All Locations" />
+                  </SelectTrigger>
+                  <SelectContent className="rounded-xl shadow-xl">
+                    <SelectItem value="all-locations">All Locations</SelectItem>
+                    {locations.map((loc) => (
+                      <SelectItem key={loc._id} value={loc._id}>
+                        {loc.title}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
 
@@ -613,20 +596,23 @@ export default function SearchPage() {
                     <span className="text-xs font-bold text-gray-500 uppercase tracking-wider px-2">
                       All Categories
                     </span>
-                    <select
-                      value={selectedCategory}
-                      onChange={(e) => {
-                        setSelectedCategory(e.target.value);
-                      }}
-                      className="h-8 px-2 rounded-full border border-gray-200 bg-white text-xs focus:outline-none"
+                    <Select
+                      value={selectedCategory || "all-categories"}
+                      onValueChange={(val) => setSelectedCategory(val === "all-categories" ? "" : val)}
+                      disabled={isLoading}
                     >
-                      <option value="">Any</option>
-                      {categories.map((category) => (
-                        <option key={category._id} value={category._id}>
-                          {category.name}
-                        </option>
-                      ))}
-                    </select>
+                      <SelectTrigger className="h-8 px-2 rounded-full border border-gray-200 bg-white text-xs focus:ring-0 focus:ring-offset-0 focus:border-primary shrink-0 min-w-[100px]">
+                        <SelectValue placeholder="Any" />
+                      </SelectTrigger>
+                      <SelectContent className="rounded-xl shadow-lg">
+                        <SelectItem value="all-categories">Any</SelectItem>
+                        {categories.map((category) => (
+                          <SelectItem key={category._id} value={category._id}>
+                            {category.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
               </div>
@@ -731,21 +717,25 @@ export default function SearchPage() {
                   <label className="block text-sm font-medium mb-2">
                     Location
                   </label>
-                  <div className="relative">
-                    <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5 pointer-events-none z-10" />
-                    <select
-                      value={selectedLocation}
-                      onChange={(e) => setSelectedLocation(e.target.value)}
+                  <div className="relative group">
+                    <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5 pointer-events-none z-10 group-focus-within:text-primary transition-colors" />
+                    <Select
+                      value={selectedLocation || "all-locations"}
+                      onValueChange={(val) => setSelectedLocation(val === "all-locations" ? "" : val)}
                       disabled={isLoading}
-                      className="w-full h-12 pl-12 pr-4 rounded-2xl border border-gray-200 bg-white cursor-pointer appearance-none focus:outline-none focus:ring-2 focus:ring-primary/50 disabled:opacity-50"
                     >
-                      <option value="">All Locations</option>
-                      {locations.map((loc) => (
-                        <option key={loc._id} value={loc._id}>
-                          {loc.title}
-                        </option>
-                      ))}
-                    </select>
+                      <SelectTrigger className="w-full h-12 pl-12 rounded-2xl border-gray-200 bg-white focus:ring-primary/20">
+                        <SelectValue placeholder="All Locations" />
+                      </SelectTrigger>
+                      <SelectContent className="rounded-xl shadow-lg">
+                        <SelectItem value="all-locations">All Locations</SelectItem>
+                        {locations.map((loc) => (
+                          <SelectItem key={loc._id} value={loc._id}>
+                            {loc.title}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
 
@@ -754,21 +744,25 @@ export default function SearchPage() {
                   <label className="block text-sm font-medium mb-2">
                     Category
                   </label>
-                  <div className="relative">
-                    <Filter className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5 pointer-events-none z-10" />
-                    <select
-                      value={selectedCategory}
-                      onChange={(e) => setSelectedCategory(e.target.value)}
+                  <div className="relative group">
+                    <Filter className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5 pointer-events-none z-10 group-focus-within:text-primary transition-colors" />
+                    <Select
+                      value={selectedCategory || "all-categories"}
+                      onValueChange={(val) => setSelectedCategory(val === "all-categories" ? "" : val)}
                       disabled={isLoading}
-                      className="w-full h-12 pl-12 pr-4 rounded-2xl border border-gray-200 bg-white cursor-pointer appearance-none focus:outline-none focus:ring-2 focus:ring-primary/50 disabled:opacity-50"
                     >
-                      <option value="">All Categories</option>
-                      {categories.map((category) => (
-                        <option key={category._id} value={category._id}>
-                          {category.name}
-                        </option>
-                      ))}
-                    </select>
+                      <SelectTrigger className="w-full h-12 pl-12 rounded-2xl border-gray-200 bg-white focus:ring-primary/20">
+                        <SelectValue placeholder="All Categories" />
+                      </SelectTrigger>
+                      <SelectContent className="rounded-xl shadow-lg">
+                        <SelectItem value="all-categories">All Categories</SelectItem>
+                        {categories.map((category) => (
+                          <SelectItem key={category._id} value={category._id}>
+                            {category.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
 
@@ -893,14 +887,34 @@ export default function SearchPage() {
           </div>
         ) : (
           <>
-            {/* Results Count */}
-            <p className="text-gray-600">
-              Found{" "}
-              <span className="font-semibold text-gray-900">
-                {properties.length}
-              </span>{" "}
-              {properties.length === 1 ? "property" : "properties"}
-            </p>
+            {/* Results Count & Sort */}
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+              <p className="text-gray-600 bg-gray-50 px-4 py-2 rounded-xl border border-gray-100 flex items-center gap-2">
+                Found{" "}
+                <span className="font-bold text-primary text-lg">
+                  {totalProperties}
+                </span>{" "}
+                {totalProperties === 1 ? "property" : "properties"} matching your criteria
+              </p>
+
+              <div className="flex items-center gap-2 group">
+                <span className="text-xs font-bold text-gray-400 uppercase tracking-widest px-2">Sort by</span>
+                <Select
+                  value={sortBy || "newest"}
+                  onValueChange={(val) => setSortBy(val === "newest" ? "" : val)}
+                  disabled={isLoading}
+                >
+                  <SelectTrigger className="h-10 w-[180px] rounded-xl border-gray-200 focus:ring-primary/20 bg-white">
+                    <SelectValue placeholder="Sort by" />
+                  </SelectTrigger>
+                  <SelectContent className="rounded-xl shadow-xl">
+                    <SelectItem value="newest">Newest First</SelectItem>
+                    <SelectItem value="asc">Price: Low to High</SelectItem>
+                    <SelectItem value="des">Price: High to Low</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
 
             {/* Property Grid or Empty State */}
             {properties.length > 0 ? (
@@ -915,43 +929,89 @@ export default function SearchPage() {
 
                 {/* Pagination Controls */}
                 {totalPages > 1 && (
-                  <div className="flex justify-center items-center gap-2 mt-8">
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={() => handlePageChange(currentPage - 1)}
-                      disabled={currentPage === 1}
-                      className="h-10 w-10 rounded-full"
-                    >
-                      <ChevronLeft className="h-4 w-4" />
-                    </Button>
+                  <div className="flex flex-col sm:flex-row justify-center items-center gap-4 mt-8 pb-10">
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={() => handlePageChange(currentPage - 1)}
+                        disabled={currentPage === 1}
+                        className="h-10 w-10 rounded-full border-gray-200 hover:bg-primary/5 hover:text-primary transition-colors"
+                      >
+                        <ChevronLeft className="h-4 w-4" />
+                      </Button>
 
-                    <div className="flex items-center gap-1">
-                      {Array.from({ length: totalPages }, (_, i) => i + 1).map(
-                        (page) => (
-                          <Button
-                            key={page}
-                            variant={currentPage === page ? "default" : "ghost"}
-                            size="sm"
-                            onClick={() => handlePageChange(page)}
-                            className={`h-10 w-10 rounded-full ${currentPage === page ? "pointer-events-none" : ""
-                              }`}
-                          >
-                            {page}
-                          </Button>
-                        )
-                      )}
+                      <div className="flex items-center gap-1">
+                        {(() => {
+                          const range = [];
+                          const delta = 1; // Number of pages to show around current page
+                          
+                          for (let i = 1; i <= totalPages; i++) {
+                            if (
+                              i === 1 || 
+                              i === totalPages || 
+                              (i >= currentPage - delta && i <= currentPage + delta)
+                            ) {
+                              range.push(i);
+                            }
+                          }
+
+                          const rangeWithDots = [];
+                          let l;
+
+                          for (let i of range) {
+                            if (l) {
+                              if (i - l === 2) {
+                                rangeWithDots.push(l + 1);
+                              } else if (i - l !== 1) {
+                                rangeWithDots.push("...");
+                              }
+                            }
+                            rangeWithDots.push(i);
+                            l = i;
+                          }
+
+                          return rangeWithDots.map((page, index) => {
+                            if (page === "...") {
+                              return (
+                                <span key={`dots-${index}`} className="w-8 text-center text-muted-foreground font-medium">
+                                  ...
+                                </span>
+                              );
+                            }
+                            return (
+                              <Button
+                                key={page}
+                                variant={currentPage === page ? "default" : "ghost"}
+                                size="sm"
+                                onClick={() => handlePageChange(Number(page))}
+                                className={`h-10 w-10 rounded-full transition-all ${
+                                  currentPage === page 
+                                    ? "pointer-events-none shadow-md shadow-primary/20" 
+                                    : "hover:bg-primary/5 hover:text-primary"
+                                }`}
+                              >
+                                {page}
+                              </Button>
+                            );
+                          });
+                        })()}
+                      </div>
+
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={() => handlePageChange(currentPage + 1)}
+                        disabled={currentPage === totalPages}
+                        className="h-10 w-10 rounded-full border-gray-200 hover:bg-primary/5 hover:text-primary transition-colors"
+                      >
+                        <ChevronRight className="h-4 w-4" />
+                      </Button>
                     </div>
-
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={() => handlePageChange(currentPage + 1)}
-                      disabled={currentPage === totalPages}
-                      className="h-10 w-10 rounded-full"
-                    >
-                      <ChevronRight className="h-4 w-4" />
-                    </Button>
+                    
+                    <div className="text-sm text-muted-foreground font-medium sm:ml-2">
+                      Page <span className="text-foreground">{currentPage}</span> of {totalPages}
+                    </div>
                   </div>
                 )}
               </>

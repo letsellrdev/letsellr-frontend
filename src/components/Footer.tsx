@@ -97,7 +97,7 @@ export const Footer = ({ categories }: { categories: Category[] }) => {
               <ul className="space-y-4">
                 <li className="flex items-start gap-3 text-muted-foreground text-sm">
                   <Mail className="h-5 w-5 mt-0.5 flex-shrink-0" />
-                  <span>support@letsellr.com</span>
+                  <span>letsellr.dev@gmail.com</span>
                 </li>
                 <li className="flex items-start gap-3 text-muted-foreground text-sm">
                   <Phone className="h-5 w-5 mt-0.5 flex-shrink-0" />
@@ -123,7 +123,7 @@ export const Footer = ({ categories }: { categories: Category[] }) => {
                   <Instagram className="h-5 w-5" />
                 </a>
                 <a
-                  href={`https://wa.me/91${letsellr.contactNumber}`}
+                  href={`https://wa.me/91${letsellr.contactNumber.replace(/\s+/g, "")}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center justify-center w-10 h-10 rounded-full border hover:text-white hover:bg-black transition-colors duration-300"

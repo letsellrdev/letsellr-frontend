@@ -286,27 +286,52 @@ export const SearchBar = ({
       </div>
 
       {/* ── Search Bar Trigger ── */}
-      <div className="relative group perspective">
+      <div className="relative group max-w-2xl mx-auto w-full px-2">
+        {/* Subtle background glow effect */}
+        <div className="absolute -inset-0.5 bg-gradient-to-r from-primary/10 to-primary/5 rounded-[2rem] blur-sm opacity-0 group-hover:opacity-100 transition duration-500 cursor-pointer" />
+        
         <button
           onClick={() => setOpen(true)}
-          className="w-full bg-card hover:bg-card/90 border border-border/80 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] rounded-[2rem] p-3 pl-4 flex items-center gap-3 transition-all duration-300 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          className="relative w-full bg-gradient-soft hover:bg-gray-200/60 dark:hover:bg-secondary/30 backdrop-blur-sm border border-border/40 shadow-sm hover:shadow-md hover:border-primary/20 rounded-[1.5rem] p-2.5 pl-5 md:p-3 md:pl-6 flex items-center justify-between gap-4 transition-all duration-300 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2 active:scale-[0.985]"
         >
-          <div className="bg-primary/5 p-2 rounded-xl shrink-0 group-hover:scale-105 transition-transform duration-300">
-            <Search className="h-4 w-4 text-primary" />
+          {/* Left Side: Icon + Text */}
+          <div className="flex items-center gap-4 min-w-0">
+            <div className="shrink-0 flex items-center justify-center">
+              <Search className="h-4.5 w-4.5 group-hover:text-primary transition-all duration-300" />
+            </div>
+
+            <div className="flex flex-col items-start min-w-0">
+              <span className="text-sm md:text-base font-semibold text-foreground/80 group-hover:text-foreground transition-colors truncate">
+                {step === 2 && selectedLocationName ? (
+                  <span className="flex items-center gap-1.5">
+                    Searching in <span className="text-primary">{selectedLocationName}</span>
+                  </span>
+                ) : (
+                  null
+                )}
+              </span>
+              <span className="text-[11px] text-medium md:text-[14px] truncate transition-colors ">
+                {step === 2 
+                  ? "Browse categories or specific properties" 
+                  : "Search locations, areas, or properties"}
+              </span>
+            </div>
           </div>
 
-          <div className="flex flex-col items-start flex-1 min-w-0">
-            <span className="text-sm font-medium text-foreground">
-              {step === 2 && selectedLocationName ? `Searching in ${selectedLocationName}...` : "Find your next home..."}
-            </span>
-            <span className="text-xs text-muted-foreground truncate w-full flex items-center gap-1.5">
-              {step === 2 ? "Search for categories or properties" : "Search locations, builders, or properties"}
-            </span>
-          </div>
-
-          <div className="hidden sm:flex items-center gap-1 bg-secondary/60 px-2 py-1.5 rounded-lg border border-border/50 shrink-0">
-            <kbd className="font-sans text-[10px] font-medium text-muted-foreground">⌘</kbd>
-            <kbd className="font-sans text-[10px] font-medium text-muted-foreground">K</kbd>
+          {/* Right Side: Desktop Shortcuts & Mobile Indicator */}
+          <div className="flex items-center gap-3 shrink-0">
+            {/* Desktop Shortcuts */}
+            <div className="hidden sm:flex items-center gap-2">
+               
+              <div className="h-9 w-9 bg-primary/90 rounded-full flex items-center justify-center shadow-md shadow-primary/10 group-hover:bg-primary transition-colors">
+                 <CornerDownLeft className="h-4 w-4 text-white" />
+              </div>
+            </div>
+            
+            {/* Mobile Indicator */}
+            <div className="sm:hidden h-8 w-8 bg-primary/10 rounded-full flex items-center justify-center">
+               <div className="w-1.5 h-1.5 bg-primary rounded-full animate-pulse" />
+            </div>
           </div>
         </button>
       </div>

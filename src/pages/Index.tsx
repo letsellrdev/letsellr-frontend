@@ -7,16 +7,17 @@ import Navbar from "@/components/Navbar";
 import { useEffect, useState } from "react";
 import instance from "@/lib/axios";
 import { motion } from "framer-motion";
-import heroVideo from "@/assets/hero.webm";
 import { ReactLenis } from 'lenis/react';
 import { Helmet } from "react-helmet-async";
+import { useNavigate } from "react-router-dom";
+import { ChevronDown, Clock8 } from "lucide-react";
 
 const Index = () => {
   const [propertyType, setPropertyType] = useState("rent");
   const [locationId, setLocationId] = useState("");
-  const [locations, setLocations] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
   const [isCategoriesLoading, setIsCategoriesLoading] = useState(false);
+  const navigate = useNavigate();
 
   // Structured Data (JSON-LD) for Local Business
   const structuredData = {
@@ -35,12 +36,6 @@ const Index = () => {
     }
   };
 
-  useEffect(() => {
-    window.scrollTo(0, 0);
-    fetchLocations();
-    fetchCategories();
-  }, []);
-
   const fetchCategories = async () => {
     try {
       setIsCategoriesLoading(true);
@@ -53,13 +48,15 @@ const Index = () => {
     }
   };
 
-  const fetchLocations = async () => {
-    try {
-      const res = await instance.get("/location/important");
-      setLocations(res.data.data || []);
-    } catch (error) {
-      console.error("Error fetching locations:", error);
-      setLocations([]);
+  useEffect(() => {
+    window.scrollTo(0, 0);
+    fetchCategories();
+  }, []);
+
+  const scrollToSecondary = () => {
+    const section = document.getElementById("categories-section");
+    if (section) {
+      section.scrollIntoView({ behavior: "smooth" });
     }
   };
 
@@ -76,109 +73,124 @@ const Index = () => {
       <div className="min-h-screen bg-background/80 selection:bg-primary/20">
         <Navbar />
         <main className="relative overflow-hidden">
-          {/* ✨ Decorative Background Elements */}
-          <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none -z-10 bg-background/50">
-            <motion.div
-              className="absolute -top-[10%] -right-[5%] w-[600px] h-[600px] rounded-full bg-primary/10 blur-[80px] will-change-transform"
-              animate={{
-                scale: [1, 1.08, 1],
-                opacity: [0.3, 0.4, 0.3],
-                x: [0, 15, 0]
-              }}
-              transition={{ duration: 12, repeat: Infinity, ease: "linear" }}
-              style={{ transform: "translateZ(0)" }}
-            />
-            <motion.div
-              className="absolute top-[20%] -left-[10%] w-[500px] h-[500px] rounded-full bg-accent/10 blur-[64px] will-change-transform"
-              animate={{
-                scale: [1, 1.15, 1],
-                opacity: [0.2, 0.35, 0.2],
-                y: [0, 25, 0]
-              }}
-              transition={{ duration: 15, repeat: Infinity, ease: "linear", delay: 1 }}
-              style={{ transform: "translateZ(0)" }}
-            />
-          </div>
 
-          {/* 🚀 Hero Section */}
-          <section className="relative pb-8 md:pt-16 md:pb-12 px-6 md:px-12 lg:px-16">
-            <div className="max-w-[1440px] mx-auto grid lg:grid-cols-[1.1fr_0.9fr] gap-8 items-center">
-              {/* Left Content */}
+          {/* 🚀 Hero Section — Full Screen Background */}
+          <section className="hero-section relative flex items-center justify-center overflow-hidden">
+            {/* Background Image */}
+            <div
+              className="absolute inset-0 bg-center bg-cover bg-no-repeat"
+              style={{ backgroundImage: "url('/images/hero-bg.jpg')" }}
+            />
+            {/* Dark overlay */}
+            <div className="absolute inset-0 bg-black/55" />
+            {/* Primary color tint at bottom */}
+            <div className="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-black/40 to-transparent" />
+
+            {/* Content */}
+            <div className="relative z-10 w-full max-w-4xl mx-auto px-5 text-center flex flex-col items-center gap-8 py-24 md:py-32">
+
+              {/* Stats row */}
               <motion.div
-                initial={{ opacity: 0, x: -50 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-                className="space-y-7 min-w-0"
+                initial={{ opacity: 0, y: -16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+                className="flex items-center gap-8"
               >
-
-                <div className="space-y-4 pt-10 sm:pt-16 md:pt-0">
-                  <h1 className="text-3xl sm:text-5xl md:text-7xl lg:text-[3.5rem] xl:text-[4rem] 2xl:text-[4.5rem] lg:whitespace-nowrap font-bold tracking-tight text-foreground leading-[1.1]">
-                    Choose your next <span className="text-primary italic">home</span>
-                  </h1>
-
-                  <p className="text-lg md:text-xl text-muted-foreground leading-relaxed">
-                    Discover quality PGs, apartments, and hostels tailored for students and professionals. Your next chapter starts here.
-                  </p>
+                <div className="text-center">
+                  <p className="text-2xl font-bold text-white">500+</p>
+                  <p className="text-xs text-white/70 tracking-wide uppercase mt-0.5">Properties Listed</p>
                 </div>
-
-                {/* Advanced Search Bar */}
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.3, duration: 0.5 }}
-                  className="relative z-20"
-                >
-                  <div className="w-full">
-                    <SearchBar
-                      propertyType={propertyType}
-                      onPropertyTypeChange={setPropertyType}
-                      location={locationId}
-                      onLocationChange={setLocationId}
-                    />
-                  </div>
-                </motion.div>
-
-                {/* Stats / Trust */}
-                <div className="flex flex-wrap gap-8 items-center pl-12 pt-4">
-                  <div className="space-y-1">
-                    <h4 className="text-2xl font-bold">500+</h4>
-                    <p className="text-sm text-muted-foreground">Properties Listed</p>
-                  </div>
-                  <div className="w-[1px] h-10 bg-border hidden sm:block" />
-                  <div className="space-y-1">
-                    <h4 className="text-2xl font-bold">12k+</h4>
-                    <p className="text-sm text-muted-foreground">Happy Residents</p>
-                  </div>
+                <div className="w-px h-10 bg-white/20" />
+                <div className="text-center">
+                  <p className="text-2xl font-bold text-white">12k+</p>
+                  <p className="text-xs text-white/70 tracking-wide uppercase mt-0.5">Happy Residents</p>
                 </div>
               </motion.div>
 
-              {/* Right Illustration (Minimal Animated Video) */}
+              {/* Headline */}
               <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1], delay: 0.2 }}
-                className="relative hidden lg:block"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1], delay: 0.1 }}
+                className="space-y-4"
               >
-                <div className="relative z-10 max-h-[500px] overflow-hidden flex items-center justify-center rounded-[1rem]">
-                  <video
-                    src={heroVideo}
-                    autoPlay
-                    loop
-                    muted
-                    playsInline
-                    className="w-full h-full object-cover"
-                  />
+                <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white leading-[1.05] tracking-tight">
+                  Find the Place<br />
+                  <span className="italic text-primary-light">You&apos;ll Love</span> to Live
+                </h1>
+                <p className="text-base sm:text-lg text-white/75 max-w-lg mx-auto leading-relaxed">
+                  Verified PGs, hostels &amp; apartments in Calicut — trusted by students and professionals.
+                </p>
+              </motion.div>
+
+              {/* ── Glassmorphic Search Trigger (heroMode) ── */}
+              <motion.div
+                initial={{ opacity: 0, y: 24 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.25 }}
+                className="w-full max-w-2xl"
+              >
+                {/* Property type tabs */}
+                <div className="flex justify-center gap-2 mb-3">
+                  {["rent", "buy", "lease"].map((type) => {
+                    const isAvailable = type === "rent";
+                    return (
+                      <button
+                        key={type}
+                        onClick={() => isAvailable && setPropertyType(type)}
+                        className={`group relative px-5 py-2 rounded-full text-sm font-semibold capitalize transition-all duration-200 flex items-center gap-1.5 ${
+                          propertyType === type
+                            ? "bg-primary text-white shadow-lg shadow-primary/40"
+                            : isAvailable 
+                              ? "bg-white/20 text-white hover:bg-white/30 backdrop-blur-sm"
+                              : "bg-white/10 text-white/40 cursor-not-allowed backdrop-blur-[2px]"
+                        }`}
+                      >
+                        {type}
+                        {!isAvailable && (
+                          <span className="flex items-center gap-1 text-[9px] px-1.5 py-0.5 rounded-full bg-amber-400/20 text-amber-200 border border-amber-400/30 font-bold uppercase tracking-tighter">
+                            <Clock8 className="w-3 h-3" />
+                            Soon
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
                 </div>
 
-                {/* Backglow - matching primary color */}
-                <div className="absolute inset-0 bg-primary/20 blur-[80px] -z-10 rounded-full scale-95 shadow-[0_0_100px_rgba(var(--primary),0.2)]" />
+                {/* Glass Search Trigger — opens full CommandDialog */}
+                <SearchBar
+                  heroMode
+                  propertyType={propertyType}
+                  onPropertyTypeChange={setPropertyType}
+                  location={locationId}
+                  onLocationChange={setLocationId}
+                />
+
+                <p className="text-white/80 text-sm pt-2 text-center mt-3">
+                  🔮 explore latest listings with real-time updates and detailed property insights
+                </p>
               </motion.div>
+
+              {/* Scroll Down Button */}
+              <motion.button
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 1, duration: 1 }}
+                onClick={scrollToSecondary}
+                className="absolute bottom-6 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1 text-white/60 hover:text-white transition-colors cursor-pointer group"
+              >
+                <span className="text-[10px] font-bold uppercase tracking-[0.2em] opacity-0 group-hover:opacity-100 transition-opacity">Explore</span>
+                <div className="w-9 h-9 flex items-center justify-center rounded-full bg-white/5 border border-white/10 backdrop-blur-sm group-hover:bg-white/10 group-hover:scale-110 transition-all duration-300">
+                  <ChevronDown className="w-5 h-5 animate-bounce" />
+                </div>
+              </motion.button>
 
             </div>
           </section>
 
           {/* 📂 Categories Bento Section */}
-          <section className="pt-0 pb-12 px-6 relative overflow-hidden">
+          <section id="categories-section" className="pt-0 pb-12 px-6 relative overflow-hidden">
             {/* Subtle ambient background */}
             <div className="absolute inset-0 bg-gradient-soft pointer-events-none" />
             <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[700px] h-[400px] rounded-full bg-primary/5 blur-[100px] pointer-events-none" />
@@ -209,6 +221,8 @@ const Index = () => {
                   whileHover={{ scale: 1.04 }}
                   whileTap={{ scale: 0.96 }}
                   className="self-start md:self-auto px-5 py-2.5 rounded-full border border-primary/30 text-primary text-sm font-semibold hover:bg-primary hover:text-primary-foreground transition-all duration-300"
+                  onClick={() => navigate("/search")}
+
                 >
                   View all →
                 </motion.button>

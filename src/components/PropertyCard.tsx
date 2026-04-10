@@ -1,4 +1,3 @@
-import { Link } from "react-router-dom";
 import { Badge } from "./ui/badge";
 import { MapPin, Star } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -25,86 +24,114 @@ export interface Property {
   rating?: number;
   contactNumber?: string;
   vacancyCount?: number;
+  status?: string;
 }
-// const getInitials = (name: string) => {
-//   return name
-//     .split(" ")
-//     .map((word) => word.charAt(0).toUpperCase())
-//     .slice(0, 2)
-//     .join("");
-// };
 
 export default function PropertyCard(data: Property) {
+  const isActive = data?.status ? data.status === "active" : null;
+
   return (
-    <div className="md:max-w-96 bg-primary/ border border-primary/20 overflow-hidden rounded-md bg-white/5 backdrop-blur-sm">
-      <div className="group relative grid-cols-5 grid sm:grid-cols-1">
+    <div className="group bg-white rounded-2xl border border-gray-100 shadow-sm transition-all duration-300 hover:-translate-y-1 cursor-pointer flex flex-col fix-rounded-overflow">
+      {/* Image Section */}
+      <div className="relative w-full aspect-[4/3] bg-gray-100 shrink-0 fix-rounded-overflow">
         <img
-          src={data?.images[0]}
-          alt="Front of men&#039;s Artwork Tee in peach with white and brown dots forming an isometric cube."
-          className="col-span-2 h-full md:max-h-52 aspect-square w-full bg-gray-200 object-cover group-hover:opacity-75 lg:aspect-auto lg:h-72"
+          src={data?.images?.[0]}
+          alt={data?.title}
+          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
         />
-        <div className="col-span-3 p-5 flex flex-col gap-2">
-          <div className="flex flex-col md:flex-row md:justify-between gap-2">
-            {data?.price && data.price.length > 0 && (
-              <p className="text-md font-medium text-gray-900">
-                ₹{data.price[0].amount}
-                <span className="text-sm text-black/50"> /Month</span>{" "}
-                {data.price.length > 1 && <span className="text-xs text-primary">(+Others)</span>}
-              </p>
-            )}
 
-            {data?.price && (
-              <p className="text-md font-medium text-gray-900">
-                <div className="flex gap-1">
-                  {[...Array(5)].map((_, i) => (
-                    <Star key={i} className={cn("h-3 w-3 text-accent", i < data?.rating ? "fill-accent" : "")} />
-                  ))}
-                </div>
-              </p>
+        {/* Status badge — top left */}
+        {isActive !== null && (
+          <div
+            className={cn(
+              "absolute top-3 left-3 px-2.5 py-1 rounded-full text-xs font-semibold shadow-sm backdrop-blur-sm",
+              isActive
+                ? "bg-emerald-500/90 text-white"
+                : "bg-rose-500/90 text-white"
             )}
+          >
+            {isActive ? "Active" : "Inactive"}
           </div>
-          <h3 className="text-sm text-gray-700">
-            <Link to="#">{data?.title}</Link>
+        )}
+
+        {/* Vacancy badge — bottom right */}
+        {data?.vacancyCount !== undefined && (
+          <div
+            className={cn(
+              "absolute bottom-3 right-3 px-2.5 py-1 rounded-full text-xs font-semibold shadow-sm backdrop-blur-sm",
+              data.vacancyCount > 0
+                ? "bg-black/60 text-white"
+                : "bg-gray-700/70 text-gray-200"
+            )}
+          >
+            {data.vacancyCount > 0
+              ? `${data.vacancyCount} slot${data.vacancyCount > 1 ? "s" : ""} left`
+              : "No slots left"}
+          </div>
+        )}
+
+        {/* Category badge — bottom left */}
+        {data?.category?.name && (
+          <div className="absolute bottom-3 left-3 px-2.5 py-1 rounded-full text-xs font-medium bg-white/85 backdrop-blur-sm text-gray-700 shadow-sm">
+            {data.category.name}
+          </div>
+        )}
+      </div>
+
+      {/* Info Section */}
+      <div className="flex flex-col gap-1.5 p-4 flex-1">
+        {/* Title + Price row */}
+        <div className="flex items-start justify-between gap-2">
+          <h3 className="text-base sm:text-sm font-semibold text-gray-900 line-clamp-2 flex-1 leading-snug">
+            {data?.title}
           </h3>
-          {data?.location?.title && (
-            <div className="text-sm text-gray-500 flex gap-2 items-center">
-              <p className="flex items-center gap-1 font-medium">
-                <MapPin className="h-3 w-3 text-muted-foreground flex-shrink-0" />
-                <span>{data?.location?.title}</span>
+          {data?.price && data.price.length > 0 && (
+            <div className="text-right shrink-0">
+              <p className="text-base sm:text-sm font-bold text-primary leading-tight">
+                ₹{data.price[0].amount.toLocaleString()}
               </p>
-              {data?.location?.description && <p className="text-xs text-gray-400 line-clamp-1">{data?.location?.description}</p>}
+              <p className="text-[11px] sm:text-[10px] text-gray-400 leading-none">per month</p>
             </div>
           )}
+        </div>
 
-          {/* Vacancy Count Badge */}
-          {data?.vacancyCount !== undefined && (
-            <div className="flex items-center absolute left-2 md:left-auto top-2 md:right-2">
-              <span
-                className={`px-2 py-1 rounded-md text-xs font-medium ${data.vacancyCount > 0
-                  ? "bg-green-100 text-green-700 border border-green-200"
-                  : "bg-gray-100 text-gray-600 border border-gray-200"
-                  }`}
-              >
-                {data.vacancyCount > 0 ? `${data.vacancyCount} Slot Available` : "No Slot Available"}
-              </span>
-            </div>
-          )}
+        {/* Location */}
+        {data?.location?.title && (
+          <div className="flex items-center gap-1 text-gray-500">
+            <MapPin className="w-3 h-3 shrink-0" />
+            <span className="text-xs truncate">{data.location.title}</span>
+          </div>
+        )}
 
-          <p className="text-sm text-gray-500 sm:flex gap-1 hidden">
-            {data?.amenity
-              ?.split(",")
-              ?.filter((e) => e?.trim())
-              ?.slice(0, 3)
-              ?.map((value) => {
-                const title = value?.trim();
+        {/* Amenity badges */}
+        {data?.amenity && (
+          <div className="flex flex-wrap gap-1 mt-1">
+            {data.amenity
+              .split(",")
+              .filter((e) => e?.trim())
+              .slice(0, 3)
+              .map((value) => {
+                const title = value.trim();
                 return (
-                  <Badge variant="outline" key={title} className="whitespace-nowrap">
+                  <Badge
+                    variant="outline"
+                    key={title}
+                    className="text-[10px] px-2 py-0.5 rounded-full border-gray-200 text-gray-500 font-normal whitespace-nowrap"
+                  >
                     {title}
                   </Badge>
                 );
               })}
-          </p>
-        </div>
+            {data.amenity.split(",").filter((e) => e?.trim()).length > 3 && (
+              <Badge
+                variant="outline"
+                className="text-[10px] px-2 py-0.5 rounded-full border-gray-200 text-gray-400 font-normal"
+              >
+                +{data.amenity.split(",").filter((e) => e?.trim()).length - 3}
+              </Badge>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

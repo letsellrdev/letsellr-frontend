@@ -12,24 +12,7 @@ import {
   X,
   ChevronLeft,
   ChevronRight,
-  Building2,
-  ArrowLeft,
 } from "lucide-react";
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command";
-import {
-  Drawer,
-  DrawerContent,
-  DrawerTrigger,
-  DrawerHeader,
-  DrawerTitle,
-} from "@/components/ui/drawer";
 import {
   Select,
   SelectContent,
@@ -63,12 +46,9 @@ function SearchAutocomplete({
   selectedLocationId?: string;
   locations?: { _id: string; title: string }[];
 }) {
-  const [drawerOpen, setDrawerOpen] = useState(false);
-
   return (
     <div className={`relative ${className}`}>
-      {/* ── Desktop View: Clean Input ── */}
-      <div className="hidden md:block w-full">
+      <div className="w-full">
         <div className="relative group">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5 pointer-events-none z-10 group-focus-within:text-primary transition-colors" />
           <Input
@@ -80,66 +60,14 @@ function SearchAutocomplete({
             autoComplete="off"
           />
           {value && (
-             <button 
+            <button
               onClick={() => onChange("")}
               className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors bg-white/50 backdrop-blur-sm p-1 rounded-full"
-             >
-               <X className="w-4 h-4" />
-             </button>
+            >
+              <X className="w-4 h-4" />
+            </button>
           )}
         </div>
-      </div>
-
-      {/* ── Mobile View: Search Trigger + Drawer ── */}
-      <div className="md:hidden w-full">
-        <Drawer open={drawerOpen} onOpenChange={setDrawerOpen}>
-          <DrawerTrigger asChild>
-            <button className="flex items-center gap-3 w-full px-4 h-14 rounded-2xl border border-gray-100 bg-white/50 backdrop-blur-sm text-gray-500 shadow-sm active:scale-[0.98] transition-all text-left group">
-              <Search className="w-5 h-5 text-gray-400 group-active:text-primary" />
-              <span className="flex-1 truncate text-sm font-medium">
-                {value || placeholder}
-              </span>
-              {value && (
-                <div 
-                  className="bg-gray-100 p-1 rounded-full cursor-pointer"
-                  onClick={(e) => { e.stopPropagation(); onChange(""); }}
-                >
-                  <X className="w-3.5 h-3.5 text-gray-500" />
-                </div>
-              )}
-            </button>
-          </DrawerTrigger>
-          <DrawerContent className="h-[25vh] sm:h-[30vh] flex flex-col focus:outline-none rounded-t-3xl">
-            <DrawerHeader className="px-4 pt-6 flex items-center gap-3 border-none">
-              <div className="flex-1 relative group bg-gray-50 rounded-2xl border border-gray-100 px-4 flex items-center">
-                <Search className="w-5 h-5 text-gray-400" />
-                <Input
-                  autoFocus
-                  placeholder="Type to search..."
-                  value={value}
-                  onChange={(e) => onChange(e.target.value)}
-                  className="border-none focus-visible:ring-0 text-lg h-14 bg-transparent pl-3 pr-0"
-                />
-                {value && (
-                  <button onClick={() => onChange("")} className="ml-2 bg-gray-200 p-1.5 rounded-full">
-                    <X className="w-4 h-4 text-gray-600" />
-                  </button>
-                )}
-              </div>
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                onClick={() => setDrawerOpen(false)}
-                className="h-12 w-12 rounded-2xl bg-gray-50 border border-gray-100"
-              >
-                <ArrowLeft className="w-6 h-6" />
-              </Button>
-            </DrawerHeader>
-            <div className="px-6 py-6 border-none">
-               <p className="text-xs text-muted-foreground font-semibold uppercase tracking-widest text-center opacity-60">Results reflect as you type</p>
-            </div>
-          </DrawerContent>
-        </Drawer>
       </div>
     </div>
   );
@@ -244,7 +172,7 @@ export default function SearchPage() {
 
   // Simple in-memory cache for search results (cleared on page refresh)
   const searchCacheRef = useState(
-    () => new Map<string, { properties: any[]; totalPages: number }>()
+    () => new Map<string, { properties: any[]; totalPages: number; totalProperties: number }>()
   )[0];
 
   // Fetch locations from API
@@ -280,6 +208,8 @@ export default function SearchPage() {
       setTenantTypes([]);
     }
   };
+
+  console.log(categories)
 
   // Fetch properties from API
   const fetchProperties = async () => {
@@ -324,27 +254,30 @@ export default function SearchPage() {
         // Use cached results for instant display
         setProperties(cached.properties);
         setTotalPages(cached.totalPages);
+        setTotalProperties(cached.totalProperties);
         return;
       }
 
       setIsLoading(true);
 
       const response = await instance.get(`/property?${params.toString()}`);
-      const fetchedProperties = response.data.properties;
-      const fetchedTotalPages = response.data.totalpages || 1;
 
-      // Update state
+      // Defensive check for response data
+      const responseData = response.data || {};
+      const fetchedProperties = responseData.properties || (Array.isArray(responseData.data) ? responseData.data : []);
+      const fetchedTotalPages = responseData.totalpages || 1;
+      const totalProps = responseData.totalproperty ?? fetchedProperties.length;
+
       setProperties(fetchedProperties);
+      setTotalProperties(totalProps);
       setTotalPages(fetchedTotalPages);
-      setTotalProperties(response.data.totalproperty || fetchedProperties.length);
 
       // Save to cache
       searchCacheRef.set(cacheKey, {
         properties: fetchedProperties,
         totalPages: fetchedTotalPages,
+        totalProperties: totalProps,
       });
-
-      console.log(response.data.properties);
 
       // Simulating API call with timeout
       // await new Promise((resolve) => setTimeout(resolve, 1500));
@@ -359,20 +292,19 @@ export default function SearchPage() {
     }
   };
 
-  console.log(properties)
 
-  // Initialize from URL params only once when locations are loaded
+
+  // Initialize from URL params only once when locations & categories are loaded
   useEffect(() => {
-    if (locations.length > 0 && !isInitialized) {
+    if (locations.length > 0 && categories.length > 0 && !isInitialized) {
       const locationId = searchParams.get("locationId") || "";
       const locationName = searchParams.get("location") || "";
+      const catParam = searchParams.get("category") || "";
 
-      // If locationId is provided, use it directly
+      // 1. Handle Location
       if (locationId) {
         setSelectedLocation(locationId);
-      }
-      // If only location name is provided, try to find matching location ID
-      else if (locationName) {
+      } else if (locationName) {
         const matchedLocation = locations.find(
           (loc) => loc.title.toLowerCase() === locationName.toLowerCase()
         );
@@ -381,9 +313,22 @@ export default function SearchPage() {
         }
       }
 
+      // 2. Handle Category (map name/slug to ID)
+      if (catParam) {
+        const matchedCat = categories.find(
+          (c) => 
+            c._id === catParam || 
+            c.name.toLowerCase() === catParam.toLowerCase() ||
+            (c as any).value?.toLowerCase() === catParam.toLowerCase()
+        );
+        if (matchedCat) {
+          setSelectedCategory(matchedCat._id);
+        }
+      }
+
       setIsInitialized(true);
     }
-  }, [locations, searchParams, isInitialized]);
+  }, [locations, categories, searchParams, isInitialized]);
 
   // Sync URL params on filter changes (only after initialization)
   useEffect(() => {
@@ -501,7 +446,12 @@ export default function SearchPage() {
     window.scrollTo({ top: 0, behavior: "instant" });
     fetchLocations();
     fetchPropertyTypes();
-    instance.get("/category").then((res) => setCategories(res.data.data || [])).catch(() => { });
+    instance.get("/category").then((res) => {
+      const cats = res.data.data || [];
+      setCategories(cats);
+    }).catch((err) => {
+      console.error("Error fetching categories:", err);
+    });
   }, []);
 
   return (
@@ -514,12 +464,12 @@ export default function SearchPage() {
 
       <section className="max-w-7xl mx-auto py-7 px-5 flex flex-col gap-5 relative z-10">
         {/* Search and Filter Card */}
-        <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-gray-200 p-4 md:p-6 shadow-sm">
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-gray-200 p-4 md:p-5 shadow-sm">
           {/* Desktop Filters */}
-          <div className="hidden md:flex flex-col gap-4">
-            {/* Top row: Search + Location */}
-            <div className="flex gap-3">
-              {/* Search Input with auto-suggestions */}
+          <div className="hidden md:flex flex-col gap-3">
+            {/* Row 1: Search + Location + Price + Clear */}
+            <div className="flex gap-2 items-center">
+              {/* Search */}
               <SearchAutocomplete
                 value={searchQuery}
                 onChange={setSearchQuery}
@@ -530,14 +480,14 @@ export default function SearchPage() {
               />
 
               {/* Location Select */}
-              <div className="w-64 relative group">
-                <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5 pointer-events-none z-10 group-focus-within:text-primary transition-colors" />
+              <div className="relative group shrink-0">
+                <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4 pointer-events-none z-10" />
                 <Select
                   value={selectedLocation || "all-locations"}
                   onValueChange={(val) => setSelectedLocation(val === "all-locations" ? "" : val)}
                   disabled={isLoading}
                 >
-                  <SelectTrigger className="w-full h-14 pl-12 rounded-2xl border-gray-200 focus:ring-primary/20 focus:border-primary transition-all shadow-sm hover:shadow-md bg-white">
+                  <SelectTrigger className="w-44 h-14 pl-9 rounded-2xl border-gray-200 focus:ring-primary/20 bg-white text-sm">
                     <SelectValue placeholder="All Locations" />
                   </SelectTrigger>
                   <SelectContent className="rounded-xl shadow-xl">
@@ -550,121 +500,25 @@ export default function SearchPage() {
                   </SelectContent>
                 </Select>
               </div>
-            </div>
 
-            {/* Bottom row: Other filters + Search button */}
-            <div className="flex gap-3 items-center flex-wrap">
-              {/* Categories Grouped by Transaction Type */}
-              <div className="flex flex-col gap-2">
-                <div className="flex gap-4 items-center">
-                  {transactionTypes.map((tx) => (
-                    <div key={tx._id} className="flex flex-col gap-2">
-                      <span className="text-xs font-bold text-gray-500 uppercase tracking-wider px-2">
-                        {tx.name}
-                      </span>
-                      <div className="flex gap-2 flex-wrap">
-                        {categories.map((category) => {
-                          const isActive =
-                            selectedPropertyType.toLowerCase() === tx.name.toLowerCase() &&
-                            selectedCategory === category._id;
-                          return (
-                            <Button
-                              key={`${tx._id}-${category._id}`}
-                              variant={isActive ? "default" : "outline"}
-                              size="sm"
-                              className="rounded-full h-8 px-3"
-                              onClick={() => {
-                                if (isActive) {
-                                  setSelectedPropertyType("");
-                                  setSelectedCategory("");
-                                } else {
-                                  setSelectedPropertyType(tx.name.toLowerCase());
-                                  setSelectedCategory(category._id);
-                                }
-                              }}
-                            >
-                              {category.name}
-                            </Button>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  ))}
-
-                  {/* General Category Selection (when no transaction type is selected or for all) */}
-                  <div className="flex flex-col gap-2">
-                    <span className="text-xs font-bold text-gray-500 uppercase tracking-wider px-2">
-                      All Categories
-                    </span>
-                    <Select
-                      value={selectedCategory || "all-categories"}
-                      onValueChange={(val) => setSelectedCategory(val === "all-categories" ? "" : val)}
-                      disabled={isLoading}
-                    >
-                      <SelectTrigger className="h-8 px-2 rounded-full border border-gray-200 bg-white text-xs focus:ring-0 focus:ring-offset-0 focus:border-primary shrink-0 min-w-[100px]">
-                        <SelectValue placeholder="Any" />
-                      </SelectTrigger>
-                      <SelectContent className="rounded-xl shadow-lg">
-                        <SelectItem value="all-categories">Any</SelectItem>
-                        {categories.map((category) => (
-                          <SelectItem key={category._id} value={category._id}>
-                            {category.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              </div>
-
-              {/* Tenant Type Chips (Male, Female, etc.) */}
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-xs font-medium text-gray-500 mr-1">For:</span>
-                {tenantTypes.map((type) => (
-                  <Button
-                    key={type._id}
-                    type="button"
-                    variant={
-                      selectedPropertyTypeCategory === type._id
-                        ? "default"
-                        : "outline"
-                    }
-                    disabled={isLoading}
-                    onClick={() =>
-                      setSelectedPropertyTypeCategory(
-                        selectedPropertyTypeCategory === type._id
-                          ? ""
-                          : type._id
-                      )
-                    }
-                    className="h-8 rounded-full px-4 text-xs"
-                  >
-                    {type.name}
-                  </Button>
-                ))}
-              </div>
-
-              {/* Price Min/Max */}
-              <div className="w-40">
-                <Input
-                  type="number"
-                  min={0}
-                  placeholder="Min Price"
-                  value={minPrice}
-                  onChange={(e) => setMinPrice(e.target.value)}
-                  className="h-14 rounded-2xl border-gray-200"
-                />
-              </div>
-              <div className="w-40">
-                <Input
-                  type="number"
-                  min={0}
-                  placeholder="Max Price"
-                  value={maxPrice}
-                  onChange={(e) => setMaxPrice(e.target.value)}
-                  className="h-14 rounded-2xl border-gray-200"
-                />
-              </div>
+              {/* Min Price */}
+              <Input
+                type="number"
+                min={0}
+                placeholder="Min ₹"
+                value={minPrice}
+                onChange={(e) => setMinPrice(e.target.value)}
+                className="w-24 h-14 rounded-2xl border-gray-200 text-sm"
+              />
+              {/* Max Price */}
+              <Input
+                type="number"
+                min={0}
+                placeholder="Max ₹"
+                value={maxPrice}
+                onChange={(e) => setMaxPrice(e.target.value)}
+                className="w-24 h-14 rounded-2xl border-gray-200 text-sm"
+              />
 
               {/* Clear Button */}
               {hasActiveFilters && (
@@ -673,14 +527,100 @@ export default function SearchPage() {
                   size="icon"
                   onClick={clearFilters}
                   disabled={isLoading}
-                  className="h-14 w-14 rounded-2xl hover:bg-red-50 hover:text-red-600"
+                  className="h-14 w-14 rounded-2xl hover:bg-red-50 hover:text-red-600 shrink-0"
                   title="Clear all filters"
                 >
-                  <X className="w-5 h-5" />
+                  <X className="w-4 h-4" />
                 </Button>
               )}
+            </div>
 
-              {/* Search Button removed: auto-fetch on change */}
+            {/* Row 2: Category pills + Tenant type + Category dropdown */}
+            <h1 className="ml-2 text-sm font-semibold text-gray-900">Looking for</h1>
+            <div className="flex items-center gap-3 flex-wrap max-w-full">
+              {/* All Categories dropdown - compact width */}
+              <div className="w-[140px] shrink-0">
+                <Select
+                  value={selectedCategory || "all-categories"}
+                  onValueChange={(val) => setSelectedCategory(val === "all-categories" ? "" : val)}
+                  disabled={isLoading}
+                >
+                  <SelectTrigger className="h-8 px-3 rounded-full border border-gray-200 bg-white text-xs focus:ring-0 focus:ring-offset-0 focus:border-primary w-full">
+                    <SelectValue placeholder="Any" />
+                  </SelectTrigger>
+                  <SelectContent className="rounded-xl shadow-lg">
+                    <SelectItem value="all-categories">Any</SelectItem>
+                    {categories.map((category) => (
+                      <SelectItem key={category._id} value={category._id}>
+                        {category.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Transaction Type pills - Improved layout to prevent scroll-x */}
+              <div className="flex items-center gap-2 flex-wrap">
+                {transactionTypes.map((tx) => (
+                  <div key={tx._id} className="flex gap-1.5 items-center flex-wrap">
+                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider shrink-0 ml-1">
+                      {tx.name}
+                    </span>
+                    <div className="flex gap-1.5 flex-wrap">
+                      {categories.map((category) => {
+                        const isActive =
+                          selectedPropertyType.toLowerCase() === tx.name.toLowerCase() &&
+                          selectedCategory === category._id;
+                        return (
+                          <button
+                            key={`${tx._id}-${category._id}`}
+                            onClick={() => {
+                              if (isActive) {
+                                setSelectedPropertyType("");
+                                setSelectedCategory("");
+                              } else {
+                                setSelectedPropertyType(tx.name.toLowerCase());
+                                setSelectedCategory(category._id);
+                              }
+                            }}
+                            disabled={isLoading}
+                            className={`h-7 px-3 rounded-full text-xs font-medium border transition-all whitespace-nowrap ${isActive
+                                ? "bg-primary text-white border-primary shadow-sm"
+                                : "bg-white text-gray-600 border-gray-200 hover:border-primary/50 hover:text-primary"
+                              }`}
+                          >
+                            {category.name}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Divider */}
+              <div className="hidden lg:block w-px h-5 bg-gray-200 shrink-0 mx-1" />
+
+              {/* Tenant Type chips */}
+              <div className="flex gap-1.5 flex-wrap">
+                {tenantTypes.map((type) => (
+                  <button
+                    key={type._id}
+                    onClick={() =>
+                      setSelectedPropertyTypeCategory(
+                        selectedPropertyTypeCategory === type._id ? "" : type._id
+                      )
+                    }
+                    disabled={isLoading}
+                    className={`h-7 px-3 rounded-full text-xs font-medium border transition-all whitespace-nowrap ${selectedPropertyTypeCategory === type._id
+                        ? "bg-primary text-white border-primary shadow-sm"
+                        : "bg-white text-gray-600 border-gray-200 hover:border-primary/50 hover:text-primary"
+                      }`}
+                  >
+                    {type.name}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
 
@@ -752,10 +692,10 @@ export default function SearchPage() {
                       disabled={isLoading}
                     >
                       <SelectTrigger className="w-full h-12 pl-12 rounded-2xl border-gray-200 bg-white focus:ring-primary/20">
-                        <SelectValue placeholder="All Categories" />
+                        <SelectValue placeholder="Any" />
                       </SelectTrigger>
                       <SelectContent className="rounded-xl shadow-lg">
-                        <SelectItem value="all-categories">All Categories</SelectItem>
+                        <SelectItem value="all-categories">Any</SelectItem>
                         {categories.map((category) => (
                           <SelectItem key={category._id} value={category._id}>
                             {category.name}
@@ -889,12 +829,12 @@ export default function SearchPage() {
           <>
             {/* Results Count & Sort */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-              <p className="text-gray-600 bg-gray-50 px-4 py-2 rounded-xl border border-gray-100 flex items-center gap-2">
+              <p className="text-gray-600 bg-gray-50 px-2 py-1 rounded-xl border border-gray-100 flex items-center gap-2">
                 Found{" "}
-                <span className="font-bold text-primary text-lg">
+                <span className="font-bold text-primary text-sm">
                   {totalProperties}
                 </span>{" "}
-                {totalProperties === 1 ? "property" : "properties"} matching your criteria
+                {totalProperties === 1 ? "property" : "properties"}
               </p>
 
               <div className="flex items-center gap-2 group">
@@ -919,7 +859,7 @@ export default function SearchPage() {
             {/* Property Grid or Empty State */}
             {properties.length > 0 ? (
               <>
-                <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 sm:gap-4 md:gap-5">
                   {properties.map((property) => (
                     <Link key={property._id} to={`/property/${property._id}`}>
                       <PropertyCard {...property} />
@@ -945,11 +885,11 @@ export default function SearchPage() {
                         {(() => {
                           const range = [];
                           const delta = 1; // Number of pages to show around current page
-                          
+
                           for (let i = 1; i <= totalPages; i++) {
                             if (
-                              i === 1 || 
-                              i === totalPages || 
+                              i === 1 ||
+                              i === totalPages ||
                               (i >= currentPage - delta && i <= currentPage + delta)
                             ) {
                               range.push(i);
@@ -985,11 +925,10 @@ export default function SearchPage() {
                                 variant={currentPage === page ? "default" : "ghost"}
                                 size="sm"
                                 onClick={() => handlePageChange(Number(page))}
-                                className={`h-10 w-10 rounded-full transition-all ${
-                                  currentPage === page 
-                                    ? "pointer-events-none shadow-md shadow-primary/20" 
+                                className={`h-10 w-10 rounded-full transition-all ${currentPage === page
+                                    ? "pointer-events-none shadow-md shadow-primary/20"
                                     : "hover:bg-primary/5 hover:text-primary"
-                                }`}
+                                  }`}
                               >
                                 {page}
                               </Button>
@@ -1008,7 +947,7 @@ export default function SearchPage() {
                         <ChevronRight className="h-4 w-4" />
                       </Button>
                     </div>
-                    
+
                     <div className="text-sm text-muted-foreground font-medium sm:ml-2">
                       Page <span className="text-foreground">{currentPage}</span> of {totalPages}
                     </div>

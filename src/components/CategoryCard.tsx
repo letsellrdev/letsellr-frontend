@@ -57,7 +57,6 @@ function CardContent({
       {/* Background image with gradient overlay & shimmer loading state */}
       <div 
         className={`category-bento-bg transition-colors duration-500 ${!isLoaded ? "bg-muted/30" : ""}`} 
-        style={{ transform: "translateZ(0)" }}
       >
         <AnimatePresence>
           {!isLoaded && (
@@ -85,11 +84,11 @@ function CardContent({
       {/* Glass pill — availability badge (top‑right) */}
       <div className="category-bento-badge">
         {count === "0" || count === "0+" ? (
-          <span className="text-[11px] font-medium tracking-wide text-dark/70">Coming Soon</span>
+          <span className="text-[11px] font-medium tracking-wide text-gray-700 whitespace-nowrap">Coming Soon</span>
         ) : (
           <>
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-            <span className="text-[11px] font-medium tracking-wide text-dark/90">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="text-[11px] font-medium tracking-wide text-gray-900 whitespace-nowrap">
               {count} available
             </span>
           </>

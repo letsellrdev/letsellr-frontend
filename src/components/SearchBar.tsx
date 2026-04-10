@@ -43,6 +43,7 @@ interface SearchBarProps {
   onPropertyTypeChange: (type: string) => void;
   location: string;
   onLocationChange: (locationId: string) => void;
+  heroMode?: boolean;
 }
 
 // ─── Tab config ───────────────────────────────────────────────────────────────
@@ -58,6 +59,7 @@ export const SearchBar = ({
   onPropertyTypeChange,
   location,
   onLocationChange,
+  heroMode = false,
 }: SearchBarProps) => {
   const navigate = useNavigate();
 
@@ -79,7 +81,6 @@ export const SearchBar = ({
   const [isFetching, setIsFetching] = useState(false);
 
   // Filtered categories based on query in step 2
-  console.log(categories)
   const filteredCategories = step === 2 && query.trim()
     ? categories.filter((c) => c.name.toLowerCase().includes(query.toLowerCase()))
     : categories;
@@ -244,7 +245,7 @@ export const SearchBar = ({
 
   // ── General search ─────────────────────────────────────────────────────────
   const handleSearch = () => {
-    const params = new URLSearchParams({ propertyType: "rent" });
+    const params = new URLSearchParams({ propertyType: propertyType || "rent" });
     if (query.trim()) params.set("query", query.trim());
     if (selectedLocationId) params.set("locationId", selectedLocationId);
     setOpen(false);
@@ -252,95 +253,130 @@ export const SearchBar = ({
   };
 
   return (
-    <div className="w-full max-w-3xl mx-auto px-4 pt-6 flex flex-col gap-4">
-      {/* ── Property Type Tabs ── */}
-      <div className="flex w-full justify-center gap-2 md:gap-3">
-        {TABS.map(({ type, label, active }) =>
-          active ? (
-            <Button
-              key={type}
-              size="sm"
-              variant={propertyType === type ? "default" : "outline"}
-              className="rounded-[10px] h-8 md:h-9 px-4 md:px-6 text-xs md:text-sm capitalize transition-all"
-              onClick={() => onPropertyTypeChange(type)}
-            >
-              {label}
-            </Button>
-          ) : (
-            <div key={type} className="relative group">
+    <div className={heroMode ? "w-full" : "w-full max-w-3xl mx-auto px-4 pt-6 flex flex-col gap-4"}>
+      {/* ── Property Type Tabs (only in normal mode) ── */}
+      {!heroMode && (
+        <div className="flex w-full justify-center gap-2 md:gap-3">
+          {TABS.map(({ type, label, active }) =>
+            active ? (
               <Button
+                key={type}
                 size="sm"
-                variant="outline"
-                disabled
-                className="rounded-[10px] h-8 md:h-9 px-3 md:px-5 text-xs md:text-sm capitalize opacity-50 cursor-not-allowed gap-1.5"
+                variant={propertyType === type ? "default" : "outline"}
+                className="rounded-[10px] h-8 md:h-9 px-4 md:px-6 text-xs md:text-sm capitalize transition-all"
+                onClick={() => onPropertyTypeChange(type)}
               >
                 {label}
-                <span className="inline-flex items-center gap-0.5 bg-amber-100/50 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300 border border-amber-200/50 dark:border-amber-800 text-[9px] font-semibold px-1.5 py-0.5 rounded-full uppercase tracking-wide leading-none">
-                  <Clock className="w-2.5 h-2.5" />
-                  Soon
-                </span>
               </Button>
-            </div>
-          )
-        )}
-      </div>
+            ) : (
+              <div key={type} className="relative group">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled
+                  className="rounded-[10px] h-8 md:h-9 px-3 md:px-5 text-xs md:text-sm capitalize opacity-50 cursor-not-allowed gap-1.5"
+                >
+                  {label}
+                  <span className="inline-flex items-center gap-0.5 bg-amber-100/50 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300 border border-amber-200/50 dark:border-amber-800 text-[9px] font-semibold px-1.5 py-0.5 rounded-full uppercase tracking-wide leading-none">
+                    <Clock className="w-2.5 h-2.5" />
+                    Soon
+                  </span>
+                </Button>
+              </div>
+            )
+          )}
+        </div>
+      )}
 
-      {/* ── Search Bar Trigger ── */}
-      <div className="relative group max-w-2xl mx-auto w-full px-2">
-        {/* Subtle background glow effect */}
-        <div className="absolute -inset-0.5 bg-gradient-to-r from-primary/10 to-primary/5 rounded-[2rem] blur-sm opacity-0 group-hover:opacity-100 transition duration-500 cursor-pointer" />
-        
+      {/* ── Hero Mode Glassmorphic Trigger ── */}
+      {heroMode ? (
         <button
           onClick={() => setOpen(true)}
-          className="relative w-full bg-gradient-soft hover:bg-gray-200/60 dark:hover:bg-secondary/30 backdrop-blur-sm border border-border/40 shadow-sm hover:shadow-md hover:border-primary/20 rounded-[1.5rem] p-2.5 pl-5 md:p-3 md:pl-6 flex items-center justify-between gap-4 transition-all duration-300 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2 active:scale-[0.985]"
+          className="w-full group flex items-center gap-0 bg-white/10 hover:bg-white/15 backdrop-blur-xl border border-white/20 hover:border-white/35 rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.2)] transition-all duration-300 overflow-hidden active:scale-[0.99]"
         >
-          {/* Left Side: Icon + Text */}
-          <div className="flex items-center gap-4 min-w-0">
-            <div className="shrink-0 flex items-center justify-center">
-              <Search className="h-4.5 w-4.5 group-hover:text-primary transition-all duration-300" />
-            </div>
-
-            <div className="flex flex-col items-start min-w-0">
-              <span className="text-sm md:text-base font-semibold text-foreground/80 group-hover:text-foreground transition-colors truncate">
-                {step === 2 && selectedLocationName ? (
-                  <span className="flex items-center gap-1.5">
-                    Searching in <span className="text-primary">{selectedLocationName}</span>
-                  </span>
-                ) : (
-                  null
-                )}
-              </span>
-              <span className="text-[11px] text-medium md:text-[14px] truncate transition-colors ">
-                {step === 2 
-                  ? "Browse categories or specific properties" 
-                  : "Search locations, areas, or properties"}
-              </span>
+          {/* Query segment */}
+          <div className="flex-1 flex items-center gap-3 px-5 py-4 border-r border-white/15">
+            <Search className="w-4 h-4 text-white/70 shrink-0" />
+            <div className="text-left min-w-0">
+              <p className="text-[11px] text-white/50 uppercase tracking-widest font-medium">
+                {step === 2 ? "Now browse" : "What"}
+              </p>
+              <p className="text-sm text-white/90 font-medium truncate">
+                {step === 2
+                  ? "Pick a category below"
+                  : "Properties, landmarks..."}
+              </p>
             </div>
           </div>
 
-          {/* Right Side: Desktop Shortcuts & Mobile Indicator */}
-          <div className="flex items-center gap-3 shrink-0">
-            {/* Desktop Shortcuts */}
-            <div className="hidden sm:flex items-center gap-2">
-               
-              <div className="h-9 w-9 bg-primary/90 rounded-full flex items-center justify-center shadow-md shadow-primary/10 group-hover:bg-primary transition-colors">
-                 <CornerDownLeft className="h-4 w-4 text-white" />
-              </div>
-            </div>
-            
-            {/* Mobile Indicator */}
-            <div className="sm:hidden h-8 w-8 bg-primary/10 rounded-full flex items-center justify-center">
-               <div className="w-1.5 h-1.5 bg-primary rounded-full animate-pulse" />
+          {/* Location segment */}
+
+
+          {/* Search button */}
+          <div className="shrink-0 m-2">
+            <div className="bg-primary hover:bg-primary/90 text-white px-5 py-3 rounded-xl flex items-center gap-2 text-sm font-semibold shadow-lg shadow-primary/30 group-hover:shadow-primary/50 transition-all duration-200">
+              <Search className="w-4 h-4" />
+              <span className="hidden sm:inline">Search</span>
             </div>
           </div>
         </button>
-      </div>
+      ) : (
+        /* ── Normal Mode Trigger ── */
+        <div className="relative group max-w-2xl mx-auto w-full px-2">
+          {/* Subtle background glow effect */}
+          <div className="absolute -inset-0.5 bg-gradient-to-r from-primary/10 to-primary/5 rounded-[2rem] blur-sm opacity-0 group-hover:opacity-100 transition duration-500 cursor-pointer" />
+
+          <button
+            onClick={() => setOpen(true)}
+            className="relative w-full bg-gradient-soft hover:bg-gray-200/60 dark:hover:bg-secondary/30 backdrop-blur-sm border border-border/40 shadow-sm hover:shadow-md hover:border-primary/20 rounded-[1.5rem] p-2 pl-4 md:p-3 md:pl-6 flex items-center justify-between gap-4 transition-all duration-300 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2 active:scale-[0.985]"
+          >
+            {/* Left Side: Icon + Text */}
+            <div className="flex items-center gap-4 min-w-0">
+              <div className="shrink-0 flex items-center justify-center">
+                <Search className="h-4.5 w-4.5 group-hover:text-primary transition-all duration-300" />
+              </div>
+
+              <div className="flex flex-col items-start min-w-0">
+                <span className="text-sm md:text-base font-semibold text-foreground/80 group-hover:text-foreground transition-colors truncate">
+                  {step === 2 && selectedLocationName ? (
+                    <span className="flex items-center gap-1.5">
+                      Searching in <span className="text-primary">{selectedLocationName}</span>
+                    </span>
+                  ) : (
+                    null
+                  )}
+                </span>
+                <span className="text-[11px] text-gray-500 text-medium md:text-[14px] truncate transition-colors ">
+                  {step === 2
+                    ? "Browse categories"
+                    : "Search landmark or properties"}
+                </span>
+              </div>
+            </div>
+
+            {/* Right Side: Desktop Shortcuts & Mobile Indicator */}
+            <div className="flex items-center gap-3 shrink-0">
+              {/* Desktop Shortcuts */}
+              <div className="hidden sm:flex items-center gap-2">
+                <div className="h-9 w-9 bg-primary/90 rounded-full flex items-center justify-center shadow-md shadow-primary/10 group-hover:bg-primary transition-colors">
+                  <CornerDownLeft className="h-4 w-4 text-white" />
+                </div>
+              </div>
+
+              {/* Mobile Indicator */}
+              <div className="sm:hidden h-8 w-8 bg-primary/10 rounded-full flex items-center justify-center">
+                <div className="w-1.5 h-1.5 bg-primary rounded-full animate-pulse" />
+              </div>
+            </div>
+          </button>
+        </div>
+      )}
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="overflow-hidden p-0 max-sm:h-screen max-sm:max-w-none max-sm:rounded-none max-sm:border-0 max-sm:top-0 max-sm:left-0 max-sm:translate-x-0 max-sm:translate-y-0 [&>button]:hidden max-w-2xl border border-border/60 shadow-2xl rounded-2xl bg-background sm:bg-background/95 sm:backdrop-blur-xl transition-all duration-300">
           <Command
             shouldFilter={false} // Disable internal filtering, we filter/sort locally + API
-            className="[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group-heading]]:text-muted-foreground [&_[cmdk-group]:not([hidden])_~[cmdk-group]]:pt-0 [&_[cmdk-group]]:px-2 [&_[cmdk-input-wrapper]_svg]:h-5 [&_[cmdk-input-wrapper]_svg]:w-5 [&_[cmdk-input]]:h-14 sm:[&_[cmdk-input]]:h-12 [&_[cmdk-item]]:px-4 [&_[cmdk-item]]:py-4 sm:[&_[cmdk-item]]:px-2 sm:[&_[cmdk-item]]:py-3 [&_[cmdk-item]_svg]:h-5 [&_[cmdk-item]_svg]:w-5 bg-transparent"
+            className="[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group-heading]]:text-muted-foreground [&_[cmdk-group]:not([hidden])_~[cmdk-group]]:pt-0 [&_[cmdk-group]]:px-2 [&_[cmdk-input-wrapper]_svg]:h-5 [&_[cmdk-input-wrapper]_svg]:w-5 [&_[cmdk-input]]:h-12 sm:[&_[cmdk-input]]:h-12 [&_[cmdk-item]]:px-4 [&_[cmdk-item]]:py-4 sm:[&_[cmdk-item]]:px-2 sm:[&_[cmdk-item]]:py-3 [&_[cmdk-item]_svg]:h-5 [&_[cmdk-item]_svg]:w-5 bg-transparent"
           >
             <CommandInput
               value={query}
@@ -359,8 +395,8 @@ export const SearchBar = ({
               onClose={() => setOpen(false)}
               placeholder={
                 step === 1
-                  ? "Search city or area..."
-                  : "Search categories or properties..."
+                  ? "Search city..."
+                  : "Search properties..."
               }
               className="border-0 focus:ring-0 text-base h-11"
               wrapperPrefix={
@@ -485,7 +521,7 @@ export const SearchBar = ({
               {query.trim() && (
                 <CommandGroup>
                   <CommandItem value="view-all" onSelect={() => handleSearch()} className="cursor-pointer text-primary">
-                    <Search className="mr-3 h-4 w-4" />
+                    <Search className=" h-4 w-4" />
                     <span className="font-medium">View all results for &quot;{query}&quot;</span>
                   </CommandItem>
                 </CommandGroup>

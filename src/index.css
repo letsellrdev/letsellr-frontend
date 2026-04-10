@@ -2,6 +2,24 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ── Hide scrollbars inside Command/Search modal ── */
+[cmdk-list] {
+  overflow-y: auto;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge */
+}
+[cmdk-list]::-webkit-scrollbar {
+  display: none; /* Chrome / Safari */
+}
+
+/* Hide any residual scrollbar inside Radix dialog content */
+[data-radix-scroll-area-viewport]::-webkit-scrollbar {
+  display: none;
+}
+[data-radix-scroll-area-viewport] {
+  scrollbar-width: none;
+}
+
 /* 
   🎨 Design System
   --------------------------------------------------------------------
@@ -147,6 +165,23 @@
 
   body {
     @apply bg-background text-foreground antialiased selection:bg-primary/20;
+    scrollbar-gutter: stable;
+  }
+
+  html {
+    scrollbar-gutter: stable;
+  }
+
+  /*
+   * Fix: Radix UI dialog adds padding-right to body to compensate for
+   * scrollbar disappearing, but since we use scrollbar-gutter: stable
+   * the gutter is always reserved — so we zero out that compensation
+   * to prevent the layout shift / auto-scroll when dialog opens.
+   */
+  body[data-scroll-locked] {
+    --removed-body-scroll-bar-size: 0px !important;
+    margin-right: 0 !important;
+    padding-right: 0 !important;
   }
 
   .glass-card {
@@ -197,6 +232,37 @@
       background-position: -200% 0;
     }
   }
+
+  /* Subtle gradient mask to fade edges of the marquee */
+  .marquee-mask {
+    mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+    -webkit-mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+  }
+
+  /* 
+     🛠️ Universal Fix for rounded-corners clipping glitch 
+     Prevents "sharp edges" during transitions/transforms.
+  */
+  .fix-rounded-overflow {
+    isolation: isolate;
+    overflow: hidden;
+    -webkit-mask-image: -webkit-radial-gradient(white, black);
+    mask-image: radial-gradient(white, black);
+    transform: translateZ(0);
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+  }
+
+  /* ── Hero section full-screen ── */
+  .hero-section {
+    min-height: 100svh;
+    width: 100%;
+  }
+
+  /* ── Primary-light for italic hero text ── */
+  .text-primary-light {
+    color: hsl(174, 70%, 68%);
+  }
 }
 
 /* ══════════════════════════════════════════
@@ -205,12 +271,11 @@
 
 /* ── Base card shell ── */
 .category-bento-card {
+  @apply fix-rounded-overflow;
   position: relative;
   width: 100%;
   height: 100%;
-  overflow: hidden;
   border-radius: 1.25rem;
-  isolation: isolate;
   border: 1px solid rgba(255, 255, 255, 0.12);
   box-shadow:
     0 0 0 1px rgba(255, 255, 255, 0.06) inset,
@@ -219,11 +284,18 @@
 
 /* ── Size variants ── */
 .category-bento-hero {
-  min-height: 360px;
+  min-height: 380px;
 }
 
 .category-bento-default {
-  min-height: 220px;
+  min-height: 240px;
+}
+
+@media (max-width: 768px) {
+  .category-bento-hero,
+  .category-bento-default {
+    min-height: 200px;
+  }
 }
 
 /* ── Full-bleed background image ── */
@@ -260,14 +332,16 @@
   z-index: 10;
   display: flex;
   align-items: center;
-  gap: 5px;
-  padding: 5px 11px;
+  gap: 6px;
+  padding: 6px 14px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.6);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.5);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+  white-space: nowrap;
+  max-width: calc(100% - 28px);
 }
 
 /* ── Glass footer bar: Premium Light Glass with subtle primary shadow ── */

@@ -165,12 +165,9 @@
 
   body {
     @apply bg-background text-foreground antialiased selection:bg-primary/20;
-    scrollbar-gutter: stable;
   }
 
-  html {
-    scrollbar-gutter: stable;
-  }
+
 
   /*
    * Fix: Radix UI dialog adds padding-right to body to compensate for
@@ -178,11 +175,7 @@
    * the gutter is always reserved — so we zero out that compensation
    * to prevent the layout shift / auto-scroll when dialog opens.
    */
-  body[data-scroll-locked] {
-    --removed-body-scroll-bar-size: 0px !important;
-    margin-right: 0 !important;
-    padding-right: 0 !important;
-  }
+
 
   .glass-card {
     background: var(--glass-bg);

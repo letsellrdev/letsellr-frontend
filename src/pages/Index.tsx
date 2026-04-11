@@ -10,7 +10,7 @@ import { motion } from "framer-motion";
 import { ReactLenis } from 'lenis/react';
 import { Helmet } from "react-helmet-async";
 import { useNavigate } from "react-router-dom";
-import { ChevronDown, Clock8 } from "lucide-react";
+import { ChevronDown, Clock8, Landmark } from "lucide-react";
 
 const Index = () => {
   const [propertyType, setPropertyType] = useState("rent");
@@ -115,8 +115,8 @@ const Index = () => {
                 className="space-y-4"
               >
                 <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white leading-[1.05] tracking-tight">
-                  Find the Place<br />
-                  <span className="italic text-primary-light">You&apos;ll Love</span> to Live
+                  Choose your next
+                  <span className="italic text-primary-light"> home</span>
                 </h1>
                 <p className="text-base sm:text-lg text-white/75 max-w-lg mx-auto leading-relaxed">
                   Verified PGs, hostels &amp; apartments in Calicut — trusted by students and professionals.
@@ -167,8 +167,8 @@ const Index = () => {
                   onLocationChange={setLocationId}
                 />
 
-                <p className="text-white/80 text-sm pt-2 text-center mt-3">
-                  🔮 explore latest listings with real-time updates and detailed property insights
+                <p className="text-white/75 text-sm pt-2 text-center mt-3">
+                  <Landmark className="inline mb-1 w-4 h-4" /> explore latest listings with real-time updates and detailed property insights
                 </p>
               </motion.div>
 
@@ -181,11 +181,10 @@ const Index = () => {
                 className="absolute bottom-6 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1 text-white/60 hover:text-white transition-colors cursor-pointer group"
               >
                 <span className="text-[10px] font-bold uppercase tracking-[0.2em] opacity-0 group-hover:opacity-100 transition-opacity">Explore</span>
-                <div className="w-9 h-9 flex items-center justify-center rounded-full bg-white/5 border border-white/10 backdrop-blur-sm group-hover:bg-white/10 group-hover:scale-110 transition-all duration-300">
+                <div className="w-9 h-9 flex items-center justify-center rounded-full   5 border border-white/10 backdrop-blur-sm group-hover:bg-white/10 group-hover:scale-110 transition-all duration-300">
                   <ChevronDown className="w-5 h-5 animate-bounce" />
                 </div>
               </motion.button>
-
             </div>
           </section>
 

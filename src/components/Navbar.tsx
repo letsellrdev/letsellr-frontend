@@ -71,7 +71,7 @@ export default function Navbar() {
           <Dialog>
             <DialogTrigger asChild>
               <button
-                className={`flex items-center gap-2 text-sm font-semibold px-4 py-2 rounded-full border transition-all duration-300 cursor-pointer ${
+                className={`flex items-center gap-2 text-sm font-semibold px-4 py-2 rounded-full border bg-transparent transition-all duration-300 cursor-pointer ${
                   transparent
                     ? "border-white/40 text-white hover:bg-white/15 backdrop-blur-sm"
                     : "border-primary/30 text-primary hover:bg-primary hover:text-white"

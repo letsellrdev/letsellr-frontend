@@ -56,7 +56,12 @@ const Index = () => {
   const scrollToSecondary = () => {
     const section = document.getElementById("categories-section");
     if (section) {
-      section.scrollIntoView({ behavior: "smooth" });
+      const navbarHeight = 80; // Approximate height of sticky navbar
+      const targetPosition = section.getBoundingClientRect().top + window.pageYOffset - navbarHeight;
+      window.scrollTo({
+        top: targetPosition,
+        behavior: "smooth"
+      });
     }
   };
 
@@ -138,13 +143,12 @@ const Index = () => {
                       <button
                         key={type}
                         onClick={() => isAvailable && setPropertyType(type)}
-                        className={`group relative px-5 py-2 rounded-full text-sm font-semibold capitalize transition-all duration-200 flex items-center gap-1.5 ${
-                          propertyType === type
+                        className={`group relative px-5 py-2 rounded-full text-sm font-semibold capitalize transition-all duration-200 flex items-center gap-1.5 ${propertyType === type
                             ? "bg-primary text-white shadow-lg shadow-primary/40"
-                            : isAvailable 
+                            : isAvailable
                               ? "bg-white/20 text-white hover:bg-white/30 backdrop-blur-sm"
                               : "bg-white/10 text-white/40 cursor-not-allowed backdrop-blur-[2px]"
-                        }`}
+                          }`}
                       >
                         {type}
                         {!isAvailable && (

@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Pagination } from "swiper/modules";
 import { ChevronLeft, ChevronRight, X, Plus } from "lucide-react";
@@ -53,8 +54,8 @@ const FullscreenGallery: React.FC<FullscreenGalleryProps> = ({
 
   if (!isOpen || images.length === 0) return null;
 
-  return (
-    <div className="fixed inset-0 bg-black z-50 flex items-center justify-center">
+  return createPortal(
+    <div className="fixed inset-0 bg-black z-[100] flex items-center justify-center">
       {/* Close Button */}
       <button
         onClick={onClose}
@@ -114,7 +115,8 @@ const FullscreenGallery: React.FC<FullscreenGalleryProps> = ({
           ))}
         </div>
       )}
-    </div>
+    </div>,
+    document.body
   );
 };
 

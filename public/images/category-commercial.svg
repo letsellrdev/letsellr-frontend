@@ -1,0 +1,189 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" fill="none">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="600" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#18181b"/><stop offset="100%" stop-color="#09090b"/>
+    </linearGradient>
+    <linearGradient id="glassWall" x1="0" y1="0" x2="0" y2="1" gradientUnits="objectBoundingBox">
+      <stop offset="0%" stop-color="#38bdf8" stop-opacity="0.25"/>
+      <stop offset="100%" stop-color="#0284c7" stop-opacity="0.1"/>
+    </linearGradient>
+    <linearGradient id="steelBeam" x1="0" y1="0" x2="0" y2="1" gradientUnits="objectBoundingBox">
+      <stop offset="0%" stop-color="#64748b"/><stop offset="100%" stop-color="#334155"/>
+    </linearGradient>
+    <linearGradient id="floorGrad" x1="0" y1="1" x2="0" y2="0" gradientUnits="objectBoundingBox">
+      <stop offset="0%" stop-color="#1e293b"/><stop offset="100%" stop-color="#334155"/>
+    </linearGradient>
+    <filter id="bldGlow">
+      <feDropShadow dx="0" dy="0" stdDeviation="20" flood-color="#38bdf8" flood-opacity="0.2"/>
+    </filter>
+    <filter id="signGlow">
+      <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
+      <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <!-- Background -->
+  <rect width="800" height="600" fill="url(#bg)"/>
+  <!-- City glow on horizon -->
+  <ellipse cx="400" cy="520" rx="380" ry="100" fill="#38bdf8" opacity="0.05"/>
+  <!-- Ground / street -->
+  <rect x="0" y="520" width="800" height="80" fill="#1e293b"/>
+  <!-- Road markings -->
+  <rect x="0" y="520" width="800" height="8" fill="#334155"/>
+  <rect x="160" y="530" width="35" height="4" rx="2" fill="white" opacity="0.15"/>
+  <rect x="230" y="530" width="35" height="4" rx="2" fill="white" opacity="0.15"/>
+  <rect x="535" y="530" width="35" height="4" rx="2" fill="white" opacity="0.15"/>
+  <rect x="605" y="530" width="35" height="4" rx="2" fill="white" opacity="0.15"/>
+  <!-- Pavement -->
+  <rect x="0" y="518" width="800" height="8" fill="#0f172a"/>
+  <!-- Ground floor glow reflection -->
+  <rect x="180" y="514" width="440" height="20" rx="4" fill="#38bdf8" opacity="0.06"/>
+
+  <!-- Main Commercial Building (center, glass tower) -->
+  <rect x="220" y="140" width="360" height="385" rx="6" filter="url(#bldGlow)"/>
+  <!-- Steel frame structure -->
+  <rect x="220" y="140" width="360" height="385" rx="6" fill="url(#steelBeam)" opacity="0.95"/>
+  <!-- Glass facade panels (full grid) -->
+  <!-- Col dividers -->
+  <line x1="280" y1="140" x2="280" y2="525" stroke="#475569" stroke-width="2"/>
+  <line x1="340" y1="140" x2="340" y2="525" stroke="#475569" stroke-width="2"/>
+  <line x1="400" y1="140" x2="400" y2="525" stroke="#475569" stroke-width="2"/>
+  <line x1="460" y1="140" x2="460" y2="525" stroke="#475569" stroke-width="2"/>
+  <line x1="520" y1="140" x2="520" y2="525" stroke="#475569" stroke-width="2"/>
+  <!-- Floor dividers (every 40px from 140 to 520) -->
+  <line x1="220" y1="180" x2="580" y2="180" stroke="#475569" stroke-width="1.5"/>
+  <line x1="220" y1="220" x2="580" y2="220" stroke="#475569" stroke-width="1.5"/>
+  <line x1="220" y1="260" x2="580" y2="260" stroke="#475569" stroke-width="1.5"/>
+  <line x1="220" y1="300" x2="580" y2="300" stroke="#475569" stroke-width="1.5"/>
+  <line x1="220" y1="340" x2="580" y2="340" stroke="#475569" stroke-width="1.5"/>
+  <line x1="220" y1="380" x2="580" y2="380" stroke="#475569" stroke-width="1.5"/>
+  <line x1="220" y1="420" x2="580" y2="420" stroke="#475569" stroke-width="1.5"/>
+  <line x1="220" y1="460" x2="580" y2="460" stroke="#475569" stroke-width="1.5"/>
+  <line x1="220" y1="500" x2="580" y2="500" stroke="#475569" stroke-width="1.5"/>
+  <!-- Glass panels - lit/unlit pattern -->
+  <!-- Row 1 -->
+  <rect x="223" y="143" width="54" height="34" rx="2" fill="url(#glassWall)"/>
+  <rect x="283" y="143" width="54" height="34" rx="2" fill="#fbbf24" opacity="0.2"/>
+  <rect x="343" y="143" width="54" height="34" rx="2" fill="url(#glassWall)"/>
+  <rect x="403" y="143" width="54" height="34" rx="2" fill="#fbbf24" opacity="0.15"/>
+  <rect x="463" y="143" width="54" height="34" rx="2" fill="url(#glassWall)"/>
+  <rect x="523" y="143" width="54" height="34" rx="2" fill="#fbbf24" opacity="0.2"/>
+  <!-- Row 2 -->
+  <rect x="223" y="183" width="54" height="34" rx="2" fill="#fbbf24" opacity="0.18"/>
+  <rect x="283" y="183" width="54" height="34" rx="2" fill="url(#glassWall)"/>
+  <rect x="343" y="183" width="54" height="34" rx="2" fill="#fbbf24" opacity="0.25"/>
+  <rect x="403" y="183" width="54" height="34" rx="2" fill="url(#glassWall)"/>
+  <rect x="463" y="183" width="54" height="34" rx="2" fill="#fbbf24" opacity="0.2"/>
+  <rect x="523" y="183" width="54" height="34" rx="2" fill="url(#glassWall)"/>
+  <!-- Row 3 -->
+  <rect x="223" y="223" width="54" height="34" rx="2" fill="url(#glassWall)"/>
+  <rect x="283" y="223" width="54" height="34" rx="2" fill="#fbbf24" opacity="0.22"/>
+  <rect x="343" y="223" width="54" height="34" rx="2" fill="url(#glassWall)"/>
+  <rect x="403" y="223" width="54" height="34" rx="2" fill="#fbbf24" opacity="0.18"/>
+  <rect x="463" y="223" width="54" height="34" rx="2" fill="url(#glassWall)"/>
+  <rect x="523" y="223" width="54" height="34" rx="2" fill="#fbbf24" opacity="0.2"/>
+  <!-- Row 4 -->
+  <rect x="223" y="263" width="54" height="34" rx="2" fill="#fbbf24" opacity="0.15"/>
+  <rect x="283" y="263" width="54" height="34" rx="2" fill="url(#glassWall)"/>
+  <rect x="343" y="263" width="54" height="34" rx="2" fill="#fbbf24" opacity="0.28"/>
+  <rect x="403" y="263" width="54" height="34" rx="2" fill="url(#glassWall)"/>
+  <rect x="463" y="263" width="54" height="34" rx="2" fill="#fbbf24" opacity="0.18"/>
+  <rect x="523" y="263" width="54" height="34" rx="2" fill="url(#glassWall)"/>
+  <!-- Row 5 -->
+  <rect x="223" y="303" width="54" height="34" rx="2" fill="url(#glassWall)"/>
+  <rect x="283" y="303" width="54" height="34" rx="2" fill="#fbbf24" opacity="0.2"/>
+  <rect x="343" y="303" width="54" height="34" rx="2" fill="url(#glassWall)"/>
+  <rect x="403" y="303" width="54" height="34" rx="2" fill="#fbbf24" opacity="0.25"/>
+  <rect x="463" y="303" width="54" height="34" rx="2" fill="url(#glassWall)"/>
+  <rect x="523" y="303" width="54" height="34" rx="2" fill="#fbbf24" opacity="0.15"/>
+  <!-- Row 6 (more lit, busy floor) -->
+  <rect x="223" y="343" width="54" height="34" rx="2" fill="#fbbf24" opacity="0.3"/>
+  <rect x="283" y="343" width="54" height="34" rx="2" fill="#fbbf24" opacity="0.28"/>
+  <rect x="343" y="343" width="54" height="34" rx="2" fill="#fbbf24" opacity="0.32"/>
+  <rect x="403" y="343" width="54" height="34" rx="2" fill="#fbbf24" opacity="0.26"/>
+  <rect x="463" y="343" width="54" height="34" rx="2" fill="#fbbf24" opacity="0.3"/>
+  <rect x="523" y="343" width="54" height="34" rx="2" fill="#fbbf24" opacity="0.28"/>
+  <!-- Row 7 -->
+  <rect x="223" y="383" width="54" height="34" rx="2" fill="url(#glassWall)"/>
+  <rect x="283" y="383" width="54" height="34" rx="2" fill="#fbbf24" opacity="0.2"/>
+  <rect x="343" y="383" width="54" height="34" rx="2" fill="url(#glassWall)"/>
+  <rect x="403" y="383" width="54" height="34" rx="2" fill="#fbbf24" opacity="0.18"/>
+  <rect x="463" y="383" width="54" height="34" rx="2" fill="url(#glassWall)"/>
+  <rect x="523" y="383" width="54" height="34" rx="2" fill="#fbbf24" opacity="0.22"/>
+  <!-- Row 8 -->
+  <rect x="223" y="423" width="54" height="34" rx="2" fill="#fbbf24" opacity="0.2"/>
+  <rect x="283" y="423" width="54" height="34" rx="2" fill="url(#glassWall)"/>
+  <rect x="343" y="423" width="54" height="34" rx="2" fill="#fbbf24" opacity="0.18"/>
+  <rect x="403" y="423" width="54" height="34" rx="2" fill="url(#glassWall)"/>
+  <rect x="463" y="423" width="54" height="34" rx="2" fill="#fbbf24" opacity="0.25"/>
+  <rect x="523" y="423" width="54" height="34" rx="2" fill="url(#glassWall)"/>
+  <!-- Lobby / ground floor -->
+  <rect x="220" y="463" width="360" height="62" rx="0" fill="#1e293b"/>
+  <!-- Lobby glass doors -->
+  <rect x="315" y="465" width="80" height="58" rx="2" fill="#38bdf8" opacity="0.12"/>
+  <rect x="315" y="465" width="80" height="58" rx="2" fill="none" stroke="#38bdf8" stroke-width="1.5" opacity="0.4"/>
+  <line x1="355" y1="465" x2="355" y2="523" stroke="#38bdf8" stroke-width="1.5" opacity="0.4"/>
+  <!-- Lobby signage -->
+  <rect x="225" y="468" width="80" height="20" rx="3" fill="#334155"/>
+  <text x="265" y="482" text-anchor="middle" font-family="'Inter','Segoe UI',sans-serif" font-size="9" fill="#94a3b8">RECEPTION</text>
+  <!-- Lobby steps -->
+  <rect x="195" y="523" width="410" height="7" rx="2" fill="#334155"/>
+  <rect x="186" y="527" width="428" height="6" rx="2" fill="#475569"/>
+  <!-- Company sign / logo board -->
+  <rect x="240" y="115" width="320" height="32" rx="6" fill="#0f172a" stroke="#38bdf8" stroke-width="1.5" filter="url(#signGlow)"/>
+  <text x="400" y="136" text-anchor="middle" font-family="'Inter','Segoe UI',sans-serif" font-size="13" font-weight="700" fill="#38bdf8" filter="url(#signGlow)">COMMERCIAL COMPLEX</text>
+  <!-- Rooftop elements -->
+  <rect x="350" y="96" width="6" height="50" rx="2" fill="#475569"/>
+  <circle cx="353" cy="94" r="6" fill="#ef4444" opacity="0.9" filter="url(#signGlow)"/>
+  <rect x="440" y="110" width="5" height="36" rx="1" fill="#475569"/>
+  <circle cx="442" cy="108" r="4" fill="#ef4444" opacity="0.7" filter="url(#signGlow)"/>
+  <!-- Rooftop HVAC units -->
+  <rect x="235" y="132" width="40" height="14" rx="3" fill="#334155"/>
+  <rect x="520" y="132" width="40" height="14" rx="3" fill="#334155"/>
+  <!-- Adjacent buildings (left) -->
+  <rect x="50" y="300" width="120" height="225" rx="4" fill="#1e293b" opacity="0.9"/>
+  <rect x="56" y="310" width="25" height="22" rx="2" fill="#fbbf24" opacity="0.2"/>
+  <rect x="87" y="310" width="25" height="22" rx="2" fill="#38bdf8" opacity="0.2"/>
+  <rect x="118" y="310" width="25" height="22" rx="2" fill="#fbbf24" opacity="0.25"/>
+  <rect x="56" y="342" width="25" height="22" rx="2" fill="#38bdf8" opacity="0.2"/>
+  <rect x="87" y="342" width="25" height="22" rx="2" fill="#fbbf24" opacity="0.18"/>
+  <rect x="118" y="342" width="25" height="22" rx="2" fill="#38bdf8" opacity="0.2"/>
+  <rect x="56" y="374" width="25" height="22" rx="2" fill="#fbbf24" opacity="0.22"/>
+  <rect x="87" y="374" width="25" height="22" rx="2" fill="#38bdf8" opacity="0.18"/>
+  <rect x="118" y="374" width="25" height="22" rx="2" fill="#fbbf24" opacity="0.2"/>
+  <rect x="56" y="406" width="25" height="22" rx="2" fill="#38bdf8" opacity="0.2"/>
+  <rect x="87" y="406" width="25" height="22" rx="2" fill="#fbbf24" opacity="0.25"/>
+  <rect x="118" y="406" width="25" height="22" rx="2" fill="#38bdf8" opacity="0.18"/>
+  <rect x="55" y="455" width="80" height="70" rx="2" fill="#334155"/>
+  <rect x="60" y="458" width="30" height="67" rx="2" fill="#38bdf8" opacity="0.08"/>
+  <rect x="95" y="458" width="30" height="67" rx="2" fill="#38bdf8" opacity="0.08"/>
+  <!-- Adjacent buildings (right) -->
+  <rect x="630" y="280" width="120" height="245" rx="4" fill="#1e293b" opacity="0.9"/>
+  <rect x="636" y="290" width="25" height="22" rx="2" fill="#fbbf24" opacity="0.22"/>
+  <rect x="667" y="290" width="25" height="22" rx="2" fill="#38bdf8" opacity="0.2"/>
+  <rect x="698" y="290" width="25" height="22" rx="2" fill="#fbbf24" opacity="0.18"/>
+  <rect x="636" y="322" width="25" height="22" rx="2" fill="#38bdf8" opacity="0.2"/>
+  <rect x="667" y="322" width="25" height="22" rx="2" fill="#fbbf24" opacity="0.25"/>
+  <rect x="698" y="322" width="25" height="22" rx="2" fill="#38bdf8" opacity="0.18"/>
+  <rect x="636" y="354" width="25" height="22" rx="2" fill="#fbbf24" opacity="0.2"/>
+  <rect x="667" y="354" width="25" height="22" rx="2" fill="#38bdf8" opacity="0.2"/>
+  <rect x="698" y="354" width="25" height="22" rx="2" fill="#fbbf24" opacity="0.22"/>
+  <rect x="636" y="386" width="25" height="22" rx="2" fill="#38bdf8" opacity="0.25"/>
+  <rect x="667" y="386" width="25" height="22" rx="2" fill="#fbbf24" opacity="0.18"/>
+  <rect x="698" y="386" width="25" height="22" rx="2" fill="#38bdf8" opacity="0.2"/>
+  <rect x="645" y="450" width="80" height="75" rx="2" fill="#334155"/>
+  <rect x="650" y="453" width="30" height="72" rx="2" fill="#38bdf8" opacity="0.08"/>
+  <rect x="685" y="453" width="30" height="72" rx="2" fill="#38bdf8" opacity="0.08"/>
+  <!-- Street lamp posts -->
+  <rect x="148" y="464" width="5" height="58" rx="2" fill="#475569"/>
+  <path d="M151 464 Q151 446 168 446" stroke="#475569" stroke-width="4" fill="none" stroke-linecap="round"/>
+  <circle cx="168" cy="446" r="7" fill="#fbbf24" opacity="0.85" filter="url(#signGlow)"/>
+  <rect x="647" y="462" width="5" height="60" rx="2" fill="#475569"/>
+  <path d="M650 462 Q650 444 633 444" stroke="#475569" stroke-width="4" fill="none" stroke-linecap="round"/>
+  <circle cx="633" cy="444" r="7" fill="#fbbf24" opacity="0.85" filter="url(#signGlow)"/>
+  <!-- Stars -->
+  <circle cx="60" cy="60" r="1.5" fill="white" opacity="0.6"/>
+  <circle cx="180" cy="40" r="1" fill="white" opacity="0.4"/>
+  <circle cx="520" cy="50" r="1.5" fill="white" opacity="0.5"/>
+  <circle cx="700" cy="40" r="1" fill="white" opacity="0.4"/>
+  <circle cx="380" cy="32" r="1" fill="white" opacity="0.4"/>
+</svg>

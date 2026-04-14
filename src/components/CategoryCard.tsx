@@ -23,6 +23,40 @@ interface CategoryCardProps {
 
 
 
+/* ─── Category fallback illustrations (local SVGs, work offline) ─── */
+const CATEGORY_ILLUSTRATIONS: Record<string, string> = {
+  "pg-hostels":       "/images/category-pg-hostels.svg",
+  "hostel":           "/images/category-pg-hostels.svg",
+  "pg":               "/images/category-pg-hostels.svg",
+  "flat-apartments":  "/images/category-flat-apartments.svg",
+  "flat":             "/images/category-flat-apartments.svg",
+  "apartment":        "/images/category-flat-apartments.svg",
+  "apartments":       "/images/category-flat-apartments.svg",
+  "house-villas":     "/images/category-house-villas.svg",
+  "house":            "/images/category-house-villas.svg",
+  "villa":            "/images/category-house-villas.svg",
+  "villas":           "/images/category-house-villas.svg",
+  "land":             "/images/category-land.svg",
+  "plot":             "/images/category-land.svg",
+  "commercial":       "/images/category-commercial.svg",
+  "office":           "/images/category-commercial.svg",
+  "shop":             "/images/category-commercial.svg",
+};
+
+function getCategoryFallbackImage(
+  title: string,
+  value?: string,
+  isHero?: boolean
+): string {
+  const key = (value || title).toLowerCase().trim();
+  // Try exact match first, then partial match
+  if (CATEGORY_ILLUSTRATIONS[key]) return CATEGORY_ILLUSTRATIONS[key];
+  const partialKey = Object.keys(CATEGORY_ILLUSTRATIONS).find((k) => key.includes(k) || k.includes(key));
+  if (partialKey) return CATEGORY_ILLUSTRATIONS[partialKey];
+  // Final generic fallback
+  return isHero ? "/images/category-pg-hostels.svg" : "/images/category-flat-apartments.svg";
+}
+
 /* ─── helpers ─── */
 function buildSearchUrl(
   value: string | undefined,
@@ -48,7 +82,8 @@ function CardContent({
   image,
   count,
   size = "default",
-}: Pick<CategoryCardProps, "title" | "description" | "image" | "count" | "size">) {
+  value,
+}: Pick<CategoryCardProps, "title" | "description" | "image" | "count" | "size" | "value">) {
   const isHero = size === "hero";
   const [isLoaded, setIsLoaded] = useState(false);
 
@@ -72,7 +107,7 @@ function CardContent({
           }}
           transition={{ duration: 0.6, ease: "easeOut" }}
           onLoad={() => setIsLoaded(true)}
-          src={image || (isHero ? "/images/category-card-big.png" : "/images/category-card-hotel.png")}
+          src={image || getCategoryFallbackImage(title, value, isHero)}
           alt={title}
           loading="lazy"
           decoding="async"

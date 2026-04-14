@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/drawer";
 import { MapPin, MessageSquare } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import instance from "@/lib/axios";
 import ImageGallery from "@/components/Imageswiper";
 import { useProperty } from "@/contexts/PropertyContext";
@@ -24,12 +24,20 @@ import { PropertyHeader } from "@/components/property/PropertyHeader";
 import { AmenitySection } from "@/components/property/AmenitySection";
 import { BookingCard } from "@/components/property/BookingCard";
 import { ReviewSection } from "@/components/property/ReviewSection";
+import PropertyCard from "@/components/PropertyCard";
 import {
   ImageGridSkeleton,
   DescriptionSkeleton,
   AmenitiesSkeleton,
   SidebarSkeleton,
 } from "@/components/property/PropertySkeletons";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
 
 // ── Local skeleton for reviews (not in PropertySkeletons yet) ──────────────────
 function ReviewsSkeleton() {
@@ -79,6 +87,7 @@ interface Review {
 // ── Main Component ─────────────────────────────────────────────────────────────
 export default function PropertyPage() {
   const { propertyId } = useParams();
+  const navigate = useNavigate();
   const [product, setProduct] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -96,6 +105,10 @@ export default function PropertyPage() {
 
   // Categories for footer
   const [categories, setCategories] = useState<{ _id: string; name: string }[]>([]);
+
+  // Related properties state
+  const [relatedProperties, setRelatedProperties] = useState<any[]>([]);
+  const [isRelatedLoading, setIsRelatedLoading] = useState(false);
 
   // Booking selection state (shared between sidebar & mobile bar)
   const [selectedVacancy, setSelectedVacancy] = useState<string>("");
@@ -122,12 +135,33 @@ export default function PropertyPage() {
       const propertyData = response.data.property;
       setProduct(propertyData);
       setCurrentProduct(propertyData);
+      
+      // Fetch related properties if location exists
+      const locId = typeof propertyData.location === 'object' ? propertyData.location?._id : propertyData.location;
+      if (locId) {
+        fetchRelatedProperties(locId);
+      }
     } catch (error) {
       console.error("Error fetching property:", error);
       setProduct(null);
       setCurrentProduct(null);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const fetchRelatedProperties = async (locId: string) => {
+    setIsRelatedLoading(true);
+    try {
+      const response = await instance.get(`/property?locationId=${locId}&limit=5`);
+      const allProps = response.data.properties || [];
+      // Filter out current property
+      setRelatedProperties(allProps.filter((p: any) => p._id !== propertyId));
+    } catch (error) {
+      console.error("Error fetching related properties:", error);
+      setRelatedProperties([]);
+    } finally {
+      setIsRelatedLoading(false);
     }
   };
 
@@ -168,7 +202,7 @@ export default function PropertyPage() {
       .catch(() => {});
 
     return () => { setCurrentProduct(null); };
-  }, []);
+  }, [propertyId]);
 
   // ── Review handlers ──────────────────────────────────────────────────────────
   const handleInputChange = (
@@ -485,7 +519,11 @@ export default function PropertyPage() {
                                 onClick={() => {
                                   if (!isFull) {
                                     setSelectedPrice({ type: priceOption.type, amount: priceOption.amount });
-                                    if (vacancy) setSelectedVacancy(vacancy.type);
+                                    // Only auto-set vacancy if exact type match — no substring guessing
+                                    const exactVacancy = product?.vacancies?.find(
+                                      (v: any) => v.type?.toLowerCase() === priceOption.type?.toLowerCase()
+                                    );
+                                    if (exactVacancy && exactVacancy.count > 0) setSelectedVacancy(exactVacancy.type);
                                   }
                                 }}
                                 disabled={isFull}
@@ -538,6 +576,51 @@ export default function PropertyPage() {
                     )}
                   </div>
                 </div>
+
+                {/* Related Properties Section */}
+                {relatedProperties.length > 0 && (
+                  <div className="mt-16 mb-12 flex flex-col gap-10">
+                    <div className="flex flex-col gap-2 items-center text-center">
+                      <h2 className="text-2xl md:text-3xl font-bold text-gray-900">
+                        Similar properties in <span className="text-primary">{typeof product?.location === 'object' ? product?.location?.title : product?.location}</span>
+                      </h2>
+                      <div className="h-1 w-16 bg-primary/60 rounded-full">
+                      </div>
+                    </div>
+                    
+                    <div className="relative px-12 md:px-0">
+                      <Carousel
+                        opts={{
+                          align: "start",
+                          loop: true,
+                        }}
+                        className="w-full"
+                      >
+                        <CarouselContent>
+                          {relatedProperties.map((p) => (
+                            <CarouselItem key={p._id} className="basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/4">
+                              <div className="p-1 h-full cursor-pointer" onClick={() => {
+                                window.scrollTo({ top: 0, behavior: "smooth" });
+                                navigate(`/property/${p._id}`);
+                              }}>
+                                <PropertyCard {...p} />
+                              </div>
+                            </CarouselItem>
+                          ))}
+                        </CarouselContent>
+                        <div className="hidden md:block">
+                          <CarouselPrevious className="-left-12 border-primary/20 hover:bg-primary/10 hover:text-primary transition-all" />
+                          <CarouselNext className="-right-12 border-primary/20 hover:bg-primary/10 hover:text-primary transition-all" />
+                        </div>
+                        {/* Mobile controls */}
+                        <div className="flex md:hidden justify-center gap-4 mt-8">
+                           <CarouselPrevious className="static translate-y-0" />
+                           <CarouselNext className="static translate-y-0" />
+                        </div>
+                      </Carousel>
+                    </div>
+                  </div>
+                )}
               </TabsContent>
 
               {/* ── LOCATION TAB ────────────────────────────────────────────── */}
@@ -596,31 +679,25 @@ export default function PropertyPage() {
 
 
       {/* ── Mobile Bottom Bar ───────────────────────────────────────────────── */}
-      <div className="fixed bottom-0 z-10 md:hidden p-4 px-5 bg-white border-t border-gray-200 w-full flex justify-between items-center gap-3">
-        <div className="flex-1 min-w-0">
-          {selectedPrice || selectedVacancy ? (
-            <div className="flex flex-col gap-0.5">
-              <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">
-                Selected
+      <div className="fixed inset-x-0 bottom-0 z-10 md:hidden px-4 py-3 bg-white border-t border-gray-100 flex items-center gap-3 shadow-[0_-2px_12px_rgba(0,0,0,0.06)]">
+        <div className="flex-1 min-w-0 overflow-hidden">
+          {selectedPrice ? (
+            <div className="flex flex-col gap-0"> 
+              <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest leading-none mb-1">Selected</p>
+              <p className="text-sm font-extrabold text-gray-900 truncate">
+                {selectedPrice.type}
+                <span className="font-bold text-primary ml-1">₹{selectedPrice.amount}<span className="text-[10px] text-gray-400 font-normal">/mo</span></span>
               </p>
-              <div className="text-sm font-bold text-primary truncate">
-                {selectedPrice && (
-                  <span>
-                    {selectedPrice.type} — ₹{selectedPrice.amount}
-                  </span>
-                )}
-                {selectedPrice && selectedVacancy && " · "}
-                {selectedVacancy && <span>{selectedVacancy}</span>}
-              </div>
+              {selectedVacancy && (
+                <p className="text-[10px] text-gray-500 truncate">{selectedVacancy}</p>
+              )}
             </div>
           ) : (
             <div>
-              <p className="text-[10px] text-gray-500 font-semibold uppercase tracking-widest">
-                Starting from
-              </p>
-              <p className="text-xl font-extrabold text-foreground">
+              <p className="text-[9px] text-gray-400 font-bold uppercase tracking-widest leading-none mb-1">Starting from</p>
+              <p className="text-base font-extrabold text-gray-900 leading-none">
                 ₹{product?.price?.[0]?.amount || 0}
-                <span className="text-xs text-gray-400 font-normal ml-1">/ mo</span>
+                <span className="text-[10px] text-gray-400 font-normal ml-1">/mo</span>
               </p>
             </div>
           )}

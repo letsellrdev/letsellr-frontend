@@ -1,0 +1,81 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" fill="none">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="600" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#0a4f3a"/><stop offset="100%" stop-color="#042b22"/>
+    </linearGradient>
+    <linearGradient id="hb" x1="0" y1="0" x2="0" y2="1" gradientUnits="objectBoundingBox">
+      <stop offset="0%" stop-color="#fef9f0"/><stop offset="100%" stop-color="#fff8ee"/>
+    </linearGradient>
+    <linearGradient id="rf" x1="0" y1="0" x2="0" y2="1" gradientUnits="objectBoundingBox">
+      <stop offset="0%" stop-color="#d97706"/><stop offset="100%" stop-color="#b45309"/>
+    </linearGradient>
+    <filter id="hs"><feDropShadow dx="0" dy="12" stdDeviation="20" flood-color="#042b22" flood-opacity="0.5"/></filter>
+  </defs>
+  <rect width="800" height="600" fill="url(#bg)"/>
+  <!-- Hills -->
+  <ellipse cx="650" cy="470" rx="350" ry="140" fill="#0d6b4a" opacity="0.6"/>
+  <ellipse cx="150" cy="490" rx="280" ry="130" fill="#0a5c3f" opacity="0.5"/>
+  <!-- Ground -->
+  <rect x="0" y="490" width="800" height="110" fill="#15803d"/>
+  <rect x="0" y="490" width="800" height="20" fill="#16a34a" opacity="0.5"/>
+  <!-- Pathway -->
+  <path d="M358 540 L442 540 L480 600 L320 600 Z" fill="#d4a96a" opacity="0.6"/>
+  <!-- House body -->
+  <rect x="200" y="290" width="400" height="250" rx="6" fill="url(#hb)" filter="url(#hs)"/>
+  <!-- Roof -->
+  <path d="M170 295 L400 130 L630 295 Z" fill="url(#rf)"/>
+  <path d="M170 295 L400 130 L420 140 L195 295 Z" fill="#92400e" opacity="0.3"/>
+  <!-- Chimney -->
+  <rect x="490" y="160" width="30" height="60" rx="3" fill="#d97706"/>
+  <rect x="487" y="155" width="36" height="10" rx="2" fill="#b45309"/>
+  <!-- Smoke -->
+  <path d="M505 155 Q510 138 504 126" stroke="#e2e8f0" stroke-width="4" fill="none" stroke-linecap="round" opacity="0.5"/>
+  <!-- Windows -->
+  <rect x="230" y="320" width="90" height="70" rx="5" fill="#fef3c7"/>
+  <rect x="228" y="318" width="94" height="74" rx="6" fill="none" stroke="#d97706" stroke-width="3"/>
+  <line x1="275" y1="320" x2="275" y2="390" stroke="#d97706" stroke-width="2"/>
+  <line x1="230" y1="355" x2="320" y2="355" stroke="#d97706" stroke-width="2"/>
+  <rect x="232" y="322" width="41" height="31" rx="2" fill="#fbbf24" opacity="0.5"/>
+  <rect x="465" y="320" width="90" height="70" rx="5" fill="#fef3c7"/>
+  <rect x="463" y="318" width="94" height="74" rx="6" fill="none" stroke="#d97706" stroke-width="3"/>
+  <line x1="510" y1="320" x2="510" y2="390" stroke="#d97706" stroke-width="2"/>
+  <line x1="465" y1="355" x2="555" y2="355" stroke="#d97706" stroke-width="2"/>
+  <rect x="511" y="322" width="41" height="31" rx="2" fill="#fbbf24" opacity="0.5"/>
+  <!-- Dormer -->
+  <path d="M355 215 L400 178 L445 215 Z" fill="#c2742e"/>
+  <rect x="360" y="215" width="80" height="52" rx="3" fill="#fef3c7"/>
+  <line x1="400" y1="215" x2="400" y2="267" stroke="#d97706" stroke-width="1.5"/>
+  <!-- Main Door -->
+  <rect x="348" y="400" width="104" height="140" rx="5" fill="#7c4e1f"/>
+  <rect x="352" y="404" width="96" height="136" rx="4" fill="#92602a"/>
+  <path d="M352 422 Q400 396 448 422" stroke="#7c4e1f" stroke-width="3" fill="none"/>
+  <rect x="360" y="430" width="36" height="44" rx="3" fill="#7c4e1f"/>
+  <rect x="404" y="430" width="36" height="44" rx="3" fill="#7c4e1f"/>
+  <circle cx="400" cy="468" r="6" fill="#fbbf24"/>
+  <!-- Steps -->
+  <rect x="330" y="535" width="140" height="10" rx="3" fill="#d4b483"/>
+  <!-- Porch columns -->
+  <rect x="340" y="360" width="16" height="180" rx="4" fill="#fef9f0"/>
+  <rect x="444" y="360" width="16" height="180" rx="4" fill="#fef9f0"/>
+  <rect x="332" y="358" width="136" height="12" rx="3" fill="#f5e8d8"/>
+  <!-- Trees -->
+  <rect x="110" y="415" width="12" height="100" rx="3" fill="#7c4e1f"/>
+  <ellipse cx="116" cy="390" rx="45" ry="55" fill="#16a34a"/>
+  <ellipse cx="100" cy="405" rx="30" ry="38" fill="#15803d"/>
+  <rect x="670" y="405" width="12" height="100" rx="3" fill="#7c4e1f"/>
+  <ellipse cx="676" cy="378" rx="50" ry="58" fill="#16a34a"/>
+  <!-- Bushes -->
+  <ellipse cx="200" cy="493" rx="40" ry="22" fill="#15803d"/>
+  <ellipse cx="600" cy="493" rx="40" ry="22" fill="#15803d"/>
+  <!-- Flowers -->
+  <circle cx="215" cy="488" r="5" fill="#f43f5e" opacity="0.8"/>
+  <circle cx="228" cy="483" r="4" fill="#fb923c" opacity="0.8"/>
+  <circle cx="605" cy="488" r="5" fill="#f43f5e" opacity="0.8"/>
+  <!-- Stars -->
+  <circle cx="60" cy="80" r="2" fill="white" opacity="0.5"/>
+  <circle cx="200" cy="60" r="1.5" fill="white" opacity="0.4"/>
+  <circle cx="700" cy="60" r="1" fill="white" opacity="0.4"/>
+  <!-- Sun -->
+  <circle cx="680" cy="220" r="45" fill="#fbbf24" opacity="0.15"/>
+  <circle cx="680" cy="220" r="28" fill="#fbbf24" opacity="0.2"/>
+</svg>

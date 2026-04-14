@@ -1,0 +1,110 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" fill="none">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="600" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#fdf6e3"/><stop offset="60%" stop-color="#e8d5b0"/><stop offset="100%" stop-color="#c8a96a"/>
+    </linearGradient>
+    <linearGradient id="earthGrad" x1="0" y1="0" x2="0" y2="1" gradientUnits="objectBoundingBox">
+      <stop offset="0%" stop-color="#c8a96a"/><stop offset="100%" stop-color="#8b6914"/>
+    </linearGradient>
+    <linearGradient id="skyBlue" x1="0" y1="0" x2="0" y2="1" gradientUnits="objectBoundingBox">
+      <stop offset="0%" stop-color="#38bdf8" stop-opacity="0.3"/><stop offset="100%" stop-color="#0ea5e9" stop-opacity="0"/>
+    </linearGradient>
+    <filter id="post"><feDropShadow dx="2" dy="4" stdDeviation="4" flood-color="#78350f" flood-opacity="0.3"/></filter>
+  </defs>
+  <!-- Sky -->
+  <rect width="800" height="600" fill="url(#bg)"/>
+  <!-- Clouds -->
+  <ellipse cx="180" cy="100" rx="80" ry="35" fill="white" opacity="0.7"/>
+  <ellipse cx="240" cy="90" rx="60" ry="28" fill="white" opacity="0.8"/>
+  <ellipse cx="130" cy="108" rx="50" ry="22" fill="white" opacity="0.6"/>
+  <ellipse cx="580" cy="120" rx="70" ry="30" fill="white" opacity="0.6"/>
+  <ellipse cx="640" cy="110" rx="55" ry="24" fill="white" opacity="0.7"/>
+  <ellipse cx="530" cy="128" rx="45" ry="20" fill="white" opacity="0.5"/>
+  <!-- Sun -->
+  <circle cx="680" cy="80" r="50" fill="#fbbf24" opacity="0.25"/>
+  <circle cx="680" cy="80" r="34" fill="#fbbf24" opacity="0.35"/>
+  <circle cx="680" cy="80" r="20" fill="#fbbf24" opacity="0.6"/>
+  <!-- Sun rays -->
+  <line x1="680" y1="40" x2="680" y2="30" stroke="#fbbf24" stroke-width="2.5" stroke-linecap="round" opacity="0.5"/>
+  <line x1="680" y1="120" x2="680" y2="130" stroke="#fbbf24" stroke-width="2.5" stroke-linecap="round" opacity="0.5"/>
+  <line x1="640" y1="80" x2="630" y2="80" stroke="#fbbf24" stroke-width="2.5" stroke-linecap="round" opacity="0.5"/>
+  <line x1="720" y1="80" x2="730" y2="80" stroke="#fbbf24" stroke-width="2.5" stroke-linecap="round" opacity="0.5"/>
+  <line x1="652" y1="52" x2="645" y2="45" stroke="#fbbf24" stroke-width="2" stroke-linecap="round" opacity="0.4"/>
+  <line x1="708" y1="108" x2="715" y2="115" stroke="#fbbf24" stroke-width="2" stroke-linecap="round" opacity="0.4"/>
+  <!-- Land plot outline -->
+  <polygon points="100,510 180,240 620,240 700,510" fill="#d4a76a" opacity="0.3" stroke="#b8860b" stroke-width="2" stroke-dasharray="10 6"/>
+  <!-- Main land plot (earth) -->
+  <rect x="100" y="400" width="600" height="160" rx="8" fill="url(#earthGrad)" opacity="0.9"/>
+  <!-- Soil texture lines -->
+  <line x1="120" y1="430" x2="680" y2="430" stroke="#a07830" stroke-width="1.5" stroke-dasharray="8 4" opacity="0.4"/>
+  <line x1="130" y1="450" x2="670" y2="450" stroke="#a07830" stroke-width="1.5" stroke-dasharray="6 5" opacity="0.35"/>
+  <line x1="120" y1="470" x2="680" y2="470" stroke="#a07830" stroke-width="1.5" stroke-dasharray="8 4" opacity="0.3"/>
+  <line x1="140" y1="490" x2="660" y2="490" stroke="#a07830" stroke-width="1.5" stroke-dasharray="6 5" opacity="0.25"/>
+  <!-- Ground grass edge -->
+  <rect x="80" y="396" width="640" height="16" rx="4" fill="#4ade80" opacity="0.7"/>
+  <ellipse cx="180" cy="400" rx="30" ry="10" fill="#22c55e" opacity="0.5"/>
+  <ellipse cx="400" cy="399" rx="40" ry="10" fill="#22c55e" opacity="0.4"/>
+  <ellipse cx="620" cy="400" rx="28" ry="9" fill="#22c55e" opacity="0.5"/>
+  <!-- Survey flags / corner markers -->
+  <!-- Corner 1 TL -->
+  <rect x="100" y="248" width="5" height="80" rx="2" fill="#ef4444" filter="url(#post)"/>
+  <polygon points="105,248 130,258 105,268" fill="#ef4444"/>
+  <!-- Corner 2 TR -->
+  <rect x="695" y="248" width="5" height="80" rx="2" fill="#ef4444" filter="url(#post)"/>
+  <polygon points="695,248 670,258 695,268" fill="#ef4444"/>
+  <!-- Corner 3 BL -->
+  <rect x="100" y="400" width="5" height="40" rx="2" fill="#f97316" filter="url(#post)"/>
+  <!-- Corner 4 BR -->
+  <rect x="695" y="400" width="5" height="40" rx="2" fill="#f97316" filter="url(#post)"/>
+  <!-- Measurement tape / rope line -->
+  <line x1="105" y1="260" x2="695" y2="260" stroke="#ef4444" stroke-width="2" stroke-dasharray="12 6" opacity="0.7"/>
+  <line x1="105" y1="260" x2="105" y2="400" stroke="#ef4444" stroke-width="2" stroke-dasharray="8 5" opacity="0.7"/>
+  <line x1="695" y1="260" x2="695" y2="400" stroke="#ef4444" stroke-width="2" stroke-dasharray="8 5" opacity="0.7"/>
+  <!-- Survey instrument (tripod + theodolite) -->
+  <circle cx="400" cy="295" r="18" fill="#374151" stroke="#6b7280" stroke-width="2"/>
+  <circle cx="400" cy="295" r="10" fill="#1e293b"/>
+  <line x1="400" y1="295" x2="400" y2="285" stroke="#9ca3af" stroke-width="2"/>
+  <rect x="388" y="282" width="24" height="8" rx="2" fill="#4b5563"/>
+  <line x1="375" y1="313" x2="390" y2="295" stroke="#6b7280" stroke-width="2.5"/>
+  <line x1="425" y1="313" x2="410" y2="295" stroke="#6b7280" stroke-width="2.5"/>
+  <line x1="400" y1="313" x2="400" y2="295" stroke="#6b7280" stroke-width="2.5"/>
+  <ellipse cx="400" cy="316" rx="30" ry="6" fill="#374151" opacity="0.4"/>
+  <!-- Blueprint/plan on ground -->
+  <rect x="220" y="315" width="160" height="110" rx="6" fill="#1d4ed8" opacity="0.85"/>
+  <rect x="226" y="321" width="148" height="98" rx="4" fill="#1e40af"/>
+  <line x1="226" y1="350" x2="374" y2="350" stroke="white" stroke-width="1" opacity="0.4"/>
+  <line x1="226" y1="378" x2="374" y2="378" stroke="white" stroke-width="1" opacity="0.4"/>
+  <line x1="300" y1="321" x2="300" y2="419" stroke="white" stroke-width="1" opacity="0.4"/>
+  <rect x="234" y="329" width="58" height="14" rx="2" fill="#93c5fd" opacity="0.3"/>
+  <rect x="234" y="357" width="58" height="14" rx="2" fill="#93c5fd" opacity="0.3"/>
+  <rect x="310" y="329" width="58" height="14" rx="2" fill="#93c5fd" opacity="0.25"/>
+  <rect x="310" y="357" width="58" height="14" rx="2" fill="#93c5fd" opacity="0.25"/>
+  <text x="300" y="416" text-anchor="middle" font-family="monospace" font-size="10" fill="#93c5fd" opacity="0.7">PLOT PLAN</text>
+  <!-- Blueprint label -->
+  <rect x="425" y="320" width="150" height="105" rx="6" fill="#fef3c7" opacity="0.9"/>
+  <text x="500" y="342" text-anchor="middle" font-family="'Inter','Segoe UI',sans-serif" font-size="11" font-weight="700" fill="#78350f">LAND REGISTRY</text>
+  <line x1="435" y1="350" x2="565" y2="350" stroke="#d97706" stroke-width="1"/>
+  <text x="440" y="366" font-family="monospace" font-size="9" fill="#92400e">Area: 2400 sq.ft</text>
+  <text x="440" y="382" font-family="monospace" font-size="9" fill="#92400e">Zone: Residential</text>
+  <text x="440" y="398" font-family="monospace" font-size="9" fill="#92400e">Survey No: 142/B</text>
+  <text x="440" y="414" font-family="monospace" font-size="9" fill="#92400e">Status: Clear Title</text>
+  <!-- Trees on land edges -->
+  <rect x="140" y="357" width="8" height="50" rx="2" fill="#78350f"/>
+  <ellipse cx="144" cy="345" rx="22" ry="28" fill="#16a34a"/>
+  <rect x="650" y="357" width="8" height="50" rx="2" fill="#78350f"/>
+  <ellipse cx="654" cy="345" rx="22" ry="28" fill="#16a34a"/>
+  <!-- Small plants on land -->
+  <ellipse cx="200" cy="446" rx="18" ry="10" fill="#22c55e" opacity="0.6"/>
+  <ellipse cx="600" cy="446" rx="18" ry="10" fill="#22c55e" opacity="0.6"/>
+  <ellipse cx="400" cy="455" rx="14" ry="8" fill="#22c55e" opacity="0.5"/>
+  <!-- Dimension arrows -->
+  <line x1="130" y1="275" x2="670" y2="275" stroke="#78350f" stroke-width="1.5" opacity="0.5"/>
+  <polygon points="130,275 140,270 140,280" fill="#78350f" opacity="0.5"/>
+  <polygon points="670,275 660,270 660,280" fill="#78350f" opacity="0.5"/>
+  <text x="400" y="272" text-anchor="middle" font-family="monospace" font-size="10" fill="#78350f" opacity="0.7">60 ft</text>
+  <!-- Birds in sky -->
+  <path d="M220 180 Q225 174 230 180" stroke="#374151" stroke-width="1.5" fill="none"/>
+  <path d="M240 170 Q245 164 250 170" stroke="#374151" stroke-width="1.5" fill="none"/>
+  <path d="M480 155 Q485 149 490 155" stroke="#374151" stroke-width="1.5" fill="none"/>
+  <path d="M500 165 Q505 159 510 165" stroke="#374151" stroke-width="1.5" fill="none"/>
+</svg>

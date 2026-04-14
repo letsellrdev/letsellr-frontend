@@ -85,15 +85,40 @@ export const SearchBar = ({
     ? categories.filter((c) => c.name.toLowerCase().includes(query.toLowerCase()))
     : categories;
 
+  // ─── Priorities ────────────────────────────────────────────────────────────
+  const PRIORITIZED_LOCATIONS = [
+    "calicut town",
+    "thondayad",
+    "palazhi",
+    "mankave",
+    "nadakkave",
+  ];
+
   // ── Fetch locations on mount ───────────────────────────────────────────────
   useEffect(() => {
     instance
       .get("/location")
       .then((res) => {
-        const data = res.data.data || [];
-        setLocations(data);
+        const data: LocationItem[] = res.data.data || [];
+
+        // Sort locations based on priorities
+        const sortedData = [...data].sort((a, b) => {
+          const titleA = a.title.toLowerCase();
+          const titleB = b.title.toLowerCase();
+
+          const indexA = PRIORITIZED_LOCATIONS.indexOf(titleA);
+          const indexB = PRIORITIZED_LOCATIONS.indexOf(titleB);
+
+          if (indexA !== -1 && indexB !== -1) return indexA - indexB;
+          if (indexA !== -1) return -1;
+          if (indexB !== -1) return 1;
+
+          return titleA.localeCompare(titleB);
+        });
+
+        setLocations(sortedData);
         // Default suggestions when opening step 1
-        setLocSuggestions(data.slice(0, 5));
+        setLocSuggestions(sortedData.slice(0, 5));
       })
       .catch(() => setLocations([]));
   }, []);

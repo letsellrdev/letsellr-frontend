@@ -9,6 +9,9 @@ import {
   LinkIcon,
   ChevronLeft,
   ChevronRight,
+  LayoutGrid,
+  List,
+  MoreVertical,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -42,6 +45,21 @@ import { Link } from "react-router-dom";
 import instance from "@/lib/axios";
 import { PropertyCardSkeleton } from "@/components/skeletons";
 import { toast } from "sonner";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 // Types
 interface PriceOption {
@@ -568,154 +586,139 @@ const PropertyCard = ({
   onEdit: (property: Property, mobile?: boolean) => void;
   onDelete: (property: Property) => void;
 }) => {
-  // Safe access to first image
   const firstImage = property.images?.[0] || "/placeholder.jpg";
-  // Safe access to first price
-  const firstPrice = property.price?.[0]?.amount;
-
+  
   return (
-    <Card className="p-4 sm:p-5 border-border hover:shadow-lg transition-shadow relative flex flex-col justify-between">
-      <div className="flex gap-3 sm:gap-4">
-        <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-xl overflow-hidden bg-muted flex-shrink-0">
+    <Card className="p-4 sm:p-5 border-border hover:shadow-lg transition-shadow flex flex-col gap-4 overflow-hidden">
+      {/* Top Section: Image + Primary Info */}
+      <div className="flex gap-4 items-start">
+        {/* Image Container - Larger on Mobile, Standard on Desktop */}
+        <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl overflow-hidden bg-muted flex-shrink-0 shadow-sm">
           <img
             src={firstImage}
             alt={property.title || "Property Image"}
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover transition-transform hover:scale-105 duration-300"
           />
         </div>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-start justify-between gap-2 mb-2">
-            <div className="flex-1 min-w-0">
-              <h3 className="font-semibold text-foreground text-base sm:text-lg truncate">
-                {property.title || "Untitled"}
-              </h3>
-            </div>
+
+        {/* Primary Content Container */}
+        <div className="flex-1 min-w-0 flex flex-col gap-1.5">
+          {/* Title & Status Row */}
+          <div className="flex items-start justify-between gap-2">
+            <h3 className="font-bold text-foreground text-base sm:text-lg leading-tight truncate">
+              {property.title || "Untitled"}
+            </h3>
             {property.status && (
               <span
-                className={`px-2 py-1 rounded-lg text-xs font-medium whitespace-nowrap ${property.status === "active"
-                  ? "bg-green-500/10 text-green-600"
-                  : "bg-red-500/10 text-red-600"
-                  }`}
+                className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider whitespace-nowrap ${
+                  property.status === "active"
+                    ? "bg-green-100 text-green-700 border border-green-200"
+                    : "bg-red-100 text-red-700 border border-red-200"
+                }`}
               >
                 {property.status}
               </span>
             )}
           </div>
 
-          <div className="text-xs sm:text-sm text-muted-foreground mb-2">
-            <div className="flex items-center gap-1">
-              <MapPin className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
-              <span className="truncate font-medium">
-                {typeof property.location === "string"
-                  ? "No location"
-                  : (property.location as Location)?.title || "No location"}
+          {/* Metadata Badges Row (Replaces Absolute Positioning) */}
+          <div className="flex flex-wrap gap-1.5 items-center mt-0.5">
+            {property.propertyCode && (
+              <span className="text-[10px] font-mono bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded border border-gray-200">
+                #{property.propertyCode}
               </span>
-              {typeof property.location !== "string" &&
-                (property.location as Location)?.description && (
-                  <p className="text-xs text-muted-foreground/70 line-clamp-1">
-                    {(property.location as Location)?.description}
-                  </p>
-                )}
-            </div>
-            <div className="absolute top-4 right-4 flex flex-row-reverse items-center gap-2">
-              {/* Property Type Category Badge */}
-              {property.propertyTypeCategory &&
-                typeof property.propertyTypeCategory !== "string" && (
-                  <div className="">
-                    <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200">
-                      {(property.propertyTypeCategory as PropertyType).name}
-                    </span>
-                  </div>
-                )}
-              {/* Vacancy Count Badge */}
-              {property.vacancyCount !== undefined && (
-                <div className="flex items-center">
-                  <span
-                    className={`px-2 py-0.5 rounded-md text-xs font-medium ${property.vacancyCount > 0
-                      ? "bg-green-50 text-green-700 border border-green-200"
-                      : "bg-gray-100 text-gray-600 border border-gray-200"
-                      }`}
-                  >
-                    {property.vacancyCount > 0
-                      ? `${property.vacancyCount} Vacancies`
-                      : "No Vacancies"}
-                  </span>
-                </div>
-              )}
-              {property.propertyCode && (
-                <span className="text-xs text-gray-500 font-mono">
-                  Code: {property.propertyCode}
-                </span>
-              )}
-            </div>
+            )}
+            {property.propertyTypeCategory && typeof property.propertyTypeCategory !== "string" && (
+              <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200 uppercase">
+                {(property.propertyTypeCategory as PropertyType).name}
+              </span>
+            )}
+            {property.vacancyCount !== undefined && (
+              <span
+                className={`px-2 py-0.5 rounded-md text-[10px] font-bold border uppercase ${
+                  property.vacancyCount > 0
+                    ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                    : "bg-gray-100 text-gray-600 border-gray-200"
+                }`}
+              >
+                {property.vacancyCount > 0
+                  ? `${property.vacancyCount} Vacancies`
+                  : "No Vacancy"}
+              </span>
+            )}
           </div>
 
-          <div className="flex items-center gap-2 sm:gap-4 text-xs sm:text-sm text-muted-foreground mb-3">
-            {property.views !== undefined && (
-              <div className="flex items-center gap-1">
-                <Eye className="h-3 w-3 sm:h-4 sm:w-4" />
-                <span>{property.views}</span>
-              </div>
-            )}
-            <div className="flex items-center gap-1">
-              <Star className="h-3 w-3 sm:h-4 sm:w-4 text-primary fill-primary" />
-              <span>{property.rating || 0}</span>
-            </div>
-
-            {/* Display prices */}
-            {property.price && property.price.length > 0 && (
-              <div className="flex flex-col gap-1 mb-3">
-                {property.price?.slice(0, 2).map((p, idx) => (
-                  <div
-                    key={idx}
-                    className="flex items-center gap-2 text-sm text-primary font-semibold"
-                  >
-                    <span>{p.type || "Room"}:</span>
-                    <span>₹{p.amount} /Month</span>
-                  </div>
-                ))}
-              </div>
-            )}
+          {/* Location Row */}
+          <div className="flex items-start gap-1 text-xs text-muted-foreground mt-1">
+            <MapPin className="h-3.5 w-3.5 shrink-0 text-primary/70" />
+            <span className="truncate">
+              {typeof property.location === "string"
+                ? "No location"
+                : (property.location as Location)?.title || "No location"}
+            </span>
           </div>
         </div>
       </div>
 
-      <div className="flex gap-2">
+      {/* Middle Section: Stats & Prices */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 py-3 border-y border-gray-50 bg-gray-50/30 -mx-4 sm:-mx-5 px-4 sm:px-5">
+        {/* Engagement Stats */}
+        <div className="flex items-center gap-4 text-xs font-medium text-muted-foreground">
+          <div className="flex items-center gap-1.5">
+            <Eye className="h-4 w-4 text-blue-500" />
+            <span>{property.views || 0} views</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <Star className="h-4 w-4 text-amber-500 fill-amber-500" />
+            <span>{property.rating || 0} rating</span>
+          </div>
+        </div>
+
+        {/* Pricing Summary */}
+        <div className="flex flex-col gap-1">
+          {property.price && property.price.length > 0 ? (
+            <div className="flex flex-wrap gap-x-3 gap-y-1">
+              {property.price.slice(0, 2).map((p, idx) => (
+                <div key={idx} className="text-xs font-bold text-gray-900 flex items-center gap-1">
+                  <span className="text-gray-400 font-normal uppercase text-[9px] tracking-tight">{p.type}:</span>
+                  <span className="text-primary">₹{p.amount}</span>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <span className="text-xs text-muted-foreground italic">No pricing set</span>
+          )}
+        </div>
+      </div>
+
+      {/* Bottom Section: Actions */}
+      <div className="flex gap-2 pt-1">
         <Button
           size="sm"
           variant="outline"
-          className="hidden md:flex rounded-lg flex-1 hover:bg-primary/5 hover:text-primary hover:border-primary text-xs sm:text-sm"
-          onClick={() => onEdit(property)}
+          className="flex-1 rounded-xl h-9 text-xs sm:text-sm border-gray-200 hover:bg-primary hover:text-white hover:border-primary transition-all duration-200"
+          onClick={() => onEdit(property, false)}
         >
-          <Edit className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-1" />
-          <span className="hidden sm:inline">Edit</span>
-        </Button>
-        <Button
-          size="sm"
-          variant="outline"
-          className="md:hidden flex-1 rounded-lg hover:bg-primary/5 hover:text-primary hover:border-primary text-xs sm:text-sm"
-          onClick={() => onEdit(property, true)}
-        >
-          <Edit className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-1" />
-          <span className="hidden sm:inline">Edit</span>
+          <Edit className="h-3.5 w-3.5 mr-1.5" />
+          Edit
         </Button>
         <Link to={`/property/${property._id}`} className="flex-1">
           <Button
             size="sm"
             variant="outline"
-            className="w-full rounded-lg hover:bg-primary/5 hover:text-primary hover:border-primary text-xs sm:text-sm"
+            className="w-full rounded-xl h-9 text-xs sm:text-sm border-gray-200 hover:bg-gray-100 transition-all duration-200"
           >
-            <LinkIcon className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-1" />
-            <span className="hidden sm:inline">View</span>
+            <Eye className="h-3.5 w-3.5 mr-1.5" />
+            View
           </Button>
         </Link>
         <Button
           size="sm"
           variant="outline"
-          className="rounded-lg hover:bg-red-50 hover:text-red-600 hover:border-red-600 px-2 sm:px-3"
+          className="rounded-xl h-9 w-9 p-0 border-gray-200 hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition-all duration-200"
           onClick={() => onDelete(property)}
         >
-          <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
+          <Trash2 className="h-4 w-4" />
         </Button>
       </div>
     </Card>
@@ -726,6 +729,7 @@ const PropertyCard = ({
 const AdminPropertiesPage = () => {
   const [properties, setProperties] = useState<Property[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [currentView, setCurrentView] = useState<"grid" | "table">("grid");
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isMobileFormOpen, setIsMobileFormOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -1209,147 +1213,160 @@ const AdminPropertiesPage = () => {
         </div>
       )}
 
-      {/* Header & Add Property */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-2xl font-bold text-foreground">
-            Properties Management
-          </h2>
-          <p className="text-muted-foreground mt-1">
-            Manage all your property listings
+      {/* Header Section */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="flex flex-col gap-1">
+          <h1 className="text-2xl font-bold text-gray-900">Manage Properties</h1>
+          <p className="text-sm text-muted-foreground whitespace-nowrap">
+            {totalProperties} total properties listed
           </p>
         </div>
+        
+        <div className="flex items-center gap-3 w-full md:w-auto">
+          <Tabs value={currentView} onValueChange={(v) => setCurrentView(v as "grid" | "table")} className="hidden sm:block">
+            <TabsList className="rounded-xl h-10 w-fit">
+              <TabsTrigger value="grid" className="rounded-lg px-3">
+                <LayoutGrid className="h-4 w-4 mr-2" />
+                Grid
+              </TabsTrigger>
+              <TabsTrigger value="table" className="rounded-lg px-3">
+                <List className="h-4 w-4 mr-2" />
+                Table
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
 
-        {/* Desktop Dialog */}
-        <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
-          <DialogTrigger asChild className="hidden md:flex">
-            <Button
-              className="rounded-xl bg-primary hover:bg-primary/90"
-              onClick={resetForm}
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Add Property
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden">
-            <DialogHeader>
-              <DialogTitle>
-                {currentProperty ? "Edit Property" : "Add New Property"}
-              </DialogTitle>
-            </DialogHeader>
-            <PropertyForm
-              formData={formData}
-              onChange={handleInputChange}
-              onPriceChange={handlePriceChange}
-              onAddPrice={addPriceOption}
-              onRemovePrice={removePriceOption}
-              onFileChange={handleFileChange}
-              onSubmit={handleSubmit}
-              onCancel={() => {
-                setIsFormOpen(false);
-                resetForm();
-              }}
-              onRemoveImage={removeExistingImage}
-              onRemoveNewImage={handleRemoveNewImage}
-              onVacancyChange={handleVacancyChange}
-              onAddVacancy={addVacancy}
-              onRemoveVacancy={removeVacancy}
-              isSubmitting={isSubmitting}
-              isEditing={!!currentProperty}
-              formErrors={formErrors}
-              titleRef={titleRef}
-              descriptionRef={descriptionRef}
-              categoryRef={categoryRef}
-              priceRef={priceRef}
-              locationRef={locationRef}
-              amenityRef={amenityRef}
-              contactRef={contactRef}
-              imagesRef={imagesRef}
-              setFormData={setFormData}
-              notification={notification || ""}
-              locations={locations}
-              propertyTypes={propertyTypes}
-              apiCategories={apiCategories}
-            />
-          </DialogContent>
-        </Dialog>
+          <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
+            <DialogTrigger asChild className="hidden md:flex">
+              <Button
+                className="rounded-xl bg-primary hover:bg-primary/90 ml-auto"
+                onClick={resetForm}
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Add Property
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden">
+              <DialogHeader>
+                <DialogTitle>
+                  {currentProperty ? "Edit Property" : "Add New Property"}
+                </DialogTitle>
+              </DialogHeader>
+              <PropertyForm
+                formData={formData}
+                onChange={handleInputChange}
+                onPriceChange={handlePriceChange}
+                onAddPrice={addPriceOption}
+                onRemovePrice={removePriceOption}
+                onFileChange={handleFileChange}
+                onSubmit={handleSubmit}
+                onCancel={() => {
+                  setIsFormOpen(false);
+                  resetForm();
+                }}
+                onRemoveImage={removeExistingImage}
+                onRemoveNewImage={handleRemoveNewImage}
+                onVacancyChange={handleVacancyChange}
+                onAddVacancy={addVacancy}
+                onRemoveVacancy={removeVacancy}
+                isSubmitting={isSubmitting}
+                isEditing={!!currentProperty}
+                formErrors={formErrors}
+                titleRef={titleRef}
+                descriptionRef={descriptionRef}
+                categoryRef={categoryRef}
+                priceRef={priceRef}
+                locationRef={locationRef}
+                amenityRef={amenityRef}
+                contactRef={contactRef}
+                imagesRef={imagesRef}
+                setFormData={setFormData}
+                notification={notification || ""}
+                locations={locations}
+                propertyTypes={propertyTypes}
+                apiCategories={apiCategories}
+              />
+            </DialogContent>
+          </Dialog>
 
-        {/* Mobile Drawer */}
-        <Drawer open={isMobileFormOpen} onOpenChange={setIsMobileFormOpen}>
-          <DrawerTrigger asChild className="md:hidden">
-            <Button
-              className="w-full rounded-xl bg-primary hover:bg-primary/90"
-              onClick={resetForm}
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Add Property
-            </Button>
-          </DrawerTrigger>
-          <DrawerContent>
-            <DrawerHeader>
-              <DrawerTitle>
-                {currentProperty ? "Edit Property" : "Add New Property"}
-              </DrawerTitle>
-            </DrawerHeader>
-            <PropertyForm
-              formData={formData}
-              setFormData={setFormData}
-              onChange={handleInputChange}
-              onPriceChange={handlePriceChange}
-              onAddPrice={addPriceOption}
-              onRemovePrice={removePriceOption}
-              onSubmit={handleSubmit}
-              onCancel={handleCloseForm}
-              onRemoveImage={removeExistingImage}
-              onRemoveNewImage={handleRemoveNewImage}
-              onFileChange={handleFileChange}
-              isSubmitting={isSubmitting}
-              isEditing={!!currentProperty}
-              formErrors={formErrors}
-              titleRef={titleRef}
-              descriptionRef={descriptionRef}
-              categoryRef={categoryRef}
-              priceRef={priceRef}
-              locationRef={locationRef}
-              amenityRef={amenityRef}
-              contactRef={contactRef}
-              imagesRef={imagesRef}
-              notification={notification}
-              locations={locations}
-              propertyTypes={propertyTypes}
-              onVacancyChange={handleVacancyChange}
-              onAddVacancy={addVacancy}
-              onRemoveVacancy={removeVacancy}
-              apiCategories={apiCategories}
-            />
-          </DrawerContent>
-        </Drawer>
+          {/* Mobile Drawer */}
+          <Drawer open={isMobileFormOpen} onOpenChange={setIsMobileFormOpen}>
+            <DrawerTrigger asChild className="md:hidden flex-1">
+              <Button
+                className="w-full rounded-xl bg-primary hover:bg-primary/90"
+                onClick={resetForm}
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Add Property
+              </Button>
+            </DrawerTrigger>
+            <DrawerContent>
+              <DrawerHeader>
+                <DrawerTitle>
+                  {currentProperty ? "Edit Property" : "Add New Property"}
+                </DrawerTitle>
+              </DrawerHeader>
+              <PropertyForm
+                formData={formData}
+                setFormData={setFormData}
+                onChange={handleInputChange}
+                onPriceChange={handlePriceChange}
+                onAddPrice={addPriceOption}
+                onRemovePrice={removePriceOption}
+                onSubmit={handleSubmit}
+                onCancel={handleCloseForm}
+                onRemoveImage={removeExistingImage}
+                onRemoveNewImage={handleRemoveNewImage}
+                onFileChange={handleFileChange}
+                isSubmitting={isSubmitting}
+                isEditing={!!currentProperty}
+                formErrors={formErrors}
+                titleRef={titleRef}
+                descriptionRef={descriptionRef}
+                categoryRef={categoryRef}
+                priceRef={priceRef}
+                locationRef={locationRef}
+                amenityRef={amenityRef}
+                contactRef={contactRef}
+                imagesRef={imagesRef}
+                notification={notification}
+                locations={locations}
+                propertyTypes={propertyTypes}
+                onVacancyChange={handleVacancyChange}
+                onAddVacancy={addVacancy}
+                onRemoveVacancy={removeVacancy}
+                apiCategories={apiCategories}
+              />
+            </DrawerContent>
+          </Drawer>
+        </div>
       </div>
 
-      {/* Search Bar */}
-      <div className="flex gap-2">
-        <Input
-          type="text"
-          placeholder="Search by property code, title, or location..."
-          value={searchQuery}
-          onChange={(e) => {
-            setSearchQuery(e.target.value);
-            setCurrentPage(1); // Reset to page 1 on search
-          }}
-          className="rounded-xl flex-1"
-        />
-        {searchQuery && (
-          <Button
-            variant="outline"
-            onClick={() => {
-              setSearchQuery("");
+      {/* Search Bar Row - Right Aligned */}
+      <div className="flex flex-col sm:flex-row justify-end items-center gap-3">
+        <div className="relative w-full sm:w-80 group">
+          <Input
+            placeholder="Search by title, code or location..."
+            value={searchQuery}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
               setCurrentPage(1);
             }}
-            className="rounded-xl"
-          >
-            Clear
-          </Button>
-        )}
+            className="pl-10 h-10 rounded-xl bg-white border-gray-200 focus-visible:ring-primary/20 transition-all shadow-sm group-focus-within:shadow-md"
+          />
+          <Plus className="h-5 w-5 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 rotate-45" />
+          {searchQuery && (
+            <button
+              onClick={() => {
+                setSearchQuery("");
+                setCurrentPage(1);
+              }}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 p-1"
+            >
+              <Trash2 className="h-4 w-4" />
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Stats */}
@@ -1368,15 +1385,15 @@ const AdminPropertiesPage = () => {
         </Card> */}
       </div>
 
-      {/* Property List */}
-      {/* Properties Grid */}
+      {/* Property Display Section */}
       {isLoading ? (
         <div className="grid grid-cols-1 xl:grid-cols-2 2xl:grid-cols-3 gap-4">
           {[...Array(6)].map((_, i) => (
             <PropertyCardSkeleton key={i} />
           ))}
         </div>
-      ) : (
+      ) : currentView === "grid" ? (
+        /* GRID VIEW */
         <div className="grid grid-cols-1 xl:grid-cols-2 2xl:grid-cols-3 gap-4">
           {properties.map((property) => (
             <PropertyCard
@@ -1387,45 +1404,247 @@ const AdminPropertiesPage = () => {
             />
           ))}
         </div>
-      )}
-
-      {/* Pagination Controls */}
-      {totalPages > 1 && (
-        <div className="flex justify-center items-center gap-2 mt-8">
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => handlePageChange(currentPage - 1)}
-            disabled={currentPage === 1}
-            className="h-10 w-10 rounded-full"
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-
-          <div className="flex items-center gap-1">
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-              <Button
-                key={page}
-                variant={currentPage === page ? "default" : "ghost"}
-                size="sm"
-                onClick={() => handlePageChange(page)}
-                className={`h-10 w-10 rounded-full ${currentPage === page ? "pointer-events-none" : ""
-                  }`}
-              >
-                {page}
-              </Button>
-            ))}
+      ) : (
+        /* TABLE / MANAGEMENT VIEW */
+        <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm">
+          {/* Desktop Table View */}
+          <div className="hidden md:block">
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader className="bg-gray-50/50">
+                  <TableRow>
+                    <TableHead className="w-[80px]">Image</TableHead>
+                    <TableHead>Property Detail</TableHead>
+                    <TableHead className="hidden lg:table-cell">Location</TableHead>
+                    <TableHead className="text-center">Stats</TableHead>
+                    <TableHead>Price Info</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {properties.map((property) => (
+                    <TableRow key={property._id} className="hover:bg-gray-50/50 transition-colors">
+                      <TableCell>
+                        <img
+                          src={property.images?.[0] || "/placeholder.jpg"}
+                          className="w-12 h-12 rounded-lg object-cover shadow-sm border border-gray-100"
+                          alt=""
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex flex-col gap-0.5">
+                          <span className="font-bold text-gray-900 line-clamp-1">{property.title}</span>
+                          <div className="flex items-center gap-2">
+                            <span className="text-[10px] font-mono text-gray-400 bg-gray-50 px-1 rounded">#{property.propertyCode}</span>
+                            <span className={`px-1.5 py-0.5 rounded-full text-[9px] font-bold uppercase ${
+                              property.status === "active" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
+                            }`}>
+                              {property.status}
+                            </span>
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell className="hidden lg:table-cell">
+                        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                          <MapPin className="h-3.5 w-3.5 shrink-0 text-primary/60" />
+                          <span className="truncate max-w-[150px]">
+                            {typeof property.location === "string" ? property.location : property.location?.title}
+                          </span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex flex-col items-center gap-1 text-[11px] text-muted-foreground font-medium">
+                          <div className="flex items-center gap-1">
+                            <Eye className="h-3.5 w-3.5 text-blue-500" />
+                            <span>{property.views || 0}</span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <Star className="h-3.5 w-3.5 text-amber-500 fill-amber-500" />
+                            <span>{property.rating || 0}</span>
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex flex-col gap-0.5">
+                          {property.price?.slice(0, 1).map((p, idx) => (
+                            <span key={idx} className="text-xs font-bold text-gray-900 whitespace-nowrap">
+                              ₹{p.amount} <span className="text-[9px] text-gray-400 font-normal uppercase">{p.type}</span>
+                            </span>
+                          ))}
+                          {property.price?.length > 1 && (
+                            <span className="text-[9px] text-primary font-bold">+{property.price.length - 1} MORE</span>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" className="h-8 w-8 p-0 hover:bg-gray-100 rounded-full">
+                              <MoreVertical className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-48 rounded-xl shadow-xl border-gray-100 p-1">
+                            <DropdownMenuItem asChild className="rounded-lg cursor-pointer py-2">
+                              <Link to={`/property/${property._id}`} className="flex items-center gap-2">
+                                <Eye className="h-4 w-4 text-blue-500" /> View Live Listing
+                              </Link>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleEdit(property)} className="rounded-lg cursor-pointer py-2 flex items-center gap-2">
+                              <Edit className="h-4 w-4 text-amber-500" /> Edit Details
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleDelete(property)} className="rounded-lg cursor-pointer py-2 flex items-center gap-2 text-red-600 focus:text-red-600 focus:bg-red-50">
+                              <Trash2 className="h-4 w-4" /> Delete Property
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           </div>
 
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => handlePageChange(currentPage + 1)}
-            disabled={currentPage === totalPages}
-            className="h-10 w-10 rounded-full"
-          >
-            <ChevronRight className="h-4 w-4" />
-          </Button>
+          {/* Mobile Management List View - Optimizes readability for small screens */}
+          <div className="md:hidden divide-y divide-gray-50">
+            {properties.map((property) => (
+              <div key={property._id} className="p-4 flex flex-col gap-3 active:bg-gray-50 transition-colors">
+                <div className="flex gap-4">
+                  <img
+                    src={property.images?.[0] || "/placeholder.jpg"}
+                    className="w-16 h-16 rounded-xl object-cover shadow-sm flex-shrink-0"
+                    alt=""
+                  />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between gap-2">
+                      <span className="font-bold text-gray-900 text-sm line-clamp-2 leading-tight">
+                        {property.title}
+                      </span>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="outline" className="h-8 w-8 p-0 rounded-lg flex-shrink-0 border-gray-100">
+                            <MoreVertical className="h-4 w-4 text-gray-400" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-52 rounded-2xl shadow-2xl border-gray-100 p-1.5">
+                          <DropdownMenuItem asChild className="rounded-xl py-3 cursor-pointer">
+                            <Link to={`/property/${property._id}`} className="flex items-center gap-3">
+                              <Eye className="h-5 w-5 text-blue-500" /> View Live
+                            </Link>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleEdit(property)} className="rounded-xl py-3 cursor-pointer flex items-center gap-3">
+                            <Edit className="h-5 w-5 text-amber-500" /> Edit Property
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleDelete(property)} className="rounded-xl py-3 cursor-pointer flex items-center gap-3 text-red-600 focus:text-red-600 focus:bg-red-50">
+                            <Trash2 className="h-5 w-5" /> Delete Property
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className="text-[10px] font-mono text-gray-400">#{property.propertyCode}</span>
+                      <span className={`px-1.5 py-0.5 rounded-full text-[9px] font-bold uppercase ${
+                        property.status === "active" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
+                      }`}>
+                        {property.status}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between text-xs pt-1 border-t border-gray-50">
+                  <div className="flex items-center gap-3 text-muted-foreground font-medium">
+                    <div className="flex items-center gap-1">
+                      <Eye className="h-3.5 w-3.5 text-blue-400" />
+                      <span>{property.views || 0}</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Star className="h-3.5 w-3.5 text-amber-400 fill-amber-400" />
+                      <span>{property.rating || 0}</span>
+                    </div>
+                  </div>
+                  <div className="font-bold text-primary bg-primary/5 px-2 py-1 rounded-lg">
+                    ₹{property.price?.[0]?.amount}<span className="text-[9px] font-normal text-gray-400 ml-0.5">/mo</span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Optimized Smart Pagination */}
+      {totalPages > 1 && (
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-10">
+          <div className="text-xs text-muted-foreground font-medium sm:order-last">
+            Page <span className="text-foreground">{currentPage}</span> of {totalPages}
+          </div>
+          
+          <div className="flex items-center gap-1.5">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage === 1}
+              className="rounded-xl h-9 px-3 gap-1 border-gray-200"
+            >
+              <ChevronLeft className="h-4 w-4" />
+              <span className="hidden xs:inline">Prev</span>
+            </Button>
+
+            <div className="flex items-center gap-1">
+              {(() => {
+                const pages = [];
+                const maxVisiblePages = 5;
+                let startPage = Math.max(1, currentPage - 2);
+                let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+
+                if (endPage - startPage < maxVisiblePages - 1) {
+                  startPage = Math.max(1, endPage - maxVisiblePages + 1);
+                }
+
+                if (startPage > 1) {
+                  pages.push(
+                    <Button key={1} variant="ghost" size="sm" onClick={() => handlePageChange(1)} className="h-9 w-9 rounded-xl hidden xs:flex">1</Button>
+                  );
+                  if (startPage > 2) pages.push(<span key="d1" className="px-1 text-gray-300">...</span>);
+                }
+
+                for (let i = startPage; i <= endPage; i++) {
+                  pages.push(
+                    <Button
+                      key={i}
+                      variant={currentPage === i ? "default" : "ghost"}
+                      size="sm"
+                      onClick={() => handlePageChange(i)}
+                      className={`h-9 w-9 rounded-xl font-bold ${currentPage === i ? "shadow-md shadow-primary/20" : "text-muted-foreground"}`}
+                    >
+                      {i}
+                    </Button>
+                  );
+                }
+
+                if (endPage < totalPages) {
+                  if (endPage < totalPages - 1) pages.push(<span key="d2" className="px-1 text-gray-300">...</span>);
+                  pages.push(
+                    <Button key={totalPages} variant="ghost" size="sm" onClick={() => handlePageChange(totalPages)} className="h-9 w-9 rounded-xl hidden xs:flex">{totalPages}</Button>
+                  );
+                }
+                return pages;
+              })()}
+            </div>
+
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={currentPage === totalPages}
+              className="rounded-xl h-9 px-3 gap-1 border-gray-200"
+            >
+              <span className="hidden xs:inline">Next</span>
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
       )}
 

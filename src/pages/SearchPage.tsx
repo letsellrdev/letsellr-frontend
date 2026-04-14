@@ -24,6 +24,16 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { ChangeEvent, KeyboardEvent } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { SyncLoader } from "react-spinners";
+import {
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerDescription,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from "@/components/ui/drawer";
 
 interface Suggestion {
   _id: string;
@@ -635,185 +645,207 @@ export default function SearchPage() {
               locations={locations}
             />
 
-            {/* Filter Toggle */}
-            <button
-              onClick={() => setShowMobileFilters(!showMobileFilters)}
-              disabled={isLoading}
-              className="flex items-center justify-center gap-2 h-12 border border-gray-200 rounded-2xl bg-white hover:bg-gray-50 transition-colors disabled:opacity-50"
-            >
-              <Filter className="w-5 h-5" />
-              <span className="font-medium">
-                {hasActiveFilters
-                  ? `Filters (${activeFilterCount})`
-                  : "Show Filters"}
-              </span>
-            </button>
-
-            {/* Mobile Filter Panel */}
-            {showMobileFilters && (
-              <div className="flex flex-col gap-3 p-4 bg-gray-50 rounded-2xl border border-gray-200">
-                {/* Location */}
-                <div>
-                  <label className="block text-sm font-medium mb-2">
-                    Location
-                  </label>
-                  <div className="relative group">
-                    <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5 pointer-events-none z-10 group-focus-within:text-primary transition-colors" />
-                    <Select
-                      value={selectedLocation || "all-locations"}
-                      onValueChange={(val) => setSelectedLocation(val === "all-locations" ? "" : val)}
-                      disabled={isLoading}
-                    >
-                      <SelectTrigger className="w-full h-12 pl-12 rounded-2xl border-gray-200 bg-white focus:ring-primary/20">
-                        <SelectValue placeholder="All Locations" />
-                      </SelectTrigger>
-                      <SelectContent className="rounded-xl shadow-lg">
-                        <SelectItem value="all-locations">All Locations</SelectItem>
-                        {locations.map((loc) => (
-                          <SelectItem key={loc._id} value={loc._id}>
-                            {loc.title}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
-                {/* Category */}
-                <div>
-                  <label className="block text-sm font-medium mb-2">
-                    Category
-                  </label>
-                  <div className="relative group">
-                    <Filter className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5 pointer-events-none z-10 group-focus-within:text-primary transition-colors" />
-                    <Select
-                      value={selectedCategory || "all-categories"}
-                      onValueChange={(val) => setSelectedCategory(val === "all-categories" ? "" : val)}
-                      disabled={isLoading}
-                    >
-                      <SelectTrigger className="w-full h-12 pl-12 rounded-2xl border-gray-200 bg-white focus:ring-primary/20">
-                        <SelectValue placeholder="Any" />
-                      </SelectTrigger>
-                      <SelectContent className="rounded-xl shadow-lg">
-                        <SelectItem value="all-categories">Any</SelectItem>
-                        {categories.map((category) => (
-                          <SelectItem key={category._id} value={category._id}>
-                            {category.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
-                {/* Property Type Grouped Categories */}
-                <div className="flex flex-col gap-4">
-                  {transactionTypes.map((tx) => (
-                    <div key={tx._id} className="flex flex-col gap-2">
-                      <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider">
-                        {tx.name}
-                      </label>
-                      <div className="flex gap-2 flex-wrap">
-                        {categories.map((category) => {
-                          const isActive =
-                            selectedPropertyType.toLowerCase() === tx.name.toLowerCase() &&
-                            selectedCategory === category._id;
-                          return (
-                            <Button
-                              key={`${tx._id}-${category._id}`}
-                              variant={isActive ? "default" : "outline"}
-                              size="sm"
-                              className="rounded-full h-8 px-3 text-xs"
-                              onClick={() => {
-                                if (isActive) {
-                                  setSelectedPropertyType("");
-                                  setSelectedCategory("");
-                                } else {
-                                  setSelectedPropertyType(tx.name.toLowerCase());
-                                  setSelectedCategory(category._id);
-                                }
-                              }}
-                            >
-                              {category.name}
-                            </Button>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Tenant Type Category */}
-                <div>
-                  <label className="block text-sm font-medium mb-2">
-                    Tenant Type (For)
-                  </label>
-                  <div className="flex items-center gap-2 flex-wrap">
-                    {tenantTypes.map((type) => (
+            {/* Drawer Based Filters */}
+            <Drawer open={showMobileFilters} onOpenChange={setShowMobileFilters}>
+              <DrawerTrigger asChild>
+                <button
+                  disabled={isLoading}
+                  className="flex items-center justify-center gap-2 h-12 border border-gray-200 rounded-2xl bg-white hover:bg-gray-50 transition-colors disabled:opacity-50"
+                >
+                  <Filter className="w-5 h-5" />
+                  <span className="font-medium">
+                    {hasActiveFilters
+                      ? `Filters (${activeFilterCount})`
+                      : "Show Filters"}
+                  </span>
+                </button>
+              </DrawerTrigger>
+              <DrawerContent className="max-h-[85vh]">
+                <DrawerHeader className="border-b pb-4">
+                  <div className="flex items-center justify-between">
+                    <DrawerTitle className="text-xl font-bold">Filters</DrawerTitle>
+                    {hasActiveFilters && (
                       <Button
-                        key={type._id}
-                        type="button"
-                        variant={
-                          selectedPropertyTypeCategory === type._id
-                            ? "default"
-                            : "outline"
-                        }
-                        disabled={isLoading}
-                        onClick={() =>
-                          setSelectedPropertyTypeCategory(
-                            selectedPropertyTypeCategory === type._id
-                              ? ""
-                              : type._id
-                          )
-                        }
-                        className="h-9 rounded-full px-4 text-xs"
+                        variant="ghost"
+                        size="sm"
+                        onClick={clearFilters}
+                        className="text-red-500 hover:text-red-600 hover:bg-red-50 h-8 px-2"
                       >
-                        {type.name}
+                        Reset All
                       </Button>
+                    )}
+                  </div>
+                  <DrawerDescription>
+                    Refine your search results
+                  </DrawerDescription>
+                </DrawerHeader>
+
+                <div className="px-4 py-6 overflow-y-auto flex flex-col gap-6">
+                  {/* Location */}
+                  <div>
+                    <label className="block text-sm font-semibold mb-3 flex items-center gap-2">
+                      <MapPin className="w-4 h-4 text-primary" />
+                      Location
+                    </label>
+                    <div className="relative group">
+                      <Select
+                        value={selectedLocation || "all-locations"}
+                        onValueChange={(val) => setSelectedLocation(val === "all-locations" ? "" : val)}
+                        disabled={isLoading}
+                      >
+                        <SelectTrigger className="w-full h-12 rounded-2xl border-gray-200 bg-white focus:ring-primary/20">
+                          <SelectValue placeholder="All Locations" />
+                        </SelectTrigger>
+                        <SelectContent className="rounded-xl shadow-lg">
+                          <SelectItem value="all-locations">All Locations</SelectItem>
+                          {locations.map((loc) => (
+                            <SelectItem key={loc._id} value={loc._id}>
+                              {loc.title}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  {/* Category */}
+                  <div>
+                    <label className="block text-sm font-semibold mb-3 flex items-center gap-2">
+                      <Filter className="w-4 h-4 text-primary" />
+                      Category
+                    </label>
+                    <div className="relative group">
+                      <Select
+                        value={selectedCategory || "all-categories"}
+                        onValueChange={(val) => setSelectedCategory(val === "all-categories" ? "" : val)}
+                        disabled={isLoading}
+                      >
+                        <SelectTrigger className="w-full h-12 rounded-2xl border-gray-200 bg-white focus:ring-primary/20">
+                          <SelectValue placeholder="Any" />
+                        </SelectTrigger>
+                        <SelectContent className="rounded-xl shadow-lg">
+                          <SelectItem value="all-categories">Any</SelectItem>
+                          {categories.map((category) => (
+                            <SelectItem key={category._id} value={category._id}>
+                              {category.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  {/* Property Type Grouped Categories */}
+                  <div className="flex flex-col gap-5">
+                    {transactionTypes.map((tx) => (
+                      <div key={tx._id} className="flex flex-col gap-3">
+                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider">
+                          {tx.name}
+                        </label>
+                        <div className="flex gap-2 flex-wrap">
+                          {categories.map((category) => {
+                            const isActive =
+                              selectedPropertyType.toLowerCase() === tx.name.toLowerCase() &&
+                              selectedCategory === category._id;
+                            return (
+                              <Button
+                                key={`${tx._id}-${category._id}`}
+                                variant={isActive ? "default" : "outline"}
+                                size="sm"
+                                className={`rounded-full h-9 px-4 text-xs transition-all ${
+                                  isActive ? "bg-primary text-white" : ""
+                                }`}
+                                onClick={() => {
+                                  if (isActive) {
+                                    setSelectedPropertyType("");
+                                    setSelectedCategory("");
+                                  } else {
+                                    setSelectedPropertyType(tx.name.toLowerCase());
+                                    setSelectedCategory(category._id);
+                                  }
+                                }}
+                              >
+                                {category.name}
+                              </Button>
+                            );
+                          })}
+                        </div>
+                      </div>
                     ))}
                   </div>
-                </div>
 
-                {/* Price Range */}
-                <div>
-                  <label className="block text-sm font-medium mb-2">
-                    Price Range
-                  </label>
-                  <div className="grid grid-cols-2 gap-2">
-                    <Input
-                      type="number"
-                      min={0}
-                      placeholder="Min"
-                      value={minPrice}
-                      onChange={(e) => setMinPrice(e.target.value)}
-                      className="rounded-2xl border-gray-200"
-                    />
-                    <Input
-                      type="number"
-                      min={0}
-                      placeholder="Max"
-                      value={maxPrice}
-                      onChange={(e) => setMaxPrice(e.target.value)}
-                      className="rounded-2xl border-gray-200"
-                    />
+                  {/* Tenant Type Category */}
+                  <div>
+                    <label className="block text-sm font-semibold mb-3">
+                      Tenant Type (For)
+                    </label>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      {tenantTypes.map((type) => (
+                        <Button
+                          key={type._id}
+                          type="button"
+                          variant={
+                            selectedPropertyTypeCategory === type._id
+                              ? "default"
+                              : "outline"
+                          }
+                          disabled={isLoading}
+                          onClick={() =>
+                            setSelectedPropertyTypeCategory(
+                              selectedPropertyTypeCategory === type._id
+                                ? ""
+                                : type._id
+                            )
+                          }
+                          className="h-10 rounded-full px-5 text-xs"
+                        >
+                          {type.name}
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Price Range */}
+                  <div>
+                    <label className="block text-sm font-semibold mb-3">
+                      Price Range
+                    </label>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="relative">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">₹</span>
+                        <Input
+                          type="number"
+                          min={0}
+                          placeholder="Min"
+                          value={minPrice}
+                          onChange={(e) => setMinPrice(e.target.value)}
+                          className="rounded-2xl border-gray-200 pl-7 h-12"
+                        />
+                      </div>
+                      <div className="relative">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">₹</span>
+                        <Input
+                          type="number"
+                          min={0}
+                          placeholder="Max"
+                          value={maxPrice}
+                          onChange={(e) => setMaxPrice(e.target.value)}
+                          className="rounded-2xl border-gray-200 pl-7 h-12"
+                        />
+                      </div>
+                    </div>
                   </div>
                 </div>
 
-                {/* Actions */}
-                <div className="grid grid-cols-2 gap-3">
-                  <Button
-                    variant="outline"
-                    onClick={clearFilters}
-                    disabled={isLoading}
-                    className="w-full rounded-2xl text-red-600 border-red-200 hover:bg-red-50"
-                  >
-                    <X className="w-4 h-4 mr-2" />
-                    Clear
-                  </Button>
-                  {/* Search button removed on mobile: auto-fetch on change */}
-                </div>
-              </div>
-            )}
+                <DrawerFooter className="border-t bg-white p-4">
+                  <DrawerClose asChild>
+                    <Button className="w-full h-12 rounded-2xl text-base font-semibold shadow-lg shadow-primary/20">
+                      Show Results ({totalProperties})
+                    </Button>
+                  </DrawerClose>
+                </DrawerFooter>
+              </DrawerContent>
+            </Drawer>
           </div>
         </div>
 
@@ -977,6 +1009,25 @@ export default function SearchPage() {
       </section>
 
       <Footer categories={categories} />
+
+      {/* Floating Sticky Filter Button (Mobile only) */}
+      <div className="md:hidden fixed bottom-6 left-0 right-0 flex justify-center z-40 pointer-events-none">
+        <Drawer open={showMobileFilters} onOpenChange={setShowMobileFilters}>
+          <DrawerTrigger asChild>
+            <Button
+              className="h-12 px-6 rounded-full shadow-2xl pointer-events-auto bg-primary text-white flex items-center gap-2 border border-white/20 scale-100 active:scale-95 transition-all duration-200 animate-in fade-in slide-in-from-bottom-4"
+            >
+              <Filter className="w-5 h-5" />
+              <span className="font-semibold">Filters</span>
+              {activeFilterCount > 0 && (
+                <span className="flex items-center justify-center bg-white text-primary rounded-full min-w-[20px] h-5 px-1 text-[10px] font-bold">
+                  {activeFilterCount}
+                </span>
+              )}
+            </Button>
+          </DrawerTrigger>
+        </Drawer>
+      </div>
     </div>
   );
 }

@@ -4,11 +4,12 @@ import { cn } from "@/lib/utils";
 import React from "react";
 
 interface Review {
-  id: number;
+  _id: string;
+  userName: string;
   email: string;
   comment: string;
   rating: number;
-  timestamp: string;
+  createdAt: string;
 }
 
 interface ReviewSectionProps {
@@ -74,20 +75,20 @@ export function ReviewSection({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {displayedReviews.map((review) => (
               <div
-                key={review.id}
+                key={review._id}
                 className="p-5 bg-white border border-gray-100 rounded-3xl hover:shadow-md transition-all duration-300"
               >
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold shrink-0">
-                      {review.email?.charAt(0).toUpperCase()}
+                      {(review.userName || review.email)?.charAt(0).toUpperCase()}
                     </div>
                     <div className="flex flex-col min-w-0">
                       <span className="text-sm font-bold truncate max-w-[150px]">
-                        {review.email}
+                        {review.userName || "Anonymous"}
                       </span>
                       <span className="text-xs text-muted-foreground">
-                        {formatDate(review.timestamp)}
+                        {formatDate(review.createdAt)}
                       </span>
                     </div>
                   </div>

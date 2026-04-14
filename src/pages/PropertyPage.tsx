@@ -74,14 +74,13 @@ function ReviewsSkeleton() {
 
 // ── Interfaces ─────────────────────────────────────────────────────────────────
 interface Review {
-  propertyId: string | number;
-  id: number;
-  name: string;
+  _id: string;
+  propertyId: string;
+  userName: string;
   rating: number;
   email: string;
   comment: string;
-  date: string;
-  timestamp: string;
+  createdAt: string;
 }
 
 // ── Main Component ─────────────────────────────────────────────────────────────
@@ -120,8 +119,8 @@ export default function PropertyPage() {
   const displayedReviews = showAllReviews ? allReviews : allReviews.slice(0, 5);
 
   const calculateAverageRating = (reviews: Review[]) => {
-    if (reviews.length === 0) return "0.0";
-    const sum = reviews.reduce((acc, r) => acc + r.rating, 0);
+    if (!reviews || reviews.length === 0) return "0.0";
+    const sum = reviews.reduce((acc, r) => acc + (Number(r.rating) || 0), 0);
     return (sum / reviews.length).toFixed(1);
   };
 
@@ -133,6 +132,12 @@ export default function PropertyPage() {
     try {
       const response = await instance.get(`/property/${propertyId}`);
       const propertyData = response.data.property;
+
+      if (!propertyData) {
+        navigate("/404");
+        return;
+      }
+
       setProduct(propertyData);
       setCurrentProduct(propertyData);
       

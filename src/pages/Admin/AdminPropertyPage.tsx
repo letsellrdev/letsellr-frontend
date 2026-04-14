@@ -12,24 +12,11 @@ import {
   LayoutGrid,
   List,
   MoreVertical,
+  Search,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import {
-  Drawer,
-  DrawerContent,
-  DrawerHeader,
-  DrawerTitle,
-  DrawerTrigger,
-} from "@/components/ui/drawer";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -106,484 +93,14 @@ interface Property {
   vacancies?: Vacancy[];
 }
 
-interface PropertyFormData extends Partial<Property> {
-  newImages?: File[]; // 👈 for newly uploaded images
-}
-// Constants
-// Note: categories are fetched from the API at runtime
 
-const INITIAL_FORM_STATE: PropertyFormData = {
-  title: "",
-  description: "",
-  images: [],
-  category: { _id: "", name: "" },
-  amenity: "",
-  price: [{ type: "", amount: 0 }],
-  location: "", // Location ID
-  contactNumber: "",
-  propertyType: "buy",
-  status: "active",
-  propertyTypeCategory: "",
-  vacancyCount: 0,
-  vacancies: [],
-};
-
-// Property Form Component
-const PropertyForm = ({
-  formData,
-  onChange,
-  onPriceChange,
-  onAddPrice,
-  onRemovePrice,
-  onFileChange,
-  onSubmit,
-  onCancel,
-  onRemoveImage,
-  onRemoveNewImage,
-  onVacancyChange,
-  onAddVacancy,
-  onRemoveVacancy,
-  isSubmitting,
-  isEditing,
-  formErrors,
-  titleRef,
-  descriptionRef,
-  categoryRef,
-  priceRef,
-  locationRef,
-  amenityRef,
-  contactRef,
-  imagesRef,
-  setFormData,
-  notification,
-  locations,
-  propertyTypes,
-  apiCategories,
-}: {
-  formData: PropertyFormData;
-  onChange: (
-    e: React.ChangeEvent<
-      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
-    >
-  ) => void;
-  onPriceChange: (
-    index: number,
-    field: keyof PriceOption,
-    value: string | number
-  ) => void;
-  onAddPrice: () => void;
-  onRemovePrice: (index: number) => void;
-  onSubmit: () => void;
-  onCancel: () => void;
-  onFileChange: (files: File[]) => void;
-  onRemoveImage: (index: number) => void;
-  onRemoveNewImage: (index: number) => void;
-  onVacancyChange: (
-    index: number,
-    field: keyof Vacancy,
-    value: string | number
-  ) => void;
-  onAddVacancy: () => void;
-  onRemoveVacancy: (index: number) => void;
-  isSubmitting: boolean;
-  isEditing: boolean;
-  formErrors: { [key: string]: string };
-  titleRef: React.RefObject<HTMLInputElement>;
-  descriptionRef: React.RefObject<HTMLTextAreaElement>;
-  categoryRef: React.RefObject<HTMLSelectElement>;
-  priceRef: React.RefObject<HTMLDivElement>;
-  locationRef: React.RefObject<HTMLSelectElement>;
-  amenityRef: React.RefObject<HTMLInputElement>;
-  contactRef: React.RefObject<HTMLInputElement>;
-  imagesRef: React.RefObject<HTMLInputElement>;
-  setFormData: React.Dispatch<React.SetStateAction<PropertyFormData>>;
-  notification: string;
-  locations: Location[];
-  propertyTypes: PropertyType[];
-  apiCategories: { _id: string; name: string }[];
-}) => (
-  <div className="space-y-4 max-h-[70vh] overflow-y-auto px-1">
-    {/* Property Code - Only show for editing existing properties */}
-    {
-      <div>
-        <label className="block text-sm font-medium mb-2">Property Code</label>
-        <Input
-          name="propertyCode"
-          value={formData.propertyCode}
-          onChange={onChange}
-          placeholder="4-5 digit code"
-          className="rounded-xl"
-        />
-        <p className="text-xs text-gray-500 mt-1">
-          You can update this code. must be unique.
-        </p>
-      </div>
-    }
-
-    <div>
-      <label className="block text-sm font-medium mb-2">Title *</label>
-      <Input
-        ref={titleRef}
-        name="title"
-        value={formData.title}
-        onChange={onChange}
-        placeholder="Property title"
-        className="rounded-xl"
-      />
-      {formErrors.title && (
-        <p className="text-red-500 text-sm mt-1">{formErrors.title}</p>
-      )}
-    </div>
-
-    <div>
-      <label className="block text-sm font-medium mb-2">Description *</label>
-      <textarea
-        ref={descriptionRef}
-        name="description"
-        value={formData.description}
-        onChange={onChange}
-        placeholder="Property description"
-        rows={3}
-        className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/50"
-      />
-      {formErrors.description && (
-        <p className="text-red-500 text-xs mt-1">{formErrors.description}</p>
-      )}
-    </div>
-
-    <div>
-      <label className="block text-sm font-medium mb-2">Category *</label>
-      <select
-        ref={categoryRef}
-        name="category"
-        value={formData.category?._id}
-        onChange={(e) => {
-          const selected = apiCategories.find((c) => c._id === e.target.value);
-          setFormData({
-            ...formData,
-            category: selected || { _id: "", name: "" },
-          });
-        }}
-        className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/50"
-      >
-        <option value="">Select category</option>
-        {apiCategories.map((cat) => (
-          <option key={cat._id} value={cat._id}>
-            {cat.name}
-          </option>
-        ))}
-      </select>
-
-      {formErrors.category && (
-        <p className="text-red-500 text-xs mt-1">{formErrors.category}</p>
-      )}
-    </div>
-
-    <div ref={priceRef}>
-      <label className="block text-sm font-medium mb-2">Price Options *</label>
-      {formData.price?.map((p, idx) => (
-        <div key={idx} className="flex gap-2 mb-2 items-center">
-          <Input
-            placeholder="Type (e.g., Single Room)"
-            value={p.type}
-            onChange={(e) => onPriceChange(idx, "type", e.target.value)}
-            className="rounded-xl flex-1"
-          />
-          <Input
-            placeholder="Amount"
-            type="number"
-            value={p.amount === 0 ? "" : p.amount}
-            onChange={(e) =>
-              onPriceChange(
-                idx,
-                "amount",
-                e.target.value === "" ? "" : Number(e.target.value)
-              )
-            }
-            className="rounded-xl w-24"
-          />
-
-          {formData.price.length > 1 && (
-            <Button
-              variant="outline"
-              className="px-2"
-              onClick={() => onRemovePrice(idx)}
-            >
-              -
-            </Button>
-          )}
-        </div>
-      ))}
-      {formErrors.price && (
-        <p className="text-red-500 text-xs mt-1">{formErrors.price}</p>
-      )}
-      <Button variant="outline" size="sm" onClick={onAddPrice}>
-        Add Price Option
-      </Button>
-    </div>
-
-    <div>
-      <label className="block text-sm font-medium mb-2">Location *</label>
-      <select
-        ref={locationRef}
-        name="location"
-        value={
-          typeof formData.location === "string"
-            ? formData.location
-            : (formData.location as Location)?._id || ""
-        }
-        onChange={onChange}
-        className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/50"
-      >
-        <option value="">Select location</option>
-        {locations.map((location) => (
-          <option key={location._id} value={location._id}>
-            {location.title}
-          </option>
-        ))}
-      </select>
-      {formErrors.location && (
-        <p className="text-red-500 text-xs mt-1">{formErrors.location}</p>
-      )}
-    </div>
-
-    <div>
-      <label className="block text-sm font-medium mb-2">
-        Amenities (comma separated) *
-      </label>
-      <Input
-        ref={amenityRef}
-        name="amenity"
-        value={formData.amenity}
-        onChange={onChange}
-        placeholder="WiFi, AC, Parking"
-        className="rounded-xl"
-      />
-      {formErrors.amenity && (
-        <p className="text-red-500 text-xs mt-1">{formErrors.amenity}</p>
-      )}
-    </div>
-
-    <div>
-      <label className="block text-sm font-medium mb-2">Contact Number *</label>
-      <Input
-        ref={contactRef}
-        name="contactNumber"
-        value={formData.contactNumber}
-        onChange={onChange}
-        placeholder="9876543210"
-        className="rounded-xl"
-      />
-      {formErrors.contactNumber && (
-        <p className="text-red-500 text-xs mt-1">{formErrors.contactNumber}</p>
-      )}
-    </div>
-
-    <div>
-      <label className="block text-sm font-medium mb-2">Vacancies</label>
-      {formData.vacancies?.map((v, idx) => (
-        <div key={idx} className="flex gap-2 mb-2 items-center">
-          <Input
-            placeholder="Type (e.g., Girls Room)"
-            value={v.type}
-            onChange={(e) => onVacancyChange(idx, "type", e.target.value)}
-            className="rounded-xl flex-1"
-          />
-          <Input
-            placeholder="Count"
-            type="number"
-            min="0"
-            value={v.count === 0 ? "" : v.count}
-            onChange={(e) =>
-              onVacancyChange(
-                idx,
-                "count",
-                e.target.value === "" ? 0 : Number(e.target.value)
-              )
-            }
-            className="rounded-xl w-24"
-          />
-          <Button
-            variant="outline"
-            className="px-2"
-            onClick={() => onRemoveVacancy(idx)}
-          >
-            -
-          </Button>
-        </div>
-      ))}
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={onAddVacancy}
-        className="mb-2"
-      >
-        Add Vacancy Detail
-      </Button>
-
-      <div className="flex items-center gap-2">
-        <label className="text-sm font-medium whitespace-nowrap">
-          Total Vacancy Count:
-        </label>
-        <Input
-          name="vacancyCount"
-          type="number"
-          min="0"
-          value={formData.vacancyCount ?? 0}
-          onChange={onChange}
-          placeholder="Total vacancies"
-          className="rounded-xl w-32"
-          disabled={formData.vacancies && formData.vacancies.length > 0}
-        />
-      </div>
-      <p className="text-xs text-gray-500 mt-1">
-        {formData.vacancies && formData.vacancies.length > 0
-          ? "Total count is automatically calculated from details."
-          : "Enter the total number of available vacancies."}
-      </p>
-    </div>
-
-    <div>
-      <label className="block text-sm font-medium mb-2">Property Type *</label>
-      <select
-        name="propertyType"
-        value={formData.propertyType}
-        onChange={onChange}
-        className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/50"
-      >
-        <option value="buy">Buy</option>
-        <option value="rent">Rent</option>
-        <option value="lease">Lease</option>
-      </select>
-    </div>
-
-    <div>
-      <label className="block text-sm font-medium mb-2">
-        Property Type Category
-      </label>
-      <select
-        name="propertyTypeCategory"
-        value={
-          typeof formData.propertyTypeCategory === "string"
-            ? formData.propertyTypeCategory
-            : (formData.propertyTypeCategory as PropertyType)?._id || ""
-        }
-        onChange={onChange}
-        className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/50"
-      >
-        <option value="">Select property type category</option>
-        {propertyTypes.map((type) => (
-          <option key={type._id} value={type._id}>
-            {type.name}
-          </option>
-        ))}
-      </select>
-    </div>
-
-    <div>
-      {/* <label className="block text-sm font-medium mb-2">Status *</label>
-      <select
-        name="status"
-        value={formData.status || "active"}
-        onChange={onChange}
-        className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/50"
-      /> */}
-
-      <label className="block text-sm font-medium mb-2">
-        Property Images *
-      </label>
-      <input
-        ref={imagesRef}
-        type="file"
-        name="newImages"
-        multiple
-        accept="image/*"
-        onChange={(e) => {
-          if (!e.target.files) return;
-          onFileChange(Array.from(e.target.files));
-          e.target.value = "";
-        }}
-        className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/50"
-      />
-      {formErrors.images && (
-        <p className="text-red-500 text-xs mt-1">{formErrors.images}</p>
-      )}
-
-      {/* Already uploaded images */}
-      {formData.images?.length > 0 && (
-        <div className="flex flex-wrap gap-2 mt-2">
-          {formData.images.map((url, index) => (
-            <div key={index} className="relative">
-              <img
-                src={url}
-                alt={`existing-${index}`}
-                className="w-20 h-20 object-cover rounded-lg border"
-              />
-              <button
-                type="button"
-                className="absolute top-0 right-0 bg-red-500 text-white rounded-full px-2 py-0.5 text-xs font-bold hover:bg-red-600"
-                onClick={() => onRemoveImage(index)}
-              >
-                ×
-              </button>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* Newly selected images */}
-      {formData.newImages?.length > 0 && (
-        <div className="flex flex-wrap gap-2 mt-2">
-          {formData.newImages.map((file, index) => (
-            <div key={index} className="relative">
-              <img
-                src={URL.createObjectURL(file)}
-                alt={`new-${index}`}
-                className="w-20 h-20 object-cover rounded-lg border"
-              />
-              <button
-                type="button"
-                className="absolute top-0 right-0 bg-red-500 text-white rounded-full px-2 py-0.5 text-xs font-bold hover:bg-red-600"
-                onClick={() => onRemoveNewImage(index)}
-              >
-                ×
-              </button>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-
-    <div className="flex gap-3 pt-4 sticky bottom-0 bg-white pb-2">
-      <Button
-        type="button"
-        variant="outline"
-        onClick={onCancel}
-        className="flex-1 rounded-xl"
-        disabled={isSubmitting}
-      >
-        Cancel
-      </Button>
-      <Button
-        onClick={onSubmit}
-        className="flex-1 rounded-xl"
-        disabled={isSubmitting}
-      >
-        <Save className="h-4 w-4 mr-2" />
-        {isSubmitting ? "Saving..." : isEditing ? "Update" : "Create"}
-      </Button>
-    </div>
-  </div>
-);
 
 // Property Card Component
 const PropertyCard = ({
   property,
-  onEdit,
   onDelete,
 }: {
   property: Property;
-  onEdit: (property: Property, mobile?: boolean) => void;
   onDelete: (property: Property) => void;
 }) => {
   const firstImage = property.images?.[0] || "/placeholder.jpg";
@@ -693,20 +210,21 @@ const PropertyCard = ({
 
       {/* Bottom Section: Actions */}
       <div className="flex gap-2 pt-1">
-        <Button
-          size="sm"
-          variant="outline"
-          className="flex-1 rounded-xl h-9 text-xs sm:text-sm border-gray-200 hover:bg-primary hover:text-white hover:border-primary transition-all duration-200"
-          onClick={() => onEdit(property, false)}
-        >
-          <Edit className="h-3.5 w-3.5 mr-1.5" />
-          Edit
-        </Button>
+        <Link to={`/admin/properties/edit/${property._id}`} className="flex-1">
+          <Button
+            size="sm"
+            variant="outline"
+            className="w-full rounded-xl h-9 text-xs sm:text-sm border-gray-200 hover:bg-primary hover:text-white hover:border-primary transition-all duration-200"
+          >
+            <Edit className="h-3.5 w-3.5 mr-1.5" />
+            Edit
+          </Button>
+        </Link>
         <Link to={`/property/${property._id}`} className="flex-1">
           <Button
             size="sm"
             variant="outline"
-            className="w-full rounded-xl h-9 text-xs sm:text-sm border-gray-200 hover:bg-gray-100 transition-all duration-200"
+            className="w-full rounded-xl h-9 text-xs sm:text-sm border-gray-200 hover:bg-primary transition-all duration-200"
           >
             <Eye className="h-3.5 w-3.5 mr-1.5" />
             View
@@ -730,18 +248,10 @@ const AdminPropertiesPage = () => {
   const [properties, setProperties] = useState<Property[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [currentView, setCurrentView] = useState<"grid" | "table">("grid");
-  const [isFormOpen, setIsFormOpen] = useState(false);
-  const [isMobileFormOpen, setIsMobileFormOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [currentProperty, setCurrentProperty] = useState<Property | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [formData, setFormData] =
-    useState<PropertyFormData>(INITIAL_FORM_STATE);
-  const [formErrors, setFormErrors] = useState<{ [key: string]: string }>({});
   const [notification, setNotification] = useState<string | null>(null);
-  const [locations, setLocations] = useState<Location[]>([]);
-  const [propertyTypes, setPropertyTypes] = useState<PropertyType[]>([]);
-  const [apiCategories, setApiCategories] = useState<{ _id: string; name: string }[]>([]);
   const [searchQuery, setSearchQuery] = useState<string>("");
 
   // Pagination State
@@ -750,14 +260,6 @@ const AdminPropertiesPage = () => {
   const [totalProperties, setTotalProperties] = useState(0);
   const itemsPerPage = 12;
 
-  const titleRef = useRef<HTMLInputElement>(null);
-  const descriptionRef = useRef<HTMLTextAreaElement>(null);
-  const categoryRef = useRef<HTMLSelectElement>(null);
-  const priceRef = useRef<HTMLDivElement>(null);
-  const locationRef = useRef<HTMLSelectElement>(null);
-  const amenityRef = useRef<HTMLInputElement>(null);
-  const contactRef = useRef<HTMLInputElement>(null);
-  const imagesRef = useRef<HTMLInputElement>(null);
 
   // Simple in-memory cache for search results (cleared on page refresh)
   const searchCacheRef = useState(
@@ -770,9 +272,6 @@ const AdminPropertiesPage = () => {
 
   // Fetch properties, locations, and property types
   useEffect(() => {
-    fetchLocations();
-    fetchPropertyTypes();
-    instance.get("/category").then((res) => setApiCategories(res.data.data || [])).catch(() => { });
   }, []);
 
   // Fetch properties when page or search changes
@@ -835,107 +334,8 @@ const AdminPropertiesPage = () => {
     }
   };
 
-  const fetchLocations = async () => {
-    try {
-      const res = await instance.get("/location");
-      setLocations(res.data.data || []);
-    } catch (error) {
-      console.error("Error fetching locations:", error);
-      setLocations([]);
-    }
-  };
 
-  const fetchPropertyTypes = async () => {
-    try {
-      const res = await instance.get("/propertytype");
-      setPropertyTypes(res.data.data || []);
-    } catch (error) {
-      console.error("Error fetching property types:", error);
-      setPropertyTypes([]);
-    }
-  };
 
-  const resetForm = () => {
-    setFormData(INITIAL_FORM_STATE);
-    setCurrentProperty(null);
-  };
-
-  const handleEdit = (property: Property, mobile = false) => {
-    // Match the category from the live API categories list
-    const category = apiCategories.find(
-      (c) => c._id === property.category?._id
-    ) || {
-      _id: property.category?._id || "",
-      name: property.category?.name || "",
-    };
-
-    setCurrentProperty(property);
-    // Merge defaults so missing fields (gender, propertyType, status, etc.) get default values
-    const merged: PropertyFormData = {
-      ...INITIAL_FORM_STATE,
-      ...property,
-      category: property.category || INITIAL_FORM_STATE.category,
-      location:
-        typeof property.location === "string"
-          ? property.location
-          : (property.location as Location)?._id || "",
-      propertyTypeCategory:
-        typeof property.propertyTypeCategory === "string"
-          ? property.propertyTypeCategory
-          : (property.propertyTypeCategory as PropertyType)?._id || "",
-      vacancies: property.vacancies || [],
-    };
-    setFormData(merged);
-    setIsFormOpen(!mobile);
-    setIsMobileFormOpen(mobile);
-  };
-
-  const removeExistingImage = (index: number) => {
-    setFormData((prev) => ({
-      ...prev,
-      images: prev.images?.filter((_, i) => i !== index),
-    }));
-  };
-
-  const validateForm = () => {
-    const errors: { [key: string]: string } = {};
-
-    if (!formData.title?.trim()) errors.title = "Title is required";
-    if (!formData.description?.trim())
-      errors.description = "Description is required";
-    if (!formData.category?._id) errors.category = "Category is required";
-    if (
-      !formData.price ||
-      formData.price.length === 0 ||
-      formData.price.every((p) => !p.amount)
-    )
-      errors.price = "At least one price is required";
-    if (
-      !formData.location ||
-      (typeof formData.location === "string" && !formData.location.trim())
-    )
-      errors.location = "Location is required";
-    if (!formData.amenity?.trim())
-      errors.amenity = "At least one amenity is required";
-    if (!formData.contactNumber?.trim())
-      errors.contactNumber = "Contact number is required";
-    if (
-      (!formData.images || formData.images.length === 0) &&
-      (!formData.newImages || formData.newImages.length === 0)
-    ) {
-      errors.images = "Please upload at least one image";
-    }
-
-    setFormErrors(errors);
-    return Object.keys(errors).length === 0; // returns true if valid
-  };
-
-  const handleFileChange = (files: File[]) => {
-    setFormData((prev) => ({
-      ...prev,
-      newImages: [...(prev.newImages || []), ...files],
-    }));
-  };
 
   const handleDelete = (property: Property) => {
     setCurrentProperty(property);
@@ -970,231 +370,6 @@ const AdminPropertiesPage = () => {
     }
   };
 
-  const handleInputChange = (
-    e: React.ChangeEvent<
-      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
-    >
-  ) => {
-    const { name, value, files } = e.target as HTMLInputElement;
-
-    if (files && name === "newImages") {
-      // Convert FileList to File[]
-      setFormData((prev) => ({
-        ...prev,
-        newImages: [...(prev.newImages || []), ...Array.from(files)],
-      }));
-    } else if (name === "category") {
-      const category = apiCategories.find((c) => c._id === value);
-      setFormData((prev) => ({
-        ...prev,
-        category: category || { _id: "", name: "" },
-      }));
-    } else {
-      setFormData((prev) => ({ ...prev, [name]: value }));
-    }
-  };
-
-  const handlePriceChange = (
-    index: number,
-    field: keyof PriceOption,
-    value: string | number
-  ) => {
-    const updatedPrices = [...(formData.price || [])];
-    updatedPrices[index] = { ...updatedPrices[index], [field]: value };
-    setFormData((prev) => ({ ...prev, price: updatedPrices }));
-  };
-
-  const addPriceOption = () => {
-    setFormData((prev) => ({
-      ...prev,
-      price: [...(prev.price || []), { type: "", amount: 0 }],
-    }));
-  };
-
-  const removePriceOption = (index: number) => {
-    const updatedPrices = [...(formData.price || [])];
-    updatedPrices.splice(index, 1);
-    setFormData((prev) => ({ ...prev, price: updatedPrices }));
-  };
-
-  const handleRemoveNewImage = (index: number) => {
-    setFormData((prev) => ({
-      ...prev,
-      newImages: prev.newImages?.filter((_, i) => i !== index),
-    }));
-  };
-
-  const handleVacancyChange = (
-    index: number,
-    field: keyof Vacancy,
-    value: string | number
-  ) => {
-    const updatedVacancies = [...(formData.vacancies || [])];
-    updatedVacancies[index] = { ...updatedVacancies[index], [field]: value };
-
-    // Auto-calculate total vacancy count
-    const totalCount = updatedVacancies.reduce(
-      (sum, v) => sum + (Number(v.count) || 0),
-      0
-    );
-
-    setFormData((prev) => ({
-      ...prev,
-      vacancies: updatedVacancies,
-      vacancyCount: totalCount,
-    }));
-  };
-
-  const addVacancy = () => {
-    setFormData((prev) => ({
-      ...prev,
-      vacancies: [...(prev.vacancies || []), { type: "", count: 0 }],
-    }));
-  };
-
-  const removeVacancy = (index: number) => {
-    const updatedVacancies = [...(formData.vacancies || [])];
-    updatedVacancies.splice(index, 1);
-
-    // Recalculate total
-    const totalCount = updatedVacancies.reduce(
-      (sum, v) => sum + (Number(v.count) || 0),
-      0
-    );
-
-    setFormData((prev) => ({
-      ...prev,
-      vacancies: updatedVacancies,
-      vacancyCount:
-        updatedVacancies.length > 0 ? totalCount : prev.vacancyCount, // Keep manual count if list becomes empty
-    }));
-  };
-
-  const handleSubmit = async () => {
-    if (!validateForm()) {
-      if (formErrors.title && titleRef.current)
-        titleRef.current.scrollIntoView({
-          behavior: "smooth",
-          block: "center",
-        });
-      else if (formErrors.description && descriptionRef.current)
-        descriptionRef.current.scrollIntoView({
-          behavior: "smooth",
-          block: "center",
-        });
-      else if (formErrors.category && categoryRef.current)
-        categoryRef.current.scrollIntoView({
-          behavior: "smooth",
-          block: "center",
-        });
-      else if (formErrors.price && priceRef.current)
-        priceRef.current.scrollIntoView({
-          behavior: "smooth",
-          block: "center",
-        });
-      else if (formErrors.location && locationRef.current)
-        locationRef.current.scrollIntoView({
-          behavior: "smooth",
-          block: "center",
-        });
-      else if (formErrors.amenity && amenityRef.current)
-        amenityRef.current.scrollIntoView({
-          behavior: "smooth",
-          block: "center",
-        });
-      else if (formErrors.contactNumber && contactRef.current)
-        contactRef.current.scrollIntoView({
-          behavior: "smooth",
-          block: "center",
-        });
-      else if (formErrors.images && imagesRef.current)
-        imagesRef.current.scrollIntoView({
-          behavior: "smooth",
-          block: "center",
-        });
-      return;
-    }
-
-    setIsSubmitting(true);
-
-    try {
-      let imageUrls: string[] = [];
-
-      // If new images are selected, upload them to S3 first
-      if (formData.newImages && formData.newImages.length > 0) {
-        const fileArray = formData.newImages; // already an array of Files
-
-        // 1️⃣ Get signed URLs from backend
-        const res = await instance.post("/property/upload-url", {
-          files: fileArray.map((f) => ({ name: f.name, type: f.type })),
-        });
-
-        const signedUrls = res.data.urls; // Array of { uploadUrl, fileUrl, key }
-
-        // 2️⃣ Upload files to S3 directly
-        await Promise.all(
-          fileArray.map((file, i) =>
-            fetch(signedUrls[i].uploadUrl, {
-              method: "PUT",
-              body: file,
-              headers: { "Content-Type": file.type },
-            })
-          )
-        );
-
-        // 3️⃣ Extract actual file URLs
-        imageUrls = signedUrls.map((item: any) => item.fileUrl);
-      }
-
-      // 4️⃣ Prepare payload
-      const payload = {
-        ...formData,
-        category: formData.category?._id,
-        price: formData.price?.filter((p) => p.amount > 0) || [],
-        location:
-          typeof formData.location === "string"
-            ? formData.location
-            : (formData.location as Location)?._id || "",
-        propertyTypeCategory: (() => {
-          const val =
-            typeof formData.propertyTypeCategory === "string"
-              ? formData.propertyTypeCategory
-              : (formData.propertyTypeCategory as PropertyType)?._id || "";
-          // Send undefined (omit) if empty so MongoDB doesn't try to cast "" to ObjectId
-          return val.trim() ? val : undefined;
-        })(),
-        images: [...(formData.images || []), ...imageUrls], // merge old + new
-      };
-
-      let response;
-      if (currentProperty) {
-        await instance.put(`/property/${currentProperty._id}`, payload, {
-          withCredentials: true,
-        });
-        // refetch all properties
-        fetchProperties();
-      } else {
-        response = await instance.post("/property", payload, {
-          withCredentials: true,
-        });
-
-        fetchProperties();
-      }
-
-      handleCloseForm();
-    } catch (error) {
-      console.error("Error saving property:", error);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleCloseForm = () => {
-    setIsFormOpen(false);
-    setIsMobileFormOpen(false);
-    setCurrentProperty(null);
-    setFormData(INITIAL_FORM_STATE);
-  };
 
   const handlePageChange = (newPage: number) => {
     if (newPage >= 1 && newPage <= totalPages) {
@@ -1214,176 +389,84 @@ const AdminPropertiesPage = () => {
       )}
 
       {/* Header Section */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      {/* Unified Control Header */}
+      <div className=" p-4 sm:p-6 rounded-2xl border border-gray-100 shadow-sm flex flex-col xl:flex-row xl:items-center justify-between gap-6">
+        {/* Title & Stats Summary */}
         <div className="flex flex-col gap-1">
-          <h1 className="text-2xl font-bold text-gray-900">Manage Properties</h1>
-          <p className="text-sm text-muted-foreground whitespace-nowrap">
-            {totalProperties} total properties listed
-          </p>
+          <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Property Management</h1>
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <span className="flex items-center gap-1.5 px-2 py-0.5 bg-primary/5 text-primary rounded-full font-medium">
+              {totalProperties} Properties
+            </span>
+          </div>
         </div>
-        
-        <div className="flex items-center gap-3 w-full md:w-auto">
-          <Tabs value={currentView} onValueChange={(v) => setCurrentView(v as "grid" | "table")} className="hidden sm:block">
-            <TabsList className="rounded-xl h-10 w-fit">
-              <TabsTrigger value="grid" className="rounded-lg px-3">
-                <LayoutGrid className="h-4 w-4 mr-2" />
-                Grid
-              </TabsTrigger>
-              <TabsTrigger value="table" className="rounded-lg px-3">
-                <List className="h-4 w-4 mr-2" />
-                Table
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
 
-          <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
-            <DialogTrigger asChild className="hidden md:flex">
+          <Link to="/admin/properties/add" className="hidden md:flex">
               <Button
-                className="rounded-xl bg-primary hover:bg-primary/90 ml-auto"
-                onClick={resetForm}
+                className="rounded-xl h-11 px-5 bg-primary text-white hover:bg-primary/90 shadow-md shadow-primary/20 font-bold"
               >
-                <Plus className="h-4 w-4 mr-2" />
-                Add Property
+                <Plus className="h-5 w-5 mr-1" />
+                Post Listing
               </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden">
-              <DialogHeader>
-                <DialogTitle>
-                  {currentProperty ? "Edit Property" : "Add New Property"}
-                </DialogTitle>
-              </DialogHeader>
-              <PropertyForm
-                formData={formData}
-                onChange={handleInputChange}
-                onPriceChange={handlePriceChange}
-                onAddPrice={addPriceOption}
-                onRemovePrice={removePriceOption}
-                onFileChange={handleFileChange}
-                onSubmit={handleSubmit}
-                onCancel={() => {
-                  setIsFormOpen(false);
-                  resetForm();
-                }}
-                onRemoveImage={removeExistingImage}
-                onRemoveNewImage={handleRemoveNewImage}
-                onVacancyChange={handleVacancyChange}
-                onAddVacancy={addVacancy}
-                onRemoveVacancy={removeVacancy}
-                isSubmitting={isSubmitting}
-                isEditing={!!currentProperty}
-                formErrors={formErrors}
-                titleRef={titleRef}
-                descriptionRef={descriptionRef}
-                categoryRef={categoryRef}
-                priceRef={priceRef}
-                locationRef={locationRef}
-                amenityRef={amenityRef}
-                contactRef={contactRef}
-                imagesRef={imagesRef}
-                setFormData={setFormData}
-                notification={notification || ""}
-                locations={locations}
-                propertyTypes={propertyTypes}
-                apiCategories={apiCategories}
-              />
-            </DialogContent>
-          </Dialog>
+            </Link>
 
-          {/* Mobile Drawer */}
-          <Drawer open={isMobileFormOpen} onOpenChange={setIsMobileFormOpen}>
-            <DrawerTrigger asChild className="md:hidden flex-1">
+            {/* Mobile Add Button */}
+            <Link to="/admin/properties/add" className="md:hidden flex-1 flex">
               <Button
-                className="w-full rounded-xl bg-primary hover:bg-primary/90"
-                onClick={resetForm}
+                className="w-full rounded-xl h-11 bg-primary hover:bg-primary/90 shadow-md shadow-primary/20 font-bold"
               >
-                <Plus className="h-4 w-4 mr-2" />
-                Add Property
+                <Plus className="h-5 w-5 mr-1" />
+                New Property
               </Button>
-            </DrawerTrigger>
-            <DrawerContent>
-              <DrawerHeader>
-                <DrawerTitle>
-                  {currentProperty ? "Edit Property" : "Add New Property"}
-                </DrawerTitle>
-              </DrawerHeader>
-              <PropertyForm
-                formData={formData}
-                setFormData={setFormData}
-                onChange={handleInputChange}
-                onPriceChange={handlePriceChange}
-                onAddPrice={addPriceOption}
-                onRemovePrice={removePriceOption}
-                onSubmit={handleSubmit}
-                onCancel={handleCloseForm}
-                onRemoveImage={removeExistingImage}
-                onRemoveNewImage={handleRemoveNewImage}
-                onFileChange={handleFileChange}
-                isSubmitting={isSubmitting}
-                isEditing={!!currentProperty}
-                formErrors={formErrors}
-                titleRef={titleRef}
-                descriptionRef={descriptionRef}
-                categoryRef={categoryRef}
-                priceRef={priceRef}
-                locationRef={locationRef}
-                amenityRef={amenityRef}
-                contactRef={contactRef}
-                imagesRef={imagesRef}
-                notification={notification}
-                locations={locations}
-                propertyTypes={propertyTypes}
-                onVacancyChange={handleVacancyChange}
-                onAddVacancy={addVacancy}
-                onRemoveVacancy={removeVacancy}
-                apiCategories={apiCategories}
-              />
-            </DrawerContent>
-          </Drawer>
-        </div>
+            </Link>
+
+        {/* Action Toolbar */}
+   
       </div>
 
-      {/* Search Bar Row - Right Aligned */}
-      <div className="flex flex-col sm:flex-row justify-end items-center gap-3">
-        <div className="relative w-full sm:w-80 group">
-          <Input
-            placeholder="Search by title, code or location..."
-            value={searchQuery}
-            onChange={(e) => {
-              setSearchQuery(e.target.value);
-              setCurrentPage(1);
-            }}
-            className="pl-10 h-10 rounded-xl bg-white border-gray-200 focus-visible:ring-primary/20 transition-all shadow-sm group-focus-within:shadow-md"
-          />
-          <Plus className="h-5 w-5 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 rotate-45" />
-          {searchQuery && (
-            <button
-              onClick={() => {
-                setSearchQuery("");
+         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 flex-1 xl:justify-between">
+          {/* Search Integrated */}
+          <div className="relative group flex-1 max-w-md">
+            <Input
+              placeholder="search by title or code..."
+              value={searchQuery}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
                 setCurrentPage(1);
               }}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 p-1"
-            >
-              <Trash2 className="h-4 w-4" />
-            </button>
-          )}
-        </div>
-      </div>
+              className="pl-10 h-11 rounded-xl bg-gray-50/50 border-gray-100 focus:bg-white focus:ring-primary/20 transition-all"
+            />
+            <Search className="h-4.5 w-4.5 absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-primary transition-colors" />
+            {searchQuery && (
+              <button
+                onClick={() => {
+                  setSearchQuery("");
+                  setCurrentPage(1);
+                }}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              >
+                <Trash2 className="h-4 w-4" />
+              </button>
+            )}
+          </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <Card className="p-4 flex flex-col items-center">
-          <span className="text-muted-foreground">Total Properties</span>
-          <span className="text-2xl font-bold">{totalProperties}</span>
-        </Card>
-        {/* <Card className="p-4 flex flex-col items-center">
-          <span className="text-muted-foreground">Active</span>
-          <span className="text-2xl font-bold">{stats.active}</span>
-        </Card>
-        <Card className="p-4 flex flex-col items-center">
-          <span className="text-muted-foreground">Inactive</span>
-          <span className="text-2xl font-bold">{stats.inactive}</span>
-        </Card> */}
-      </div>
+          <div className="flex items-center gap-3">
+            {/* View Switcher */}
+            <Tabs value={currentView} onValueChange={(v) => setCurrentView(v as "grid" | "table")} className="hidden sm:block">
+              <TabsList className="rounded-xl h-11 bg-gray-50/50 p-1 border border-gray-100">
+                <TabsTrigger value="grid" className="rounded-lg px-4 h-9 data-[state=active]:bg-white data-[state=active]:shadow-sm">
+                  <LayoutGrid className="h-4 w-4 mr-2" />
+                  Grid
+                </TabsTrigger>
+                <TabsTrigger value="table" className="rounded-lg px-4 h-9 data-[state=active]:bg-white data-[state=active]:shadow-sm">
+                  <List className="h-4 w-4 mr-2" />
+                  Table
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
+
+          </div>
+        </div>
 
       {/* Property Display Section */}
       {isLoading ? (
@@ -1399,7 +482,6 @@ const AdminPropertiesPage = () => {
             <PropertyCard
               key={property._id}
               property={property}
-              onEdit={handleEdit}
               onDelete={handleDelete}
             />
           ))}
@@ -1479,18 +561,20 @@ const AdminPropertiesPage = () => {
                       <TableCell className="text-right">
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" className="h-8 w-8 p-0 hover:bg-gray-100 rounded-full">
+                            <Button variant="ghost" className="h-8 w-8 p-0 hover:bg-primary rounded-full">
                               <MoreVertical className="h-4 w-4" />
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end" className="w-48 rounded-xl shadow-xl border-gray-100 p-1">
                             <DropdownMenuItem asChild className="rounded-lg cursor-pointer py-2">
                               <Link to={`/property/${property._id}`} className="flex items-center gap-2">
-                                <Eye className="h-4 w-4 text-blue-500" /> View Live Listing
+                                <Eye className="h-4 w-4" /> View Live Listing
                               </Link>
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleEdit(property)} className="rounded-lg cursor-pointer py-2 flex items-center gap-2">
-                              <Edit className="h-4 w-4 text-amber-500" /> Edit Details
+                            <DropdownMenuItem asChild className="rounded-lg cursor-pointer py-2 flex items-center gap-2">
+                              <Link to={`/admin/properties/edit/${property._id}`}>
+                                <Edit className="h-4 w-4" /> Edit Details
+                              </Link>
                             </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => handleDelete(property)} className="rounded-lg cursor-pointer py-2 flex items-center gap-2 text-red-600 focus:text-red-600 focus:bg-red-50">
                               <Trash2 className="h-4 w-4" /> Delete Property
@@ -1532,8 +616,10 @@ const AdminPropertiesPage = () => {
                               <Eye className="h-5 w-5 text-blue-500" /> View Live
                             </Link>
                           </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleEdit(property)} className="rounded-xl py-3 cursor-pointer flex items-center gap-3">
-                            <Edit className="h-5 w-5 text-amber-500" /> Edit Property
+                          <DropdownMenuItem asChild className="rounded-xl py-3 cursor-pointer">
+                            <Link to={`/admin/properties/edit/${property._id}`} className="flex items-center gap-3">
+                              <Edit className="h-5 w-5 text-amber-500" /> Edit Property
+                            </Link>
                           </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => handleDelete(property)} className="rounded-xl py-3 cursor-pointer flex items-center gap-3 text-red-600 focus:text-red-600 focus:bg-red-50">
                             <Trash2 className="h-5 w-5" /> Delete Property

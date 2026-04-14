@@ -10,6 +10,7 @@ import AdminDashboardPage from "./pages/Admin/AdminDashboardPage";
 import AdminLogin from "./pages/Admin/AdminLogin";
 import AdminLayout from "./pages/Admin/AdminLayout";
 import AdminPropertiesPage from "./pages/Admin/AdminPropertyPage";
+import AdminPropertyFormPage from "./pages/Admin/AdminPropertyFormPage";
 import AdminReviewsPage from "./pages/Admin/AdminReviewsPage";
 import AdminLocationPage from "./pages/Admin/AdminLocationPage";
 import AdminPropertyTypePage from "./pages/Admin/AdminPropertyTypePage";
@@ -39,6 +40,8 @@ const App = () => (
           <Route path="/admin" element={<AdminLayout />}>
             <Route index element={<AdminDashboardPage />} />
             <Route path="properties" element={<AdminPropertiesPage />} />
+            <Route path="properties/add" element={<AdminPropertyFormPage />} />
+            <Route path="properties/edit/:id" element={<AdminPropertyFormPage />} />
             <Route path="locations" element={<AdminLocationPage />} />
             <Route
               path="property-types"

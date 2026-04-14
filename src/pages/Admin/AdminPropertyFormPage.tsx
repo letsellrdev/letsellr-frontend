@@ -440,12 +440,19 @@ const AdminPropertyFormPage = () => {
               <CardDescription>The core identifying information of the property.</CardDescription>
             </CardHeader>
             <CardContent className="p-6 space-y-5">
-              {isEditing && (
-                <div>
-                  <label className="block text-xs font-semibold uppercase text-gray-500 mb-1.5">Property Code</label>
-                  <Input name="propertyCode" value={formData.propertyCode} onChange={handleInputChange} placeholder="4-5 digit code" className="rounded-xl h-11" />
-                </div>
-              )}
+              <div>
+                <label className="text-xs font-semibold uppercase text-gray-500 mb-1.5 flex items-center justify-between">
+                  Property Code
+                  {!isEditing && <span className="text-[10px] lowercase font-normal text-muted-foreground">(Auto-generated if empty)</span>}
+                </label>
+                <Input 
+                  name="propertyCode" 
+                  value={formData.propertyCode || ""} 
+                  onChange={handleInputChange} 
+                  placeholder={isEditing ? "4-5 digit code" : "Optional: e.g. 1024"} 
+                  className="rounded-xl h-11" 
+                />
+              </div>
               
               <div>
                 <label className="block text-xs font-semibold uppercase text-gray-500 mb-1.5">Title <span className="text-red-500">*</span></label>

@@ -390,7 +390,7 @@ const AdminPropertiesPage = () => {
 
       {/* Header Section */}
       {/* Unified Control Header */}
-      <div className=" p-4 sm:p-6 rounded-2xl border border-gray-100 shadow-sm flex flex-col xl:flex-row xl:items-center justify-between gap-6">
+      <div className=" p-4 sm:p-6 rounded-1xl border-1 border-gray-400  flex flex-col xl:flex-row xl:items-center justify-between gap-6">
         {/* Title & Stats Summary */}
         <div className="flex flex-col gap-1">
           <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Property Management</h1>

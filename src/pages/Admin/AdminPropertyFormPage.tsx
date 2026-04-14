@@ -4,7 +4,7 @@ import { ArrowLeft, Save, Plus, Trash2, Upload, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { toast } from "sonner";
+import { toast } from "@/components/ui/sonner";
 import instance from "@/lib/axios";
 import axios from "axios";
 
@@ -194,17 +194,25 @@ const AdminPropertyFormPage = () => {
   const removeVacancy = (index: number) => setFormData({ ...formData, vacancies: (formData.vacancies || []).filter((_, i) => i !== index) });
 
   // Image Handlers
+  const [watermarkImage, setWatermarkImage] = useState<HTMLImageElement | null>(null);
+
+  // Pre-load watermark
+  useEffect(() => {
+    const wm = new window.Image();
+    wm.src = "/letsellr-watermark.png";
+    wm.onload = () => setWatermarkImage(wm);
+    wm.onerror = () => console.error("Failed to load watermark image");
+  }, []);
+
   const addWatermark = (file: File): Promise<File> => {
     return new Promise((resolve) => {
       if (!file.type.startsWith("image/")) return resolve(file); // Skip non-images
       
       const img = new window.Image();
-      const watermark = new window.Image();
       let imgLoaded = false;
-      let wmLoaded = false;
 
       const tryDraw = () => {
-        if (!imgLoaded || !wmLoaded) return;
+        if (!imgLoaded) return;
         const canvas = document.createElement("canvas");
         canvas.width = img.width;
         canvas.height = img.height;
@@ -214,20 +222,23 @@ const AdminPropertyFormPage = () => {
         // Draw original
         ctx.drawImage(img, 0, 0);
 
-        // Watermark scale: 25% of image width
-        const scale = (img.width * 0.25) / watermark.width;
-        const wmWidth = watermark.width * scale;
-        const wmHeight = watermark.height * scale;
+        // Apply watermark if available
+        if (watermarkImage) {
+          // Watermark scale: 25% of image width
+          const scale = (img.width * 0.25) / watermarkImage.width;
+          const wmWidth = watermarkImage.width * scale;
+          const wmHeight = watermarkImage.height * scale;
 
-        // Bottom right with 5% layout margin
-        const marginX = img.width * 0.05;
-        const marginY = img.height * 0.05;
-        const x = img.width - wmWidth - marginX;
-        const y = img.height - wmHeight - marginY;
+          // Bottom right with 5% layout margin
+          const marginX = img.width * 0.05;
+          const marginY = img.height * 0.05;
+          const x = img.width - wmWidth - marginX;
+          const y = img.height - wmHeight - marginY;
 
-        ctx.globalAlpha = 0.8;
-        ctx.drawImage(watermark, x, y, wmWidth, wmHeight);
-        ctx.globalAlpha = 1.0;
+          ctx.globalAlpha = 0.8;
+          ctx.drawImage(watermarkImage, x, y, wmWidth, wmHeight);
+          ctx.globalAlpha = 1.0;
+        }
 
         canvas.toBlob(
           (blob) => {
@@ -256,17 +267,7 @@ const AdminPropertyFormPage = () => {
         resolve(file);
       };
       
-      watermark.onload = () => { 
-        wmLoaded = true; 
-        tryDraw(); 
-      };
-      watermark.onerror = () => {
-        wmLoaded = true; // Still try to draw even if watermark fails (it will just be the original)
-        tryDraw();
-      };
-
       img.src = URL.createObjectURL(file);
-      watermark.src = "/letsellr-watermark.png";
       
       // Safety timeout for processing
       setTimeout(() => {
@@ -279,9 +280,11 @@ const AdminPropertyFormPage = () => {
   };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
+    if (e.target.files && e.target.files.length > 0) {
       const newFiles = Array.from(e.target.files);
-      const toastId = toast.loading("Processing images and applying watermark...");
+      const toastId = toast.loading(`Processing ${newFiles.length} image${newFiles.length > 1 ? 's' : ''}...`, {
+        description: "Optimizing for web and applying watermark"
+      });
       
       try {
         const watermarkedFiles = await Promise.all(
@@ -293,12 +296,11 @@ const AdminPropertyFormPage = () => {
           newImages: [...(prev.newImages || []), ...watermarkedFiles] 
         }));
         
-        toast.success("Images processed successfully!", { id: toastId });
+        toast.success(`${newFiles.length} image${newFiles.length > 1 ? 's' : ''} processed and added`, { id: toastId });
       } catch (error) {
         console.error("Watermark processing failed:", error);
-        toast.error("Some images failed to process, using originals instead.", { id: toastId });
+        toast.error("Failed to process some images, using originals", { id: toastId });
         
-        // Fallback to originals if watermark fails completely
         setFormData(prev => ({
           ...prev,
           newImages: [...(prev.newImages || []), ...newFiles]
@@ -333,11 +335,16 @@ const AdminPropertyFormPage = () => {
     }
 
     setIsSubmitting(true);
+    const mainToastId = toast.loading(isEditing ? "Saving changes..." : "Creating property listing...");
+    
     try {
-      // Step 1: Request Presigned URLs
+      // Step 1: Request Presigned URLs & Upload to S3
       let imageUrls: string[] = [];
       if (formData.newImages && formData.newImages.length > 0) {
-        toast.info(`Preparing ${formData.newImages.length} images for upload...`);
+      toast.loading(`Preparing ${formData.newImages.length} image${formData.newImages.length > 1 ? 's' : ''} for upload...`, { 
+        id: mainToastId,
+        description: "Connecting to secure storage" 
+      });
         
         try {
           const filesData = formData.newImages.map(file => ({
@@ -348,11 +355,15 @@ const AdminPropertyFormPage = () => {
           const urlResponse = await instance.post("/property/upload-url", { files: filesData });
           const { urls } = urlResponse.data;
 
-          // Step 2: Upload directly to S3
+          // Step 2: Upload directly to S3 with individual progress if needed (simulated here)
           const uploadPromises = formData.newImages.map(async (file, index) => {
             const { uploadUrl, fileUrl } = urls[index];
             
-            // Use a clean axios instance for external PUT to avoid instance headers/baseURL
+            // Periodically update toast for progress feel
+            if (index > 0 && index % 2 === 0) {
+              toast.loading(`Uploading images (${index + 1}/${formData.newImages!.length})...`, { id: mainToastId });
+            }
+
             await axios.put(uploadUrl, file, {
               headers: { "Content-Type": file.type }
             });
@@ -361,10 +372,10 @@ const AdminPropertyFormPage = () => {
           });
 
           imageUrls = await Promise.all(uploadPromises);
-          toast.success("Images uploaded successfully!");
+          toast.loading("Images uploaded! Finalizing property details...", { id: mainToastId });
         } catch (uploadError) {
           console.error("Image upload failed:", uploadError);
-          toast.error("Failed to upload images. Check S3 credentials.");
+          toast.error("Failed to upload images. Check S3 credentials.", { id: mainToastId });
           setIsSubmitting(false);
           return;
         }
@@ -381,17 +392,23 @@ const AdminPropertyFormPage = () => {
 
       if (isEditing) {
         await instance.put(`/property/${id}`, payload, { withCredentials: true });
-        toast.success("Property updated successfully!");
+        toast.success("Success!", { 
+          id: mainToastId,
+          description: "Property updated successfully"
+        });
       } else {
         await instance.post("/property", payload, { withCredentials: true });
-        toast.success("Property added successfully!");
+        toast.success("Success!", { 
+          id: mainToastId,
+          description: "Property listing created successfully"
+        });
       }
       
-      // Go back to the properties table
-      navigate("/admin/properties");
+      // Navigate back after success
+      setTimeout(() => navigate("/admin/properties"), 1000);
     } catch (error) {
       console.error("Error saving property:", error);
-      toast.error("Failed to save property. Please try again.");
+      toast.error("Failed to save property. Please try again.", { id: mainToastId });
     } finally {
       setIsSubmitting(false);
     }

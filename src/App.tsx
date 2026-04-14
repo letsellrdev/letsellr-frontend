@@ -27,6 +27,7 @@ const App = () => (
   <PropertyProvider>
     <TooltipProvider>
       <Toaster />
+      <Sonner position="top-right" richColors />
       <BrowserRouter>
         <FloatingContactIcons />
         <Routes>

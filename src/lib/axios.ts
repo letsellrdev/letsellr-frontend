@@ -16,26 +16,27 @@ instance.interceptors.response.use(
     if (error.response) {
       const { status, data } = error.response;
 
-      // Check for unauthorized (401, 403, or 404 with auth error message) responses
-      if (status === 401 || status === 403 || status === 404) {
-        // Check if the error message indicates not being logged in
-        const isAuthError =
-          data?.message?.toLowerCase().includes('not logged in') ||
-          data?.message?.toLowerCase().includes('unauthorized') ||
-          data?.message?.toLowerCase().includes('not authenticated') ||
-          data?.message?.toLowerCase().includes('login required') ||
-          data?.message?.toLowerCase().includes('no token') ||
-          data?.message?.toLowerCase().includes('invalid token') ||
-          data?.message?.toLowerCase().includes('token expired') ||
-          data?.message?.toLowerCase().includes('admin not logged in');
+      // Only handle 401 (Unauthorized) and 403 (Forbidden) as definitive auth failures
+      // 404 should usually not trigger a logout unless it's explicitly an auth-related 404 (rare)
+      if (status === 401 || status === 403) {
+        const message = data?.message?.toLowerCase() || "";
+        const isAuthError = 
+          message.includes('not logged in') ||
+          message.includes('unauthorized') ||
+          message.includes('not authenticated') ||
+          message.includes('login required') ||
+          message.includes('no token') ||
+          message.includes('invalid token') ||
+          message.includes('token expired') ||
+          message.includes('admin not logged in');
 
         if (isAuthError) {
-          // Remove token from localStorage
+          // Remove token from localStorage to sync frontend state
           localStorage.removeItem("adminToken");
 
-          // Only redirect if we're on an admin page
+          // Only redirect if we're on an admin page (avoid logging out public users)
           if (window.location.pathname.startsWith('/admin') && window.location.pathname !== '/admin/login') {
-            // Redirect to login page
+            console.warn("Auth failure detected, redirecting to login:", message);
             window.location.href = '/admin/login';
           }
         }

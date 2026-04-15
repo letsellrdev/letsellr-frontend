@@ -8,14 +8,20 @@ import { useEffect, useState } from "react";
 import instance from "@/lib/axios";
 import { motion } from "framer-motion";
 import { ReactLenis } from 'lenis/react';
-import { Helmet } from "react-helmet-async";
 import { useNavigate } from "react-router-dom";
+import { useSeo } from "@/hooks/useSeo";
 import { ChevronDown, Clock8, Landmark } from "lucide-react";
+import { SeoKeywordsSection } from "@/components/SeoKeywordsSection";
 
 const Index = () => {
   const [propertyType, setPropertyType] = useState("rent");
   const [locationId, setLocationId] = useState("");
   const [categories, setCategories] = useState<any[]>([]);
+  
+  useSeo({
+    title: "Rental Homes, Flats & Rooms in Calicut/Kozhikode",
+    description: "Best rental homes in Calicut (Kozhikode). Find flats, houses, rooms, and apartments for rent. Verified listings for students, families, and bachelors.",
+  });
   const [isCategoriesLoading, setIsCategoriesLoading] = useState(false);
   const [typeAvailability, setTypeAvailability] = useState<Record<string, boolean>>({
     rent: true,
@@ -89,13 +95,6 @@ const Index = () => {
 
   return (
     <ReactLenis root options={{ lerp: 0.08, duration: 1.5, smoothWheel: true }}>
-      <Helmet>
-        <title>Letsellr - Flats, Houses & Rooms for Rent in Calicut</title>
-        <meta
-          name="description"
-          content="Find flats, houses, rooms and rental properties in Calicut/Kozhikode for families, students and bachelors."
-        />
-      </Helmet>
       <div className="min-h-screen bg-background/80 selection:bg-primary/20">
         <Navbar />
         <main className="relative overflow-hidden">
@@ -263,6 +262,7 @@ const Index = () => {
           </section>
         </main>
 
+        <SeoKeywordsSection />
         <TestimonialsSection />
         <FaqSection />
         <Footer categories={categories} />

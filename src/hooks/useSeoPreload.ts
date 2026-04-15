@@ -2,13 +2,30 @@ import { useEffect } from "react";
 
 export function useSeoPreload() {
   useEffect(() => {
-    // Preload API calls
-    fetch("/letseller/property/featured");
-    fetch("/letseller/location/calicut");
-    fetch("/letseller/property/latest");
+    // 1. Inject baseline SEO keywords if they don't exist
+    if (!document.querySelector('meta[name="keywords"]')) {
+      const meta = document.createElement("meta");
+      meta.name = "keywords";
+      meta.content = "calicut rental homes, kozhikode rent flat, nadakkavu rent house, beach road calicut apartments, mavoor road rent room, student room near calicut university, bachelors room calicut";
+      document.head.appendChild(meta);
+    }
 
-    // Preload important routes
-    const routes = ["/search", "/property/6965ea93b0f0b21420fdb569","/","/property/696e296db0f0b21420fe1419"];
+    // 2. Preload API calls for critical data
+    const apiEndPoints = [
+      "/letseller/property/featured",
+      "/letseller/location/calicut",
+      "/letseller/property/latest"
+    ];
+    apiEndPoints.forEach(url => fetch(url).catch(() => {}));
+
+    // 3. Preload important routes and top search keywords
+    const routes = [
+      "/search", 
+      "/", 
+      "/search?query=calicut+rental+homes",
+      "/search?query=kozhikode+rent+flat"
+    ];
+    
     routes.forEach((route) => {
       const link = document.createElement("link");
       link.rel = "prefetch";

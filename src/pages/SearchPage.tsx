@@ -33,7 +33,7 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from "@/components/ui/drawer";
-import { Helmet } from "react-helmet-async";
+import { useSeo } from "@/hooks/useSeo";
 interface Suggestion {
   _id: string;
   title: string;
@@ -178,6 +178,14 @@ export default function SearchPage() {
   );
   const [totalPages, setTotalPages] = useState(1);
   const itemsPerPage = 12;
+
+  useSeo({
+    title: searchQuery ? `Search results for "${searchQuery}"` : "Rentals in Calicut - Homes, Flats & Rooms",
+    description: searchQuery 
+      ? `Find verified ${searchQuery} in Calicut. Best rental listings for families, students, and professionals.` 
+      : "Search the best rental homes, flats, rooms, and PG in Calicut/Kozhikode. Verified listings.",
+    keywords: searchQuery || undefined
+  });
 
   // Simple in-memory cache for search results (cleared on page refresh)
   const searchCacheRef = useState(
@@ -472,14 +480,6 @@ export default function SearchPage() {
       <Navbar />
 
       <section className="max-w-7xl mx-auto py-7 px-5 flex flex-col gap-5 relative z-10">
-    
-        <Helmet>
-          <title>Property Listings in Calicut | Letsellr</title>
-          <meta
-            name="description"
-            content="Search rental homes, flats, rooms and PG in Calicut."
-          />
-        </Helmet>
 
         {/* Search and Filter Card */}
         <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-gray-200 p-4 md:p-5 shadow-sm">

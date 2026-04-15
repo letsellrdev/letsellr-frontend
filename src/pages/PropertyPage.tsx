@@ -15,7 +15,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import instance from "@/lib/axios";
 import ImageGallery from "@/components/Imageswiper";
 import { useProperty } from "@/contexts/PropertyContext";
-import { Helmet } from "react-helmet-async";
+import { useSeo } from "@/hooks/useSeo";
 import { motion, AnimatePresence } from "framer-motion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -113,6 +113,13 @@ export default function PropertyPage() {
   const [selectedVacancy, setSelectedVacancy] = useState<string>("");
   const [selectedPrice, setSelectedPrice] = useState<{ type: string; amount: number } | null>(null);
   const [activeTab, setActiveTab] = useState("overview");
+
+  useSeo({
+    title: product ? `${product.title} - Rentals in Calicut / Kozhikode` : "Quality Rentals, PGs & Hostels in Calicut",
+    description: product?.description?.substring(0, 160),
+    keywords: product ? `${product.title}, ${typeof product.location === "string" ? product.location : product.location?.title}` : undefined,
+    ogImage: product?.images?.[0]
+  });
 
   const { setCurrentProduct } = useProperty();
 
@@ -392,25 +399,6 @@ export default function PropertyPage() {
   // ── Main Content ──────────────────────────────────────────────────────────────
   return (
     <div className="relative">
-      <Helmet>
-        <title>{`${product?.title} - Rentals in Calicut / Kozhikode | Letsellr`}</title>
-        <meta name="description" content={product?.description?.substring(0, 160)} />
-        <meta
-          name="keywords"
-          content={`${product?.title}, rentals in calicut, pgs in kozhikode, ${
-            typeof product?.location === "string"
-              ? product.location
-              : product?.location?.title
-          }, hostels in calicut`}
-        />
-        {propertyStructuredData && (
-          <script type="application/ld+json">
-            {JSON.stringify(propertyStructuredData)}
-          </script>
-        )}
-
-
-      </Helmet>
 
       <div className="absolute hidden md:flex inset-0 z-0">
         <BackgroundDotPattern />

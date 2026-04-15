@@ -20,8 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useCallback, useEffect, useRef, useState } from "react";
-import type { ChangeEvent, KeyboardEvent } from "react";
+import { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { SyncLoader } from "react-spinners";
 import {
@@ -34,7 +33,7 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from "@/components/ui/drawer";
-
+import { Helmet } from "react-helmet-async";
 interface Suggestion {
   _id: string;
   title: string;
@@ -473,6 +472,15 @@ export default function SearchPage() {
       <Navbar />
 
       <section className="max-w-7xl mx-auto py-7 px-5 flex flex-col gap-5 relative z-10">
+    
+        <Helmet>
+          <title>Property Listings in Calicut | Letsellr</title>
+          <meta
+            name="description"
+            content="Search rental homes, flats, rooms and PG in Calicut."
+          />
+        </Helmet>
+
         {/* Search and Filter Card */}
         <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-gray-200 p-4 md:p-5 shadow-sm">
           {/* Desktop Filters */}

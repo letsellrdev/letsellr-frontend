@@ -17,6 +17,11 @@ const Index = () => {
   const [locationId, setLocationId] = useState("");
   const [categories, setCategories] = useState<any[]>([]);
   const [isCategoriesLoading, setIsCategoriesLoading] = useState(false);
+  const [typeAvailability, setTypeAvailability] = useState<Record<string, boolean>>({
+    rent: true,
+    buy: false,
+    lease: false,
+  });
   const navigate = useNavigate();
 
   // Structured Data (JSON-LD) for Local Business
@@ -48,9 +53,26 @@ const Index = () => {
     }
   };
 
+  const fetchTypeAvailability = async () => {
+    try {
+      const res = await instance.get("/property/counts-by-type");
+      if (res.data.success) {
+        const counts = res.data.data;
+        setTypeAvailability({
+          rent: counts.rent > 0,
+          buy: counts.buy > 0,
+          lease: counts.lease > 0,
+        });
+      }
+    } catch (error) {
+      console.error("Error fetching type availability:", error);
+    }
+  };
+
   useEffect(() => {
     window.scrollTo(0, 0);
     fetchCategories();
+    fetchTypeAvailability();
   }, []);
 
   const scrollToSecondary = () => {
@@ -68,12 +90,11 @@ const Index = () => {
   return (
     <ReactLenis root options={{ lerp: 0.08, duration: 1.5, smoothWheel: true }}>
       <Helmet>
-        <title>Letsellr - Verified PGs, Hostels & Apartments for Rent in Calicut / Kozhikode</title>
-        <meta name="description" content="Discover premium, verified properties for students and professionals in Calicut (Kozhikode). We offer the best PGs, hostels, and flats for rent with modern amenities." />
-        <meta name="keywords" content="rentals in calicut, pgs in kozhikode, hostels in kozhikode, apartments for rent calicut, flats near mavoor road, pgs near kottooli, student hostels kozhikode" />
-        <script type="application/ld+json">
-          {JSON.stringify(structuredData)}
-        </script>
+        <title>Letsellr - Flats, Houses & Rooms for Rent in Calicut</title>
+        <meta
+          name="description"
+          content="Find flats, houses, rooms and rental properties in Calicut/Kozhikode for families, students and bachelors."
+        />
       </Helmet>
       <div className="min-h-screen bg-background/80 selection:bg-primary/20">
         <Navbar />
@@ -138,7 +159,7 @@ const Index = () => {
                 {/* Property type tabs */}
                 <div className="flex justify-center gap-2 mb-3">
                   {["rent", "buy", "lease"].map((type) => {
-                    const isAvailable = type === "rent";
+                    const isAvailable = typeAvailability[type] || type === "rent";
                     return (
                       <button
                         key={type}

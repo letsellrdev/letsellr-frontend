@@ -20,10 +20,11 @@ import AdminStatisticsPage from "./pages/Admin/AdminStatisticsPage";
 import AdminTestimonialsPage from "./pages/Admin/AdminTestimonialsPage";
 import AdminCategoryPage from "./pages/Admin/AdminCategoryPage";
 import { PropertyProvider } from "./contexts/PropertyContext";
-// import AdminUsersPage from "./pages/Admin/AdminUsersPage";
 import FloatingContactIcons from "./components/FloatingContactIcons";
+import { useSeoPreload } from "./hooks/useSeoPreload";
 
 const App = () => (
+  useSeoPreload(),
   <PropertyProvider>
     <TooltipProvider>
       <Toaster />
@@ -52,7 +53,6 @@ const App = () => (
             <Route path="setup" element={<AdminSetupPage />} />
             <Route path="statistics" element={<AdminStatisticsPage />} />
             <Route path="testimonials" element={<AdminTestimonialsPage />} />
-            {/* <Route path="users" element={<AdminUsersPage />} /> */}
             <Route path="categories" element={<AdminCategoryPage />} />
           </Route>
 

@@ -533,11 +533,6 @@ const AdminPropertiesPage = () => {
                               <span className="font-bold text-gray-900 line-clamp-1">{property.title}</span>
                               <div className="flex items-center gap-2">
                                 <span className="text-[10px] font-mono text-gray-400 bg-gray-50 px-1 rounded">#{property.propertyCode}</span>
-                                <span className={`px-1.5 py-0.5 rounded-full text-[9px] font-bold uppercase ${
-                                  property.status === "active" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
-                                }`}>
-                                  {property.status}
-                                </span>
                               </div>
                             </div>
                           </TableCell>

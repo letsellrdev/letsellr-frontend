@@ -408,6 +408,8 @@ export default function PropertyPage() {
             {JSON.stringify(propertyStructuredData)}
           </script>
         )}
+
+
       </Helmet>
 
       <div className="absolute hidden md:flex inset-0 z-0">

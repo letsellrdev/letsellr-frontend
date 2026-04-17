@@ -114,10 +114,20 @@ export default function PropertyPage() {
   const [selectedPrice, setSelectedPrice] = useState<{ type: string; amount: number } | null>(null);
   const [activeTab, setActiveTab] = useState("overview");
 
+  const propertyLocation = typeof product?.location === "string" ? product?.location : product?.location?.title;
+  const propertyPrice = product?.price?.[0]?.amount ? `₹${product.price[0].amount}` : "";
+  const propertyCategory = typeof product?.category === "string" ? product?.category : product?.category?.name;
+
   useSeo({
-    title: product ? `${product.title} - Rentals in Calicut / Kozhikode` : "Quality Rentals, PGs & Hostels in Calicut",
-    description: product?.description?.substring(0, 160),
-    keywords: product ? `${product.title}, ${typeof product.location === "string" ? product.location : product.location?.title}` : undefined,
+    title: product 
+      ? `${product.title}${propertyCategory ? ` - ${propertyCategory}` : ""} in ${propertyLocation} | ${propertyPrice}` 
+      : "Quality Rentals, PGs & Hostels in Calicut",
+    description: product 
+      ? `Verified ${propertyCategory || "property"} in ${propertyLocation}. ${product.description?.substring(0, 120)}... Rent: ${propertyPrice}/month. Contact now for details.`
+      : "Find the best verified rental homes, flats, rooms, and PGs in Calicut/Kozhikode. Student and bachelor friendly options available.",
+    keywords: product 
+      ? `${product.title}, ${propertyLocation}, ${propertyCategory}, rent in calicut, rentals kozhikode, ${product.propertyCode}` 
+      : undefined,
     ogImage: product?.images?.[0]
   });
 
@@ -293,27 +303,37 @@ export default function PropertyPage() {
   const propertyStructuredData = product
     ? {
         "@context": "https://schema.org",
-        "@type": "Accommodation",
-        name: product.title,
-        description: product.description,
-        image: product.images?.[0],
-        address: {
-          "@type": "PostalAddress",
-          addressLocality:
-            typeof product.location === "string"
-              ? product.location
-              : product.location?.title || "Calicut",
-          addressRegion: "Kerala",
-          addressCountry: "IN",
+        "@type": "RealEstateListing",
+        "name": product.title,
+        "description": product.description,
+        "url": window.location.href,
+        "image": product.images?.[0],
+        "datePosted": product.createdAt,
+        "accommodation": {
+          "@type": "Accommodation",
+          "name": product.title,
+          "description": product.description,
+          "address": {
+            "@type": "PostalAddress",
+            "addressLocality": propertyLocation || "Calicut",
+            "addressRegion": "Kerala",
+            "addressCountry": "IN",
+          },
+          "amenityFeature":
+            product.amenity
+              ?.split(",")
+              .map((a: string) => ({
+                "@type": "LocationFeatureSpecification",
+                "name": a.trim(),
+                "value": true,
+              })) || [],
         },
-        amenityFeature:
-          product.amenity
-            ?.split(",")
-            .map((a: string) => ({
-              "@type": "LocationFeatureSpecification",
-              name: a.trim(),
-              value: true,
-            })) || [],
+        "offers": {
+          "@type": "Offer",
+          "price": product.price?.[0]?.amount,
+          "priceCurrency": "INR",
+          "availability": product.vacancyCount > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock"
+        }
       }
     : null;
 

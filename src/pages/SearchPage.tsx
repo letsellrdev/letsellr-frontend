@@ -179,12 +179,15 @@ export default function SearchPage() {
   const [totalPages, setTotalPages] = useState(1);
   const itemsPerPage = 12;
 
+  const locationTitle = locations.find(l => l._id === selectedLocation)?.title;
+  const categoryTitle = categories.find(c => c._id === selectedCategory)?.name;
+
   useSeo({
-    title: searchQuery ? `Search results for "${searchQuery}"` : "Rentals in Calicut - Homes, Flats & Rooms",
-    description: searchQuery 
-      ? `Find verified ${searchQuery} in Calicut. Best rental listings for families, students, and professionals.` 
-      : "Search the best rental homes, flats, rooms, and PG in Calicut/Kozhikode. Verified listings.",
-    keywords: searchQuery || undefined
+    title: searchQuery 
+      ? `Search results for "${searchQuery}"${locationTitle ? ` in ${locationTitle}` : ""}` 
+      : `${categoryTitle || "Properties"} for Rent in ${locationTitle || "Calicut / Kozhikode"}`,
+    description: `Browse verified ${categoryTitle || "rental properties"} in ${locationTitle || "Calicut (Kozhikode)"}. ${searchQuery ? `Search results for ${searchQuery}.` : "Best flats, houses, rooms, and PGs available."} Student and professional friendly.`,
+    keywords: `${searchQuery || ""}, ${locationTitle || ""}, ${categoryTitle || ""}, rentals in calicut, rent house kozhikode`
   });
 
   // Simple in-memory cache for search results (cleared on page refresh)

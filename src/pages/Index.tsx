@@ -31,21 +31,36 @@ const Index = () => {
   const navigate = useNavigate();
 
   // Structured Data (JSON-LD) for Local Business
-  const structuredData = {
-    "@context": "https://schema.org",
-    "@type": "RealEstateAgent",
-    "name": "Letsellr Calicut",
-    "description": "Premium rental listings for PGs, hostels, and apartments in Calicut (Kozhikode). Verified properties for students and professionals.",
-    "url": "https://letsellr.in",
-    "logo": "https://letsellr.in/favicon.ico",
-    "areaServed": "Calicut, Kozhikode, Kerala",
-    "address": {
-      "@type": "PostalAddress",
-      "addressLocality": "Calicut",
-      "addressRegion": "Kerala",
-      "addressCountry": "IN"
+  const structuredData = [
+    {
+      "@context": "https://schema.org",
+      "@type": "RealEstateAgent",
+      "name": "Letsellr Calicut",
+      "description": "Premium rental listings for PGs, hostels, and apartments in Calicut (Kozhikode). Verified properties for students and professionals.",
+      "url": "https://letsellr.in",
+      "logo": "https://letsellr.in/favicon.ico",
+      "areaServed": "Calicut, Kozhikode, Kerala",
+      "address": {
+        "@type": "PostalAddress",
+        "addressLocality": "Calicut",
+        "addressRegion": "Kerala",
+        "addressCountry": "IN"
+      }
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "url": "https://letsellr.in",
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": {
+          "@type": "EntryPoint",
+          "urlTemplate": "https://letsellr.in/search?query={search_term_string}"
+        },
+        "query-input": "required name=search_term_string"
+      }
     }
-  };
+  ];
 
   const fetchCategories = async () => {
     try {
@@ -266,6 +281,15 @@ const Index = () => {
         <TestimonialsSection />
         <FaqSection />
         <Footer categories={categories} />
+
+        {/* JSON-LD Structured Data */}
+        {structuredData.map((data, idx) => (
+          <script
+            key={idx}
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{ __html: JSON.stringify(data) }}
+          />
+        ))}
       </div>
     </ReactLenis>
   );

@@ -1,9 +1,10 @@
 import axios, { AxiosInstance } from "axios";
 
 const instance: AxiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || "http://localhost:4500/letseller",
+  baseURL: import.meta.env.VITE_API_URL || "http://localhost:4500/letsellr",
   withCredentials: true,
 });
+
 
 // Add response interceptor to handle authentication errors
 instance.interceptors.response.use(

@@ -14,7 +14,23 @@ import instance from "@/lib/axios";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+const getDistanceKM = (lat1: number, lon1: number, lat2: number, lon2: number) => {
+  const R = 6371; // km
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLon = ((lon2 - lon1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+};
+
 // ─── Types ────────────────────────────────────────────────────────────────────
+
 interface LocationItem {
   _id: string;
   title: string;
@@ -36,6 +52,8 @@ interface PropertySuggestion {
 
 interface NearbyLocation extends LocationItem {
   distance: number;
+  isGoogle?: boolean;
+  googlePlaceId?: string;
 }
 
 interface SearchBarProps {
@@ -79,6 +97,9 @@ export const SearchBar = ({
   const [isFetchingCategories, setIsFetchingCategories] = useState(false);
   const [propSuggestions, setPropSuggestions] = useState<PropertySuggestion[]>([]);
   const [isFetching, setIsFetching] = useState(false);
+  const [userCoords, setUserCoords] = useState<{ lat: number; lng: number } | null>(null);
+  const [isLocating, setIsLocating] = useState(false);
+  const [googleLocSuggestions, setGoogleLocSuggestions] = useState<NearbyLocation[]>([]);
 
   // Filtered categories based on query in step 2
   const filteredCategories = step === 2 && query.trim()
@@ -155,6 +176,51 @@ export const SearchBar = ({
     return () => document.removeEventListener("keydown", down);
   }, []);
 
+  // ── Geolocation ────────────────────────────────────────────────────────────
+  const requestLocation = useCallback(() => {
+    if (!navigator.geolocation) return;
+    setIsLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const coords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+        setUserCoords(coords);
+        setIsLocating(false);
+        // Fetch nearby locations from our backend
+        instance.get(`/location/google/nearby?lat=${coords.lat}&lng=${coords.lng}`)
+          .then(res => {
+            if (res.data.success) {
+              const formatted: NearbyLocation[] = res.data.data.map((p: any) => {
+                const pLat = p.geometry.location.lat;
+                const pLng = p.geometry.location.lng;
+                // Calculate distance manually on frontend for accuracy
+                const dist = getDistanceKM(coords.lat, coords.lng, pLat, pLng);
+                
+                return {
+                  _id: p.place_id,
+                  title: p.name,
+                  distance: dist,
+                  isGoogle: true,
+                  googlePlaceId: p.place_id
+                };
+              });
+              setGoogleLocSuggestions(formatted.sort((a, b) => a.distance - b.distance));
+
+            }
+          })
+          .catch(() => {});
+      },
+      () => {
+        setIsLocating(false);
+      }
+    );
+  }, []);
+
+  useEffect(() => {
+    if (open && step === 1 && !userCoords) {
+      requestLocation();
+    }
+  }, [open, step, userCoords, requestLocation]);
+
   // Handle backspace to go back
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -187,11 +253,32 @@ export const SearchBar = ({
           )
           : locations; // Show all (up to 5) when empty
         setLocSuggestions(matchedLocs.slice(0, 5));
+
+        // Fetch Google Autocomplete if typing and few local results
+        if (trimmed.length > 2) {
+          instance.get(`/location/google/autocomplete?query=${trimmed}`)
+            .then(res => {
+              if (res.data.success) {
+                const googleResults: NearbyLocation[] = res.data.predictions.map((p: any) => ({
+                  _id: p.place_id,
+                  title: p.structured_formatting?.main_text || p.description,
+                  distance: 0,
+                  isGoogle: true,
+                  googlePlaceId: p.place_id
+                }));
+                setGoogleLocSuggestions(googleResults);
+              }
+            })
+            .catch(() => {});
+        } else if (!trimmed) {
+          // If empty query, keep the ones from nearby search (if any)
+          // or reset if you prefer.
+        }
       } else {
         setLocSuggestions([]);
+        setGoogleLocSuggestions([]);
       }
 
-      // Hide nearby if typing
       // Always fetch properties when there's a query
       if (trimmed.length >= 1) {
         setIsFetching(true);
@@ -242,15 +329,36 @@ export const SearchBar = ({
   };
 
   // ── Selection: Location → advance to step 2 ────────────────────────────────
-  const selectLocation = (loc: LocationItem) => {
-    setSelectedLocationId(loc._id);
-    setSelectedLocationName(loc.title);
-    onLocationChange(loc._id);
+  const selectLocation = async (loc: LocationItem | NearbyLocation) => {
+    let finalId = loc._id;
+    let finalTitle = loc.title;
+
+    // IF it's a google result, integrate it first
+    if ("isGoogle" in loc && loc.isGoogle) {
+      setIsFetchingCategories(true);
+      try {
+        const res = await instance.post("/location/integrate", {
+          placeId: loc.googlePlaceId,
+          title: loc.title
+        });
+        finalId = res.data.data._id;
+        finalTitle = res.data.data.title;
+      } catch (err) {
+        console.error("Integration failed", err);
+        setIsFetchingCategories(false);
+        return;
+      }
+    }
+
+    setSelectedLocationId(finalId);
+    setSelectedLocationName(finalTitle);
+    onLocationChange(finalId);
     setQuery("");
     setLocSuggestions([]);
+    setGoogleLocSuggestions([]);
     setPropSuggestions([]);
     setStep(2);
-    fetchCategoriesForLocation(loc._id);
+    fetchCategoriesForLocation(finalId);
   };
 
   // ── Selection: Category → navigate ────────────────────────────────────────
@@ -450,13 +558,37 @@ export const SearchBar = ({
               )}
 
               {/* No Results Empty State */}
-              {!isFetching && !isFetchingCategories && locSuggestions.length === 0 && filteredCategories.length === 0 && propSuggestions.length === 0 && query.trim() !== "" && (
+              {!isFetching && !isFetchingCategories && locSuggestions.length === 0 && googleLocSuggestions.length === 0 && filteredCategories.length === 0 && propSuggestions.length === 0 && query.trim() !== "" && (
                 <CommandEmpty>No results found for &quot;{query}&quot;.</CommandEmpty>
               )}
 
-              {/* ── STEP 1: Locations ── */}
-              {step === 1 && locSuggestions.length > 0 && (
-                <CommandGroup heading="Locations">
+              {/* ── STEP 1: Geolocation / Nearby ── */}
+              {step === 1 && !query && googleLocSuggestions.length > 0 && (
+                <CommandGroup heading="Nearby Areas">
+                  {googleLocSuggestions.map((loc) => (
+                    <CommandItem
+                      key={loc._id}
+                      value={loc._id}
+                      onSelect={() => selectLocation(loc)}
+                      className="cursor-pointer"
+                    >
+                      <div className="bg-primary/10 p-1.5 rounded-md mr-3">
+                        <MapPin className="h-4 w-4 text-primary" />
+                      </div>
+                      <div className="flex flex-col flex-1">
+                        <span className="font-medium">{loc.title}</span>
+                        <span className="text-[10px] text-muted-foreground">{loc.distance.toFixed(1)} km away</span>
+                      </div>
+
+                      <CornerDownLeft className="w-3.5 h-3.5 opacity-40 ml-auto" />
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              )}
+
+              {/* ── STEP 1: Search results (Local + Google) ── */}
+              {step === 1 && (locSuggestions.length > 0 || (query && googleLocSuggestions.length > 0)) && (
+                <CommandGroup heading={query ? "Search Results" : "Locations"}>
                   {locSuggestions.map((loc) => (
                     <CommandItem
                       key={loc._id}
@@ -468,6 +600,23 @@ export const SearchBar = ({
                         <MapPin className="h-4 w-4 text-muted-foreground" />
                       </div>
                       <span className="font-medium flex-1">{loc.title}</span>
+                      <CornerDownLeft className="w-3.5 h-3.5 opacity-40 ml-auto" />
+                    </CommandItem>
+                  ))}
+                  {query && googleLocSuggestions.map((loc) => (
+                    <CommandItem
+                      key={loc._id}
+                      value={loc._id}
+                      onSelect={() => selectLocation(loc)}
+                      className="cursor-pointer"
+                    >
+                      <div className="bg-primary/5 p-1.5 rounded-md mr-3 border border-primary/10">
+                        <MapPin className="h-4 w-4 text-primary" />
+                      </div>
+                      <div className="flex flex-col flex-1">
+                        <span className="font-medium">{loc.title}</span>
+                        <span className="text-[9px] text-primary/70 font-semibold uppercase tracking-wider">New Area</span>
+                      </div>
                       <CornerDownLeft className="w-3.5 h-3.5 opacity-40 ml-auto" />
                     </CommandItem>
                   ))}

@@ -11,10 +11,11 @@ export function useSeoPreload() {
     }
 
     // 2. Preload API calls for critical data
+    const apiBase = import.meta.env.VITE_API_URL || "http://localhost:4500/letsellr";
     const apiEndPoints = [
-      "/letseller/property/featured",
-      "/letseller/location/calicut",
-      "/letseller/property/latest"
+      `${apiBase}/property/featured`,
+      `${apiBase}/location/calicut`,
+      `${apiBase}/property/latest`
     ];
     apiEndPoints.forEach(url => fetch(url).catch(() => {}));
 

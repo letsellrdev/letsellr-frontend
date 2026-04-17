@@ -39,7 +39,8 @@ const handleLogin = async (e: React.FormEvent) => {
 
 
     if (response.data.success === true) {
-      localStorage.setItem("adminToken", "dummy-token");
+      localStorage.setItem("adminToken", "dummy-token"); // Keeping dummy token as is for now
+      localStorage.setItem("adminRole", response.data.role); // Store actual role
       navigate(menuItems?.[0]?.path);
     } else {
       setError(response.data.message || "Login failed");

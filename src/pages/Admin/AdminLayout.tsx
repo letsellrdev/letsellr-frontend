@@ -14,6 +14,7 @@ import {
   Tag,
   BarChart,
   LayoutGrid,
+  ShieldCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -63,13 +64,37 @@ export const menuItems = [
     icon: Users,
     label: "Testimonials",
   },
-  // { id: "users", path: "/admin/users", icon: Users, label: "Users" },
+  { 
+    id: "manage-users", 
+    path: "/admin/register", 
+    icon: ShieldCheck, 
+    label: "Admin Management",
+    roles: ["superadmin"] 
+  },
 ];
 
 const AdminLayout = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const role = localStorage.getItem("adminRole");
+
+  // Filter menu items based on role
+  const filteredMenuItems = menuItems.filter(item => {
+    // If manager, only allow properties and dashboard
+    if (role === 'manager') {
+      return item.id === 'properties';
+    }
+    // If superadmin, allow everything
+    if (role === 'superadmin') {
+      return true;
+    }
+    // Default (e.g. admin role) - maybe all except registration?
+    if (role === 'admin') {
+      return item.id !== 'manage-users';
+    }
+    return true;
+  });
 
   // Check authentication
   useEffect(() => {
@@ -129,7 +154,7 @@ const AdminLayout = () => {
 
         {/* Menu Items */}
         <nav className="p-4 space-y-2">
-          {menuItems.map((item) => {
+          {filteredMenuItems.map((item) => {
             const Icon = item.icon;
             const isActive = location.pathname === item.path;
             return (

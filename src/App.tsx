@@ -19,9 +19,15 @@ import AdminSetupPage from "./pages/Admin/AdminSetupPage";
 import AdminStatisticsPage from "./pages/Admin/AdminStatisticsPage";
 import AdminTestimonialsPage from "./pages/Admin/AdminTestimonialsPage";
 import AdminCategoryPage from "./pages/Admin/AdminCategoryPage";
+import AdminRegistrationPage from "./pages/Admin/AdminRegistrationPage";
 import { PropertyProvider } from "./contexts/PropertyContext";
 import FloatingContactIcons from "./components/FloatingContactIcons";
 import { useSeoPreload } from "./hooks/useSeoPreload";
+import RoleProtectedRoute from "./components/RoleProtectedRoute";
+
+const adminOnlyRoles = ["superadmin", "admin"];
+const superAdminOnlyRoles = ["superadmin"];
+const allAdminRoles = ["superadmin", "admin", "manager"];
 
 const App = () => (
   useSeoPreload(),
@@ -40,20 +46,57 @@ const App = () => (
           {/* Admin Layout with Nested Routes */}
           <Route path="/admin/login" element={<AdminLogin />} />
           <Route path="/admin" element={<AdminLayout />}>
-            <Route index element={<AdminDashboardPage />} />
+            <Route index element={
+              <RoleProtectedRoute allowedRoles={adminOnlyRoles}>
+                <AdminDashboardPage />
+              </RoleProtectedRoute>
+            } />
             <Route path="properties" element={<AdminPropertiesPage />} />
             <Route path="properties/add" element={<AdminPropertyFormPage />} />
             <Route path="properties/edit/:id" element={<AdminPropertyFormPage />} />
-            <Route path="locations" element={<AdminLocationPage />} />
+            <Route path="locations" element={
+              <RoleProtectedRoute allowedRoles={adminOnlyRoles}>
+                <AdminLocationPage />
+              </RoleProtectedRoute>
+            } />
             <Route
               path="property-types"
-              element={<AdminPropertyTypePage />}
+              element={
+                <RoleProtectedRoute allowedRoles={adminOnlyRoles}>
+                  <AdminPropertyTypePage />
+                </RoleProtectedRoute>
+              }
             />
-            <Route path="reviews" element={<AdminReviewsPage />} />
-            <Route path="setup" element={<AdminSetupPage />} />
-            <Route path="statistics" element={<AdminStatisticsPage />} />
-            <Route path="testimonials" element={<AdminTestimonialsPage />} />
-            <Route path="categories" element={<AdminCategoryPage />} />
+            <Route path="reviews" element={
+              <RoleProtectedRoute allowedRoles={adminOnlyRoles}>
+                <AdminReviewsPage />
+              </RoleProtectedRoute>
+            } />
+            <Route path="setup" element={
+              <RoleProtectedRoute allowedRoles={adminOnlyRoles}>
+                <AdminSetupPage />
+              </RoleProtectedRoute>
+            } />
+            <Route path="statistics" element={
+              <RoleProtectedRoute allowedRoles={adminOnlyRoles}>
+                <AdminStatisticsPage />
+              </RoleProtectedRoute>
+            } />
+            <Route path="testimonials" element={
+              <RoleProtectedRoute allowedRoles={adminOnlyRoles}>
+                <AdminTestimonialsPage />
+              </RoleProtectedRoute>
+            } />
+            <Route path="categories" element={
+              <RoleProtectedRoute allowedRoles={adminOnlyRoles}>
+                <AdminCategoryPage />
+              </RoleProtectedRoute>
+            } />
+            <Route path="register" element={
+              <RoleProtectedRoute allowedRoles={superAdminOnlyRoles}>
+                <AdminRegistrationPage />
+              </RoleProtectedRoute>
+            } />
           </Route>
 
           {/* Catch-all */}

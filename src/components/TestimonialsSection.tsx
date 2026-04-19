@@ -21,9 +21,14 @@ export const TestimonialsSection = () => {
   useEffect(() => {
     const fetchTestimonials = async () => {
       try {
+        console.log("Fetching testimonials...");
         const res = await instance.get("/testimonial");
+        console.log("Testimonials response:", res.data);
         if (res.data.success) {
+          console.log(`Setting ${res.data.data.length} testimonials`);
           setTestimonials(res.data.data);
+        } else {
+          console.warn("Testimonials success was false");
         }
       } catch (error) {
         console.error("Failed to fetch testimonials", error);

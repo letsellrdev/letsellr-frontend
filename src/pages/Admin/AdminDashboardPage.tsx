@@ -16,9 +16,7 @@ const AdminDashboardPage = () => {
   ]);
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
-
   useEffect(() => {
-    navigate("/admin/properties");
     const fetchStats = async () => {
       try {
         const [propsRes, locsRes, catsRes, reviewsRes] = await Promise.all([

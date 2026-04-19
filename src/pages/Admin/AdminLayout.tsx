@@ -53,12 +53,6 @@ export const menuItems = [
   },
   { id: "setup", path: "/admin/setup", icon: Settings, label: "Setup" },
   {
-    id: "statistics",
-    path: "/admin/statistics",
-    icon: BarChart,
-    label: "Statistics",
-  },
-  {
     id: "testimonials",
     path: "/admin/testimonials",
     icon: Users,
@@ -81,9 +75,9 @@ const AdminLayout = () => {
 
   // Filter menu items based on role
   const filteredMenuItems = menuItems.filter(item => {
-    // If manager, only allow properties and dashboard
+    // If manager, only allow properties, reviews and testimonials
     if (role === 'manager') {
-      return item.id === 'properties';
+      return ['properties', 'reviews', 'testimonials'].includes(item.id);
     }
     // If superadmin, allow everything
     if (role === 'superadmin') {

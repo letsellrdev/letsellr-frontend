@@ -16,7 +16,6 @@ import AdminLocationPage from "./pages/Admin/AdminLocationPage";
 import AdminPropertyTypePage from "./pages/Admin/AdminPropertyTypePage";
 
 import AdminSetupPage from "./pages/Admin/AdminSetupPage";
-import AdminStatisticsPage from "./pages/Admin/AdminStatisticsPage";
 import AdminTestimonialsPage from "./pages/Admin/AdminTestimonialsPage";
 import AdminCategoryPage from "./pages/Admin/AdminCategoryPage";
 import AdminRegistrationPage from "./pages/Admin/AdminRegistrationPage";
@@ -47,7 +46,7 @@ const App = () => (
           <Route path="/admin/login" element={<AdminLogin />} />
           <Route path="/admin" element={<AdminLayout />}>
             <Route index element={
-              <RoleProtectedRoute allowedRoles={adminOnlyRoles}>
+              <RoleProtectedRoute allowedRoles={allAdminRoles}>
                 <AdminDashboardPage />
               </RoleProtectedRoute>
             } />
@@ -68,7 +67,7 @@ const App = () => (
               }
             />
             <Route path="reviews" element={
-              <RoleProtectedRoute allowedRoles={adminOnlyRoles}>
+              <RoleProtectedRoute allowedRoles={allAdminRoles}>
                 <AdminReviewsPage />
               </RoleProtectedRoute>
             } />
@@ -77,13 +76,9 @@ const App = () => (
                 <AdminSetupPage />
               </RoleProtectedRoute>
             } />
-            <Route path="statistics" element={
-              <RoleProtectedRoute allowedRoles={adminOnlyRoles}>
-                <AdminStatisticsPage />
-              </RoleProtectedRoute>
-            } />
+
             <Route path="testimonials" element={
-              <RoleProtectedRoute allowedRoles={adminOnlyRoles}>
+              <RoleProtectedRoute allowedRoles={allAdminRoles}>
                 <AdminTestimonialsPage />
               </RoleProtectedRoute>
             } />

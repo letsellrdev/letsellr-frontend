@@ -207,7 +207,7 @@ const AdminPropertyFormPage = () => {
   const addWatermark = (file: File): Promise<File> => {
     return new Promise((resolve) => {
       if (!file.type.startsWith("image/")) return resolve(file); // Skip non-images
-      
+
       const img = new window.Image();
       let imgLoaded = false;
 
@@ -224,8 +224,8 @@ const AdminPropertyFormPage = () => {
 
         // Apply watermark if available
         if (watermarkImage) {
-          // Watermark scale: 25% of image width
-          const scale = (img.width * 0.25) / watermarkImage.width;
+          // Watermark scale: 35% of image width
+          const scale = (img.width * 0.35) / watermarkImage.width;
           const wmWidth = watermarkImage.width * scale;
           const wmHeight = watermarkImage.height * scale;
 
@@ -258,17 +258,17 @@ const AdminPropertyFormPage = () => {
         );
       };
 
-      img.onload = () => { 
-        imgLoaded = true; 
-        tryDraw(); 
+      img.onload = () => {
+        imgLoaded = true;
+        tryDraw();
       };
       img.onerror = () => {
         URL.revokeObjectURL(img.src);
         resolve(file);
       };
-      
+
       img.src = URL.createObjectURL(file);
-      
+
       // Safety timeout for processing
       setTimeout(() => {
         if (!imgLoaded) {
@@ -285,22 +285,22 @@ const AdminPropertyFormPage = () => {
       const toastId = toast.loading(`Processing ${newFiles.length} image${newFiles.length > 1 ? 's' : ''}...`, {
         description: "Optimizing for web and applying watermark"
       });
-      
+
       try {
         const watermarkedFiles = await Promise.all(
           newFiles.map(file => addWatermark(file))
         );
-        
-        setFormData(prev => ({ 
-          ...prev, 
-          newImages: [...(prev.newImages || []), ...watermarkedFiles] 
+
+        setFormData(prev => ({
+          ...prev,
+          newImages: [...(prev.newImages || []), ...watermarkedFiles]
         }));
-        
+
         toast.success(`${newFiles.length} image${newFiles.length > 1 ? 's' : ''} processed and added`, { id: toastId });
       } catch (error) {
         console.error("Watermark processing failed:", error);
         toast.error("Failed to process some images, using originals", { id: toastId });
-        
+
         setFormData(prev => ({
           ...prev,
           newImages: [...(prev.newImages || []), ...newFiles]
@@ -336,16 +336,16 @@ const AdminPropertyFormPage = () => {
 
     setIsSubmitting(true);
     const mainToastId = toast.loading(isEditing ? "Saving changes..." : "Creating property listing...");
-    
+
     try {
       // Step 1: Request Presigned URLs & Upload to S3
       let imageUrls: string[] = [];
       if (formData.newImages && formData.newImages.length > 0) {
-      toast.loading(`Preparing ${formData.newImages.length} image${formData.newImages.length > 1 ? 's' : ''} for upload...`, { 
-        id: mainToastId,
-        description: "Connecting to secure storage" 
-      });
-        
+        toast.loading(`Preparing ${formData.newImages.length} image${formData.newImages.length > 1 ? 's' : ''} for upload...`, {
+          id: mainToastId,
+          description: "Connecting to secure storage"
+        });
+
         try {
           const filesData = formData.newImages.map(file => ({
             name: file.name,
@@ -358,7 +358,7 @@ const AdminPropertyFormPage = () => {
           // Step 2: Upload directly to S3 with individual progress if needed (simulated here)
           const uploadPromises = formData.newImages.map(async (file, index) => {
             const { uploadUrl, fileUrl } = urls[index];
-            
+
             // Periodically update toast for progress feel
             if (index > 0 && index % 2 === 0) {
               toast.loading(`Uploading images (${index + 1}/${formData.newImages!.length})...`, { id: mainToastId });
@@ -367,7 +367,7 @@ const AdminPropertyFormPage = () => {
             await axios.put(uploadUrl, file, {
               headers: { "Content-Type": file.type }
             });
-            
+
             return fileUrl;
           });
 
@@ -392,18 +392,18 @@ const AdminPropertyFormPage = () => {
 
       if (isEditing) {
         await instance.put(`/property/${id}`, payload, { withCredentials: true });
-        toast.success("Success!", { 
+        toast.success("Success!", {
           id: mainToastId,
           description: "Property updated successfully"
         });
       } else {
         await instance.post("/property", payload, { withCredentials: true });
-        toast.success("Success!", { 
+        toast.success("Success!", {
           id: mainToastId,
           description: "Property listing created successfully"
         });
       }
-      
+
       // Navigate back after success
       setTimeout(() => navigate("/admin/properties"), 1000);
     } catch (error) {
@@ -435,7 +435,7 @@ const AdminPropertyFormPage = () => {
             </p>
           </div>
         </div>
-        
+
         {/* Desktop Action Buttons */}
         <div className="hidden md:flex gap-3">
           <Button variant="outline" onClick={() => navigate("/admin/properties")} className="rounded-xl h-10 px-5">
@@ -448,7 +448,7 @@ const AdminPropertyFormPage = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        
+
         <div className="md:col-span-2 space-y-6">
           {/* Basic Details Card */}
           <Card className="rounded-2xl shadow-sm border-gray-100">
@@ -462,15 +462,15 @@ const AdminPropertyFormPage = () => {
                   Property Code
                   {!isEditing && <span className="text-[10px] lowercase font-normal text-muted-foreground">(Auto-generated if empty)</span>}
                 </label>
-                <Input 
-                  name="propertyCode" 
-                  value={formData.propertyCode || ""} 
-                  onChange={handleInputChange} 
-                  placeholder={isEditing ? "4-5 digit code" : "Optional: e.g. 1024"} 
-                  className="rounded-xl h-11" 
+                <Input
+                  name="propertyCode"
+                  value={formData.propertyCode || ""}
+                  onChange={handleInputChange}
+                  placeholder={isEditing ? "4-5 digit code" : "Optional: e.g. 1024"}
+                  className="rounded-xl h-11"
                 />
               </div>
-              
+
               <div>
                 <label className="block text-xs font-semibold uppercase text-gray-500 mb-1.5">Title <span className="text-red-500">*</span></label>
                 <Input ref={titleRef} name="title" value={formData.title} onChange={handleInputChange} placeholder="E.g., Luxury Skyline Apartment" className={`rounded-xl h-11 ${formErrors.title ? "border-red-500" : ""}`} />
@@ -518,8 +518,8 @@ const AdminPropertyFormPage = () => {
             </CardContent>
           </Card>
 
-           {/* Media Card */}
-           <Card className="rounded-2xl shadow-sm border-gray-100">
+          {/* Media Card */}
+          <Card className="rounded-2xl shadow-sm border-gray-100">
             <CardHeader className="pb-4 border-b border-gray-50">
               <CardTitle className="text-lg">Media & Images</CardTitle>
             </CardHeader>
@@ -534,7 +534,7 @@ const AdminPropertyFormPage = () => {
                     </button>
                   </div>
                 ))}
-                
+
                 {/* New Image Previews */}
                 {(formData.newImages || []).map((file, idx) => (
                   <div key={`new-${idx}`} className="relative aspect-square rounded-xl overflow-hidden group shadow-sm border border-primary/20">
@@ -547,7 +547,7 @@ const AdminPropertyFormPage = () => {
                     </div>
                   </div>
                 ))}
-                
+
                 {/* Upload Trigger */}
                 <label className="border-2 border-dashed border-gray-200 hover:border-primary/50 hover:bg-primary/5 rounded-xl aspect-square flex flex-col items-center justify-center cursor-pointer transition-all">
                   <Upload className="h-6 w-6 text-gray-400 mb-2" />
@@ -663,7 +663,7 @@ const AdminPropertyFormPage = () => {
               </div>
             </CardContent>
           </Card>
-          
+
           <Card className="rounded-2xl shadow-sm border-gray-100">
             <CardHeader className="pb-4 border-b border-gray-50 flex flex-row items-center justify-between">
               <CardTitle className="text-lg">Vacancies</CardTitle>
@@ -676,7 +676,7 @@ const AdminPropertyFormPage = () => {
                 <label className="block text-xs font-semibold uppercase text-gray-500 mb-1.5">Total Basic Vacancies</label>
                 <Input type="number" name="vacancyCount" value={formData.vacancyCount} onChange={handleInputChange} placeholder="0" className="rounded-xl h-11" />
               </div>
-              
+
               {formData.vacancies && formData.vacancies.length > 0 && (
                 <div className="pt-2 border-t border-gray-100 space-y-3">
                   <label className="block text-[10px] font-bold text-gray-400 uppercase">Specific Vacancies</label>

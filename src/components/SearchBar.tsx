@@ -34,6 +34,8 @@ const getDistanceKM = (lat1: number, lon1: number, lat2: number, lon2: number) =
 interface LocationItem {
   _id: string;
   title: string;
+  latitude?: number | null;
+  longitude?: number | null;
 }
 
 interface CategoryItem {
@@ -91,7 +93,7 @@ export const SearchBar = ({
   const [query, setQuery] = useState("");
 
   // Suggestions
-  const [locSuggestions, setLocSuggestions] = useState<LocationItem[]>([]);
+  const [locSuggestions, setLocSuggestions] = useState<NearbyLocation[]>([]);
   const [nearbySuggestions] = useState<NearbyLocation[]>([]);
   const [categories, setCategories] = useState<CategoryItem[]>([]);
   const [isFetchingCategories, setIsFetchingCategories] = useState(false);
@@ -138,8 +140,8 @@ export const SearchBar = ({
         });
 
         setLocations(sortedData);
-        // Default suggestions when opening step 1
-        setLocSuggestions(sortedData.slice(0, 5));
+        // Default suggestions when opening step 1 (no coords yet, distance = -1)
+        setLocSuggestions(sortedData.slice(0, 5).map((l) => ({ ...l, distance: -1 })));
       })
       .catch(() => setLocations([]));
   }, []);
@@ -151,7 +153,7 @@ export const SearchBar = ({
       setSelectedLocationName("");
       setStep(1);
       setCategories([]);
-      setLocSuggestions(locations.slice(0, 5));
+      setLocSuggestions(locations.slice(0, 5).map((l) => ({ ...l, distance: -1 })));
     }
   }, [location, locations]);
 
@@ -233,7 +235,7 @@ export const SearchBar = ({
         onLocationChange("");
         setCategories([]);
         // Keep property results or clear them if you prefer.
-        setLocSuggestions(locations.slice(0, 5));
+        setLocSuggestions(locations.slice(0, 5).map((l) => ({ ...l, distance: -1 })));
       }
     };
     document.addEventListener("keydown", handleKeyDown);
@@ -252,14 +254,23 @@ export const SearchBar = ({
             l.title.toLowerCase().includes(trimmed.toLowerCase())
           )
           : locations; // Show all (up to 5) when empty
-        setLocSuggestions(matchedLocs.slice(0, 5));
+
+        // Attach distance from user's current location if available
+        const withDistances: NearbyLocation[] = matchedLocs.slice(0, 5).map((l) => ({
+          ...l,
+          distance:
+            userCoords && l.latitude != null && l.longitude != null
+              ? getDistanceKM(userCoords.lat, userCoords.lng, l.latitude!, l.longitude!)
+              : -1,
+        }));
+        setLocSuggestions(withDistances);
 
         // Fetch Google Autocomplete if typing and few local results
         if (trimmed.length > 2) {
           instance.get(`/location/google/autocomplete?query=${trimmed}`)
             .then(res => {
               if (res.data.success) {
-                const googleResults: NearbyLocation[] = res.data.predictions.map((p: any) => ({
+                const googleResults: NearbyLocation[] = res.data.data.map((p: any) => ({
                   _id: p.place_id,
                   title: p.structured_formatting?.main_text || p.description,
                   distance: 0,
@@ -311,7 +322,7 @@ export const SearchBar = ({
         setPropSuggestions([]);
       }
     },
-    [locations]
+    [locations, userCoords]
   );
 
   // ── Fetch categories for selected location ─────────────────────────────────
@@ -523,7 +534,7 @@ export const SearchBar = ({
                 setSelectedLocationName("");
                 onLocationChange("");
                 setCategories([]);
-                setLocSuggestions(locations.slice(0, 5));
+                setLocSuggestions(locations.slice(0, 5).map((l) => ({ ...l, distance: -1 })));
               } : undefined}
               onClose={() => setOpen(false)}
               placeholder={
@@ -599,7 +610,14 @@ export const SearchBar = ({
                       <div className="bg-muted/50 p-1.5 rounded-md mr-3">
                         <MapPin className="h-4 w-4 text-muted-foreground" />
                       </div>
-                      <span className="font-medium flex-1">{loc.title}</span>
+                      <div className="flex flex-col flex-1">
+                        <span className="font-medium">{loc.title}</span>
+                        {loc.distance >= 0 && (
+                          <span className="text-[10px] text-muted-foreground">
+                            {loc.distance.toFixed(1)} km away
+                          </span>
+                        )}
+                      </div>
                       <CornerDownLeft className="w-3.5 h-3.5 opacity-40 ml-auto" />
                     </CommandItem>
                   ))}

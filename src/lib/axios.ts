@@ -29,20 +29,31 @@ const verifyAndLogout = async () => {
   if (window.location.pathname === "/admin/login") return;
 
   isLoggingOut = true;
+  
+  // Wait 1.5s before checking session — helps with transient drops or Render restarts
+  await new Promise(resolve => setTimeout(resolve, 1500));
+
   try {
     // Use a raw axios call (not the intercepted instance) to avoid recursion
-    await axios.get(`${BASE_URL}/admin/check-session`, { withCredentials: true });
-    // Session is still valid — the original 401 was a transient or route-specific error
+    await axios.get(`${BASE_URL}/admin/check-session`, { 
+      withCredentials: true,
+      timeout: 5000 // Don't wait forever
+    });
+    
+    // Session is still valid! The original 401 was likely transient or a cold-start artifact.
+    console.log("Session verified as active. Cancelling auto-logout.");
     isLoggingOut = false;
   } catch (err: any) {
     const status = err?.response?.status;
+    
+    // Only logout if the check-session call explicitly returns 401/403
+    // If it's a network error (no response), the server might be restarting - we wait.
     if (status === 401 || status === 403) {
-      // Session is genuinely dead — clear local state and redirect
       localStorage.removeItem("adminToken");
-      console.warn("Session confirmed expired. Redirecting to login.");
+      console.error("Session dead. Redirecting to login.");
       window.location.href = "/admin/login";
     } else {
-      // Network error / server cold-starting — don't log out, just reset the flag
+      console.warn("Check-session failed but not with 401/403. Server might be cold-starting.");
       isLoggingOut = false;
     }
   }

@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import instance from "@/lib/axios";
-import { DashboardSkeleton } from "@/components/skeletons";
+import AdminLoader from "@/components/AdminLoader";
 import { toast } from "sonner";
 
 const AdminDashboardPage = () => {
@@ -68,7 +68,7 @@ const AdminDashboardPage = () => {
   }, []);
 
   if (isLoading) {
-    return <DashboardSkeleton />;
+    return <AdminLoader />;
   }
 
   return (

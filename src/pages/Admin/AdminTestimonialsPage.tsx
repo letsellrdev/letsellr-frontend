@@ -24,6 +24,7 @@ import instance from "@/lib/axios";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { LocationSkeleton } from "@/components/skeletons";
+import AdminLoader from "@/components/AdminLoader";
 
 // Types
 interface Testimonial {
@@ -177,6 +178,10 @@ const AdminTestimonialsPage = () => {
     });
     setIsEditDialogOpen(true);
   };
+
+  if (isLoading) {
+    return <AdminLoader />;
+  }
 
   return (
     <div className="space-y-6">

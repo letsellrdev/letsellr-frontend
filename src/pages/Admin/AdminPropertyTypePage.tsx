@@ -17,6 +17,7 @@ import { useState, useEffect } from "react";
 import instance from "@/lib/axios";
 import { Label } from "@/components/ui/label";
 import { LocationSkeleton } from "@/components/skeletons";
+import AdminLoader from "@/components/AdminLoader";
 import { toast } from "sonner";
 
 // Types
@@ -137,6 +138,10 @@ const AdminPropertyTypePage = () => {
     });
     setIsEditDialogOpen(true);
   };
+
+  if (isLoading) {
+    return <AdminLoader />;
+  }
 
   return (
     <div className="space-y-6">

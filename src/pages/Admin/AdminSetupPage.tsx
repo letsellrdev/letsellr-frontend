@@ -3,6 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import AdminLoader from "@/components/AdminLoader";
 import { useState, useEffect } from "react";
 import instance from "@/lib/axios";
 import { toast } from "sonner";
@@ -10,9 +11,11 @@ import { toast } from "sonner";
 const AdminSetupPage = () => {
   const [phoneNumber, setPhoneNumber] = useState("");
   const [loading, setLoading] = useState(false);
+  const [isFetching, setIsFetching] = useState(true);
 
   // Fetch current phone number
   const fetchPhoneNumber = async () => {
+    setIsFetching(true);
     try {
       const response = await instance.get("/settings/default_phone_number");
       if (response.data.success) {
@@ -24,12 +27,18 @@ const AdminSetupPage = () => {
         console.error("Error fetching phone number:", error);
         toast.error("Failed to fetch phone number");
       }
+    } finally {
+      setIsFetching(false);
     }
   };
 
   useEffect(() => {
     fetchPhoneNumber();
   }, []);
+
+  if (isFetching) {
+    return <AdminLoader />;
+  }
 
   const handleSave = async () => {
     // Validate phone number

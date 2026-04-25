@@ -16,6 +16,7 @@ import { cn } from "@/lib/utils";
 import instance from "@/lib/axios";
 import { useNavigate } from "react-router-dom";
 import { ReviewSkeleton } from "@/components/skeletons";
+import AdminLoader from "@/components/AdminLoader";
 import { toast } from "sonner";
 
 const AdminReviewsPage = () => {
@@ -92,6 +93,10 @@ const AdminReviewsPage = () => {
   const showproperty = (id: string) => {
     navigate(`/property/${id}`);
   };
+
+  if (isLoading) {
+    return <AdminLoader />;
+  }
 
   return (
     <div className="space-y-6">

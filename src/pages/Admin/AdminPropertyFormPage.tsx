@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { toast } from "@/components/ui/sonner";
 import instance from "@/lib/axios";
 import axios from "axios";
+import AdminLoader from "@/components/AdminLoader";
 
 // Copy types needed locally
 interface PriceOption {
@@ -338,7 +339,7 @@ const AdminPropertyFormPage = () => {
     const mainToastId = toast.loading(isEditing ? "Saving changes..." : "Creating property listing...");
 
     try {
-      // Step 1: Request Presigned URLs & Upload to S3
+      // Step 1: Get ImageKit auth params from backend
       let imageUrls: string[] = [];
       if (formData.newImages && formData.newImages.length > 0) {
         toast.loading(`Preparing ${formData.newImages.length} image${formData.newImages.length > 1 ? 's' : ''} for upload...`, {
@@ -355,27 +356,39 @@ const AdminPropertyFormPage = () => {
           const urlResponse = await instance.post("/property/upload-url", { files: filesData });
           const { urls } = urlResponse.data;
 
-          // Step 2: Upload directly to S3 with individual progress if needed (simulated here)
+          // Step 2: Upload directly to ImageKit using multipart/form-data
           const uploadPromises = formData.newImages.map(async (file, index) => {
-            const { uploadUrl, fileUrl } = urls[index];
+            const { token, expire, signature, publicKey, urlEndpoint, fileName, folder } = urls[index];
 
             // Periodically update toast for progress feel
             if (index > 0 && index % 2 === 0) {
               toast.loading(`Uploading images (${index + 1}/${formData.newImages!.length})...`, { id: mainToastId });
             }
 
-            await axios.put(uploadUrl, file, {
-              headers: { "Content-Type": file.type }
-            });
+            const formPayload = new FormData();
+            formPayload.append("file", file);
+            formPayload.append("fileName", fileName);
+            formPayload.append("folder", folder);
+            formPayload.append("publicKey", publicKey);
+            formPayload.append("signature", signature);
+            formPayload.append("expire", String(expire));
+            formPayload.append("token", token);
 
-            return fileUrl;
+            const ikResponse = await axios.post(
+              "https://upload.imagekit.io/api/v1/files/upload",
+              formPayload,
+              { headers: { "Content-Type": "multipart/form-data" } }
+            );
+
+            // ImageKit returns the public URL in `url`
+            return ikResponse.data.url as string;
           });
 
           imageUrls = await Promise.all(uploadPromises);
           toast.loading("Images uploaded! Finalizing property details...", { id: mainToastId });
         } catch (uploadError) {
           console.error("Image upload failed:", uploadError);
-          toast.error("Failed to upload images. Check S3 credentials.", { id: mainToastId });
+          toast.error("Failed to upload images. Check ImageKit credentials.", { id: mainToastId });
           setIsSubmitting(false);
           return;
         }
@@ -415,7 +428,7 @@ const AdminPropertyFormPage = () => {
   };
 
   if (isLoading) {
-    return <div className="flex justify-center py-20 text-muted-foreground">Loading property details...</div>;
+    return <AdminLoader />;
   }
 
   return (

@@ -34,6 +34,7 @@ import {
 import { Card, CardContent } from "@/components/ui/card";
 import instance from "@/lib/axios";
 import { toast } from "sonner";
+import AdminLoader from "@/components/AdminLoader";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface Category {
@@ -257,6 +258,10 @@ const AdminCategoryPage = () => {
     };
 
     // ── Render ─────────────────────────────────────────────────────────────────
+    if (isLoading) {
+        return <AdminLoader />;
+    }
+
     return (
         <div className="space-y-6">
             {/* ── Header ── */}

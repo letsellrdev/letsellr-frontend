@@ -32,6 +32,7 @@ import { Link } from "react-router-dom";
 import instance from "@/lib/axios";
 import { PropertyCardSkeleton } from "@/components/skeletons";
 import { toast } from "@/components/ui/sonner";
+import AdminLoader from "@/components/AdminLoader";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Table,
@@ -375,6 +376,10 @@ const AdminPropertiesPage = () => {
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
   };
+
+  if (isLoading) {
+    return <AdminLoader />;
+  }
 
   return (
     <div className="space-y-6">

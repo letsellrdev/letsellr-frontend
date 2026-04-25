@@ -18,6 +18,7 @@ import instance from "@/lib/axios";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { LocationSkeleton } from "@/components/skeletons";
+import AdminLoader from "@/components/AdminLoader";
 import { toast } from "sonner";
 import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from 'react-leaflet';
 import L from 'leaflet';
@@ -207,6 +208,10 @@ const AdminLocationPage = () => {
     });
     setIsEditDialogOpen(true);
   };
+
+  if (isLoading) {
+    return <AdminLoader />;
+  }
 
   return (
     <div className="space-y-6">

@@ -30,11 +30,19 @@ interface Category {
   _id: string;
   name: string;
 }
+interface ImageObject {
+  url: string;
+  alt: string;
+}
+interface NewImageObject {
+  file: File;
+  alt: string;
+}
 interface PropertyFormData {
   title: string;
   description: string;
-  images: string[];
-  newImages?: File[];
+  images: ImageObject[];
+  newImages?: NewImageObject[];
   category: { _id: string; name: string };
   amenity: string;
   price: PriceOption[];
@@ -141,7 +149,9 @@ const AdminPropertyFormPage = () => {
         setFormData({
           title: prop.title || "",
           description: prop.description || "",
-          images: prop.images || [],
+          images: (prop.images || []).map((img: any) => 
+            typeof img === 'string' ? { url: img, alt: "" } : img
+          ),
           category: prop.category || { _id: "", name: "" },
           amenity: prop.amenity || "",
           price: prop.price?.length > 0 ? prop.price : [{ type: "", amount: 0 }],
@@ -225,8 +235,8 @@ const AdminPropertyFormPage = () => {
 
         // Apply watermark if available
         if (watermarkImage) {
-          // Watermark scale: 35% of image width
-          const scale = (img.width * 0.35) / watermarkImage.width;
+          // Watermark scale: 30% of image width
+          const scale = (img.width * 0.30) / watermarkImage.width;
           const wmWidth = watermarkImage.width * scale;
           const wmHeight = watermarkImage.height * scale;
 
@@ -292,9 +302,14 @@ const AdminPropertyFormPage = () => {
           newFiles.map(file => addWatermark(file))
         );
 
+        const newImageObjects = watermarkedFiles.map(file => ({
+          file,
+          alt: ""
+        }));
+
         setFormData(prev => ({
           ...prev,
-          newImages: [...(prev.newImages || []), ...watermarkedFiles]
+          newImages: [...(prev.newImages || []), ...newImageObjects]
         }));
 
         toast.success(`${newFiles.length} image${newFiles.length > 1 ? 's' : ''} processed and added`, { id: toastId });
@@ -302,9 +317,14 @@ const AdminPropertyFormPage = () => {
         console.error("Watermark processing failed:", error);
         toast.error("Failed to process some images, using originals", { id: toastId });
 
+        const newImageObjects = newFiles.map(file => ({
+          file,
+          alt: ""
+        }));
+
         setFormData(prev => ({
           ...prev,
-          newImages: [...(prev.newImages || []), ...newFiles]
+          newImages: [...(prev.newImages || []), ...newImageObjects]
         }));
       }
     }
@@ -314,6 +334,18 @@ const AdminPropertyFormPage = () => {
   };
   const removeNewImage = (index: number) => {
     setFormData({ ...formData, newImages: (formData.newImages || []).filter((_, i) => i !== index) });
+  };
+
+  const handleExistingImageAltChange = (index: number, alt: string) => {
+    const updatedImages = [...formData.images];
+    updatedImages[index] = { ...updatedImages[index], alt };
+    setFormData({ ...formData, images: updatedImages });
+  };
+
+  const handleNewImageAltChange = (index: number, alt: string) => {
+    const updatedNewImages = [...(formData.newImages || [])];
+    updatedNewImages[index] = { ...updatedNewImages[index], alt };
+    setFormData({ ...formData, newImages: updatedNewImages });
   };
 
   // Submit Logic
@@ -348,16 +380,16 @@ const AdminPropertyFormPage = () => {
         });
 
         try {
-          const filesData = formData.newImages.map(file => ({
-            name: file.name,
-            type: file.type
+          const filesData = formData.newImages.map(imgObj => ({
+            name: imgObj.file.name,
+            type: imgObj.file.type
           }));
 
           const urlResponse = await instance.post("/property/upload-url", { files: filesData });
           const { urls } = urlResponse.data;
 
           // Step 2: Upload directly to ImageKit using multipart/form-data
-          const uploadPromises = formData.newImages.map(async (file, index) => {
+          const uploadPromises = formData.newImages.map(async (imgObj, index) => {
             const { token, expire, signature, publicKey, urlEndpoint, fileName, folder } = urls[index];
 
             // Periodically update toast for progress feel
@@ -366,7 +398,7 @@ const AdminPropertyFormPage = () => {
             }
 
             const formPayload = new FormData();
-            formPayload.append("file", file);
+            formPayload.append("file", imgObj.file);
             formPayload.append("fileName", fileName);
             formPayload.append("folder", folder);
             formPayload.append("publicKey", publicKey);
@@ -381,10 +413,11 @@ const AdminPropertyFormPage = () => {
             );
 
             // ImageKit returns the public URL in `url`
-            return ikResponse.data.url as string;
+            return { url: ikResponse.data.url as string, alt: imgObj.alt };
           });
 
-          imageUrls = await Promise.all(uploadPromises);
+          const uploadedImageObjects = await Promise.all(uploadPromises);
+          imageUrls = uploadedImageObjects as any; // This is actually ImageObject[] now
           toast.loading("Images uploaded! Finalizing property details...", { id: mainToastId });
         } catch (uploadError) {
           console.error("Image upload failed:", uploadError);
@@ -400,7 +433,7 @@ const AdminPropertyFormPage = () => {
         price: formData.price?.filter((p) => p.amount > 0) || [],
         location: formData.location || "",
         propertyTypeCategory: formData.propertyTypeCategory || undefined,
-        images: [...(formData.images || []), ...imageUrls],
+        images: [...(formData.images || []), ...(imageUrls as unknown as ImageObject[])],
       };
 
       if (isEditing) {
@@ -539,25 +572,41 @@ const AdminPropertyFormPage = () => {
             <CardContent className="p-6">
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">
                 {/* Existing Images */}
-                {formData.images.map((url, idx) => (
-                  <div key={`existing-${idx}`} className="relative aspect-square rounded-xl overflow-hidden group shadow-sm border border-gray-100">
-                    <img src={url} alt="Property" className="w-full h-full object-cover transition-transform group-hover:scale-105" />
-                    <button onClick={() => removeExistingImage(idx)} className="absolute top-2 right-2 bg-black/50 hover:bg-red-500 text-white p-1.5 rounded-full backdrop-blur-sm transition-colors">
-                      <X className="h-3.5 w-3.5" />
-                    </button>
+                {formData.images.map((img, idx) => (
+                  <div key={`existing-${idx}`} className="space-y-2">
+                    <div className="relative aspect-square rounded-xl overflow-hidden group shadow-sm border border-gray-100">
+                      <img src={img.url} alt={img.alt || "Property"} className="w-full h-full object-cover transition-transform group-hover:scale-105" />
+                      <button onClick={() => removeExistingImage(idx)} className="absolute top-2 right-2 bg-black/50 hover:bg-red-500 text-white p-1.5 rounded-full backdrop-blur-sm transition-colors">
+                        <X className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                    <Input 
+                      placeholder="Alt text (SEO)" 
+                      value={img.alt} 
+                      onChange={(e) => handleExistingImageAltChange(idx, e.target.value)}
+                      className="h-8 text-[10px] rounded-lg"
+                    />
                   </div>
                 ))}
 
                 {/* New Image Previews */}
-                {(formData.newImages || []).map((file, idx) => (
-                  <div key={`new-${idx}`} className="relative aspect-square rounded-xl overflow-hidden group shadow-sm border border-primary/20">
-                    <FilePreview file={file} />
-                    <button onClick={() => removeNewImage(idx)} className="absolute top-2 right-2 bg-black/50 hover:bg-red-500 text-white p-1.5 rounded-full backdrop-blur-sm transition-colors z-10">
-                      <X className="h-3.5 w-3.5" />
-                    </button>
-                    <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent p-2 text-[10px] text-white truncate z-10">
-                      {file.name}
+                {(formData.newImages || []).map((imgObj, idx) => (
+                  <div key={`new-${idx}`} className="space-y-2">
+                    <div className="relative aspect-square rounded-xl overflow-hidden group shadow-sm border border-primary/20">
+                      <FilePreview file={imgObj.file} />
+                      <button onClick={() => removeNewImage(idx)} className="absolute top-2 right-2 bg-black/50 hover:bg-red-500 text-white p-1.5 rounded-full backdrop-blur-sm transition-colors z-10">
+                        <X className="h-3.5 w-3.5" />
+                      </button>
+                      <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent p-2 text-[10px] text-white truncate z-10">
+                        {imgObj.file.name}
+                      </div>
                     </div>
+                    <Input 
+                      placeholder="Alt text (SEO)" 
+                      value={imgObj.alt} 
+                      onChange={(e) => handleNewImageAltChange(idx, e.target.value)}
+                      className="h-8 text-[10px] rounded-lg border-primary/20"
+                    />
                   </div>
                 ))}
 

@@ -97,6 +97,22 @@ interface Property {
 
 
 // Property Card Component
+const getImageSrc = (imgObj: any) => {
+  if (!imgObj) return "/placeholder.jpg";
+  let url = typeof imgObj === 'string' ? imgObj : imgObj.url;
+  if (!url) return "/placeholder.jpg";
+  
+  if (url.includes('amazonaws.com')) {
+    try {
+      const parsed = new URL(url);
+      return `https://ik.imagekit.io/assets01${parsed.pathname}`;
+    } catch (e) {
+      return url;
+    }
+  }
+  return url;
+};
+
 const PropertyCard = ({
   property,
   onDelete,
@@ -104,7 +120,7 @@ const PropertyCard = ({
   property: Property;
   onDelete: (property: Property) => void;
 }) => {
-  const firstImage = property.images?.[0] || "/placeholder.jpg";
+  const firstImage = getImageSrc(property.images?.[0]);
   
   return (
     <Card className="p-4 sm:p-5 border-border hover:shadow-lg transition-shadow flex flex-col gap-4 overflow-hidden">
@@ -528,7 +544,7 @@ const AdminPropertiesPage = () => {
                         <TableRow key={property._id} className="hover:bg-gray-50/50 transition-colors">
                           <TableCell>
                             <img
-                              src={property.images?.[0] || "/placeholder.jpg"}
+                              src={getImageSrc(property.images?.[0])}
                               className="w-12 h-12 rounded-lg object-cover shadow-sm border border-gray-100"
                               alt=""
                             />
@@ -610,7 +626,7 @@ const AdminPropertiesPage = () => {
                   <div key={property._id} className="p-4 flex flex-col gap-3 active:bg-gray-50 transition-colors">
                     <div className="flex gap-4">
                       <img
-                        src={property.images?.[0] || "/placeholder.jpg"}
+                        src={getImageSrc(property.images?.[0])}
                         className="w-16 h-16 rounded-xl object-cover shadow-sm flex-shrink-0"
                         alt=""
                       />

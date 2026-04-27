@@ -150,7 +150,7 @@ const AdminPropertyFormPage = () => {
           title: prop.title || "",
           description: prop.description || "",
           images: (prop.images || []).map((img: any) => 
-            typeof img === 'string' ? { url: img, alt: "" } : img
+            typeof img === 'string' ? { url: img, alt: "" } : { url: img.url || img.image || "", alt: img.alt || "" }
           ),
           category: prop.category || { _id: "", name: "" },
           amenity: prop.amenity || "",
@@ -372,7 +372,7 @@ const AdminPropertyFormPage = () => {
 
     try {
       // Step 1: Get ImageKit auth params from backend
-      let imageUrls: string[] = [];
+      let uploadedImageObjects: ImageObject[] = [];
       if (formData.newImages && formData.newImages.length > 0) {
         toast.loading(`Preparing ${formData.newImages.length} image${formData.newImages.length > 1 ? 's' : ''} for upload...`, {
           id: mainToastId,
@@ -390,7 +390,7 @@ const AdminPropertyFormPage = () => {
 
           // Step 2: Upload directly to ImageKit using multipart/form-data
           const uploadPromises = formData.newImages.map(async (imgObj, index) => {
-            const { token, expire, signature, publicKey, urlEndpoint, fileName, folder } = urls[index];
+            const { token, expire, signature, publicKey, fileName, folder, fileUrl } = urls[index];
 
             // Periodically update toast for progress feel
             if (index > 0 && index % 2 === 0) {
@@ -412,12 +412,11 @@ const AdminPropertyFormPage = () => {
               { headers: { "Content-Type": "multipart/form-data" } }
             );
 
-            // ImageKit returns the public URL in `url`
-            return { url: ikResponse.data.url as string, alt: imgObj.alt };
+            // ImageKit returns the public URL in `url`. Use backend pre-computed fileUrl as fallback.
+            return { url: (ikResponse.data.url || fileUrl) as string, alt: imgObj.alt };
           });
 
-          const uploadedImageObjects = await Promise.all(uploadPromises);
-          imageUrls = uploadedImageObjects as any; // This is actually ImageObject[] now
+          uploadedImageObjects = await Promise.all(uploadPromises);
           toast.loading("Images uploaded! Finalizing property details...", { id: mainToastId });
         } catch (uploadError) {
           console.error("Image upload failed:", uploadError);
@@ -433,7 +432,7 @@ const AdminPropertyFormPage = () => {
         price: formData.price?.filter((p) => p.amount > 0) || [],
         location: formData.location || "",
         propertyTypeCategory: formData.propertyTypeCategory || undefined,
-        images: [...(formData.images || []), ...(imageUrls as unknown as ImageObject[])],
+        images: [...(formData.images || []), ...uploadedImageObjects],
       };
 
       if (isEditing) {

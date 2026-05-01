@@ -66,7 +66,32 @@ const Index = () => {
     try {
       setIsCategoriesLoading(true);
       const res = await instance.get("/category");
-      setCategories(res.data.data || []);
+      let fetchedCategories = res.data.data || [];
+
+      // Sort categories based on user's preferred order:
+      // PG & Hostels -> House & Villa -> Flat & Apartments -> Commercial -> Land
+      const getPriority = (name: string) => {
+        const lowerName = name.toLowerCase();
+        if (lowerName.includes("pg") || lowerName.includes("hostel")) return 1;
+        if (lowerName.includes("house") || lowerName.includes("villa")) return 2;
+        if (lowerName.includes("flat") || lowerName.includes("apartment")) return 3;
+        if (lowerName.includes("commercial") || lowerName.includes("commertial")) return 4;
+        if (lowerName.includes("land") || lowerName.includes("plot")) return 5;
+        return 6;
+      };
+
+      fetchedCategories.sort((a: any, b: any) => {
+        const priorityA = getPriority(a.name);
+        const priorityB = getPriority(b.name);
+
+        if (priorityA !== priorityB) {
+          return priorityA - priorityB;
+        }
+        // Secondary sort: Property count (descending)
+        return (b.propertyCount || 0) - (a.propertyCount || 0);
+      });
+
+      setCategories(fetchedCategories);
     } catch (error) {
       console.error("Error fetching categories:", error);
     } finally {

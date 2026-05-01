@@ -10,28 +10,32 @@ export function useSeoPreload() {
       document.head.appendChild(meta);
     }
 
-    // 2. Preload API calls for critical data
+    // 2. Preload API calls and routes with a delay to prioritize initial landing page render
     const apiBase = import.meta.env.VITE_API_URL || "http://localhost:4500/letsellr";
     const apiEndPoints = [
       `${apiBase}/property/featured`,
-      `${apiBase}/location/calicut`,
+      `${apiBase}/location/important`,
       `${apiBase}/property/latest`
     ];
-    apiEndPoints.forEach(url => fetch(url).catch(() => {}));
 
-    // 3. Preload important routes and top search keywords
-    const routes = [
-      "/search", 
-      "/", 
-      "/search?query=calicut+rental+homes",
-      "/search?query=kozhikode+rent+flat"
-    ];
-    
-    routes.forEach((route) => {
-      const link = document.createElement("link");
-      link.rel = "prefetch";
-      link.href = route;
-      document.head.appendChild(link);
+    const routes = ["/search", "/"];
+
+    // Use requestIdleCallback to run preloading when the browser is idle
+    const idleCallback = (window as any).requestIdleCallback || ((cb: any) => setTimeout(cb, 2000));
+
+    idleCallback(() => {
+      // Preload APIs
+      apiEndPoints.forEach(url => {
+        fetch(url, { priority: 'low' } as any).catch(() => {});
+      });
+
+      // Preload Routes
+      routes.forEach((route) => {
+        const link = document.createElement("link");
+        link.rel = "prefetch";
+        link.href = route;
+        document.head.appendChild(link);
+      });
     });
   }, []);
 }

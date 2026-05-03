@@ -1,12 +1,12 @@
 import { Badge } from "./ui/badge";
 import { MapPin, Star } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn, getImageSrc } from "@/lib/utils";
 
 export interface Property {
   _id: string;
   title: string;
   description: string;
-  images: string[];
+  images: (string | { url: string; alt?: string })[];
   category: {
     _id: string;
     name: string;
@@ -35,7 +35,7 @@ export default function PropertyCard(data: Property) {
       {/* Image Section */}
       <div className="relative w-full aspect-[4/3] bg-gray-100 shrink-0 fix-rounded-overflow">
         <img
-          src={data?.images?.[0]}
+          src={getImageSrc(data?.images?.[0])}
           alt={data?.title}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
         />

@@ -6,6 +6,7 @@ import { ChevronLeft, ChevronRight, X, Plus } from "lucide-react";
 import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
+import { getImageSrc } from "@/lib/utils";
 
 // Fullscreen Image Gallery Component
 interface FullscreenGalleryProps {
@@ -91,7 +92,7 @@ const FullscreenGallery: React.FC<FullscreenGalleryProps> = ({
       <div className="w-full h-full flex items-center justify-center p-4">
         {(() => {
           const img = images[currentIndex];
-          const url = typeof img === 'string' ? img : img.url;
+          const url = getImageSrc(img);
           const alt = typeof img === 'string' ? `Property image ${currentIndex + 1}` : img.alt || `Property image ${currentIndex + 1}`;
           return (
             <img
@@ -107,7 +108,7 @@ const FullscreenGallery: React.FC<FullscreenGalleryProps> = ({
       {images.length > 1 && (
         <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-2 max-w-full overflow-x-auto px-4 py-2">
           {images.map((img, index) => {
-            const url = typeof img === 'string' ? img : img.url;
+            const url = getImageSrc(img);
             const alt = typeof img === 'string' ? `Thumbnail ${index + 1}` : img.alt || `Thumbnail ${index + 1}`;
             return (
               <button
@@ -166,7 +167,7 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({ images }) => {
           className="rounded-xl overflow-hidden shadow-lg h-80"
         >
           {images.map((img, i) => {
-            const url = typeof img === 'string' ? img : img.url;
+            const url = getImageSrc(img);
             const alt = typeof img === 'string' ? `View ${i + 1}` : img.alt || `View ${i + 1}`;
             return (
               <SwiperSlide key={i}>
@@ -195,16 +196,16 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({ images }) => {
             onClick={() => openFullscreen(0)}
           >
             <img
-              src={typeof images[0] === 'string' ? images[0] : images[0].url}
-              alt={typeof images[0] === 'string' ? "Main view" : images[0].alt || "Main view"}
+              src={getImageSrc(images[0])}
+              alt={typeof images[0] === 'string' ? "Main view" : (images[0] as any).alt || "Main view"}
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
             />
           </div>
 
           {/* First 3 smaller images */}
           {images.slice(1, 4).map((img, i) => {
-            const url = typeof img === 'string' ? img : img.url;
-            const alt = typeof img === 'string' ? `Thumbnail ${i + 1}` : img.alt || `Thumbnail ${i + 1}`;
+            const url = getImageSrc(img);
+            const alt = typeof img === 'string' ? `Thumbnail ${i + 1}` : (img as any).alt || `Thumbnail ${i + 1}`;
             return (
               <div
                 key={i}
@@ -227,8 +228,8 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({ images }) => {
               onClick={() => openFullscreen(3)}
             >
               <img
-                src={typeof images[3] === 'string' ? images[3] : images[3].url}
-                alt={typeof images[3] === 'string' ? "Thumbnail 4" : images[3].alt || "Thumbnail 4"}
+                src={getImageSrc(images[3])}
+                alt={typeof images[3] === 'string' ? "Thumbnail 4" : (images[3] as any).alt || "Thumbnail 4"}
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
               />
 
@@ -251,8 +252,8 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({ images }) => {
               onClick={() => openFullscreen(3)}
             >
               <img
-                src={typeof images[3] === 'string' ? images[3] : images[3].url}
-                alt={typeof images[3] === 'string' ? "Thumbnail 4" : images[3].alt || "Thumbnail 4"}
+                src={getImageSrc(images[3])}
+                alt={typeof images[3] === 'string' ? "Thumbnail 4" : (images[3] as any).alt || "Thumbnail 4"}
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
               />
             </div>

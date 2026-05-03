@@ -13,6 +13,7 @@ import { MapPin, MessageSquare } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import instance from "@/lib/axios";
+import { getImageSrc } from "@/lib/utils";
 import ImageGallery from "@/components/Imageswiper";
 import { useProperty } from "@/contexts/PropertyContext";
 import { useSeo } from "@/hooks/useSeo";
@@ -128,7 +129,7 @@ export default function PropertyPage() {
     keywords: product 
       ? `${product.title}, ${propertyLocation}, ${propertyCategory}, rent in calicut, rentals kozhikode, ${product.propertyCode}` 
       : undefined,
-    ogImage: product?.images?.[0]
+    ogImage: getImageSrc(product?.images?.[0])
   });
 
   const { setCurrentProduct } = useProperty();
@@ -307,7 +308,7 @@ export default function PropertyPage() {
         "name": product.title,
         "description": product.description,
         "url": window.location.href,
-        "image": product.images?.[0],
+        "image": getImageSrc(product.images?.[0]),
         "datePosted": product.createdAt,
         "accommodation": {
           "@type": "Accommodation",

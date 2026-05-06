@@ -5,6 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { toast } from "@/components/ui/sonner";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+
 import instance from "@/lib/axios";
 import axios from "axios";
 import AdminLoader from "@/components/AdminLoader";
@@ -107,6 +110,7 @@ const AdminPropertyFormPage = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(isEditing);
   const [formErrors, setFormErrors] = useState<{ [key: string]: string }>({});
+  const [isWatermarkEnabled, setIsWatermarkEnabled] = useState(true);
 
   const [locations, setLocations] = useState<Location[]>([]);
   const [propertyTypes, setPropertyTypes] = useState<PropertyType[]>([]);
@@ -299,8 +303,9 @@ const AdminPropertyFormPage = () => {
 
       try {
         const watermarkedFiles = await Promise.all(
-          newFiles.map(file => addWatermark(file))
+          newFiles.map(file => isWatermarkEnabled ? addWatermark(file) : Promise.resolve(file))
         );
+
 
         const newImageObjects = watermarkedFiles.map(file => ({
           file,
@@ -464,7 +469,7 @@ const AdminPropertyFormPage = () => {
   }
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6 pb-24 md:pb-6 relative animate-fade-in">
+    <div className="max-w-5xl mx-auto space-y-6 pb-24 md:pb-6 relative animate-fade-in">
       {/* Header */}
       <div className="flex items-center justify-between pb-4 border-b border-gray-100">
         <div className="flex items-center gap-4">
@@ -565,9 +570,21 @@ const AdminPropertyFormPage = () => {
 
           {/* Media Card */}
           <Card className="rounded-2xl shadow-sm border-gray-100">
-            <CardHeader className="pb-4 border-b border-gray-50">
+            <CardHeader className="pb-4 border-b border-gray-50 flex flex-row items-center justify-between">
               <CardTitle className="text-lg">Media & Images</CardTitle>
+              <div className="flex items-center gap-2 bg-gray-50/50 px-3 py-1.5 rounded-xl border border-gray-100">
+                <Label htmlFor="watermark-toggle" className="text-[10px] font-bold uppercase text-gray-500 cursor-pointer">
+                  {isWatermarkEnabled ? "Watermark On" : "Watermark Off"}
+                </Label>
+                <Switch 
+                  id="watermark-toggle" 
+                  checked={isWatermarkEnabled} 
+                  onCheckedChange={setIsWatermarkEnabled}
+                  className="scale-75 origin-right"
+                />
+              </div>
             </CardHeader>
+
             <CardContent className="p-6">
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">
                 {/* Existing Images */}
@@ -600,7 +617,7 @@ const AdminPropertyFormPage = () => {
                         {imgObj.file.name}
                       </div>
                     </div>
-                    <Input 
+                    <Input
                       placeholder="Alt text (SEO)" 
                       value={imgObj.alt} 
                       onChange={(e) => handleNewImageAltChange(idx, e.target.value)}

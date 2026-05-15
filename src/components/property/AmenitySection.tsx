@@ -1,7 +1,7 @@
 import { 
   Wifi, Coffee, WashingMachine, Shirt, Camera, 
   Droplet, AirVent, ParkingCircle, CookingPot, 
-  GraduationCap, CheckCircle 
+  GraduationCap, CheckCircle , Bath
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -16,6 +16,7 @@ const iconMappings = [
   { keywords: ["parking", "car parking", "bike parking"], icon: ParkingCircle },
   { keywords: ["kitchen", "cooking", "bike parking"], icon: CookingPot },
   { keywords: ["study", "study-room"], icon: GraduationCap },
+  { keywords: ["bath", "bathroom"], icon: Bath },
 ];
 
 const getAmenityIcon = (amenity: string) => {

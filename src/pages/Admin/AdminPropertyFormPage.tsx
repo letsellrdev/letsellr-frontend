@@ -7,10 +7,18 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { toast } from "@/components/ui/sonner";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 
 import instance from "@/lib/axios";
 import axios from "axios";
 import AdminLoader from "@/components/AdminLoader";
+import { cn } from "@/lib/utils";
+
+const COMMON_AMENITIES = [
+  "Wifi", "AC", "TV", "Kitchen", "Parking", "CCTV", 
+  "24 Hours Water", "Power Backup", "Gym", "Pool", 
+  "Lift", "Washing Machine", "Geyser", "Bath"
+];
 
 // Copy types needed locally
 interface PriceOption {
@@ -68,7 +76,7 @@ const INITIAL_FORM_STATE: PropertyFormData = {
   price: [{ type: "", amount: 0 }],
   location: "",
   contactNumber: "",
-  propertyType: "buy",
+  propertyType: "rent",
   status: "active",
   propertyTypeCategory: "",
   vacancyCount: 0,
@@ -111,6 +119,7 @@ const AdminPropertyFormPage = () => {
   const [isLoading, setIsLoading] = useState(isEditing);
   const [formErrors, setFormErrors] = useState<{ [key: string]: string }>({});
   const [isWatermarkEnabled, setIsWatermarkEnabled] = useState(true);
+  const [amenityInput, setAmenityInput] = useState("");
 
   const [locations, setLocations] = useState<Location[]>([]);
   const [propertyTypes, setPropertyTypes] = useState<PropertyType[]>([]);
@@ -161,7 +170,7 @@ const AdminPropertyFormPage = () => {
           price: prop.price?.length > 0 ? prop.price : [{ type: "", amount: 0 }],
           location: typeof prop.location === "string" ? prop.location : prop.location?._id || "",
           contactNumber: prop.contactNumber || "",
-          propertyType: prop.propertyType || "buy",
+          propertyType: prop.propertyType || "rent",
           status: prop.status || "active",
           propertyTypeCategory: typeof prop.propertyTypeCategory === "string" ? prop.propertyTypeCategory : prop.propertyTypeCategory?._id || "",
           propertyCode: prop.propertyCode || "",
@@ -207,6 +216,40 @@ const AdminPropertyFormPage = () => {
   };
   const addVacancy = () => setFormData({ ...formData, vacancies: [...(formData.vacancies || []), { type: "", count: 0 }] });
   const removeVacancy = (index: number) => setFormData({ ...formData, vacancies: (formData.vacancies || []).filter((_, i) => i !== index) });
+
+  // Amenity Handlers
+  const handleAddAmenity = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter" && amenityInput.trim()) {
+      e.preventDefault();
+      const newAmenity = amenityInput.trim();
+      const currentAmenities = formData.amenity ? formData.amenity.split(",").map(a => a.trim()).filter(a => a) : [];
+      
+      if (!currentAmenities.includes(newAmenity)) {
+        const updatedAmenities = [...currentAmenities, newAmenity].join(", ");
+        setFormData({ ...formData, amenity: updatedAmenities });
+      }
+      setAmenityInput("");
+    }
+  };
+
+  const removeAmenity = (indexToRemove: number) => {
+    const currentAmenities = formData.amenity.split(",").map(a => a.trim()).filter(a => a);
+    const updatedAmenities = currentAmenities.filter((_, index) => index !== indexToRemove).join(", ");
+    setFormData({ ...formData, amenity: updatedAmenities });
+  };
+
+  const toggleAmenity = (amenity: string) => {
+    const current = formData.amenity ? formData.amenity.split(",").map(a => a.trim()).filter(a => a) : [];
+    const isSelected = current.some(a => a.toLowerCase() === amenity.toLowerCase());
+    
+    if (isSelected) {
+      const updated = current.filter(a => a.toLowerCase() !== amenity.toLowerCase()).join(", ");
+      setFormData({ ...formData, amenity: updated });
+    } else {
+      const updated = [...current, amenity].join(", ");
+      setFormData({ ...formData, amenity: updated });
+    }
+  };
 
   // Image Handlers
   const [watermarkImage, setWatermarkImage] = useState<HTMLImageElement | null>(null);
@@ -688,8 +731,8 @@ const AdminPropertyFormPage = () => {
                   onChange={handleInputChange}
                   className="w-full px-4 h-11 border border-gray-200 rounded-xl text-sm capitalize focus:outline-none focus:ring-2 focus:ring-primary/50 bg-white"
                 >
-                  <option value="buy">Buy</option>
                   <option value="rent">Rent</option>
+                  <option value="buy">Buy</option>
                   <option value="lease">Lease</option>
                 </select>
               </div>
@@ -736,8 +779,52 @@ const AdminPropertyFormPage = () => {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold uppercase text-gray-500 mb-1.5">Amenities (Comma separated)</label>
-                <Input name="amenity" value={formData.amenity} onChange={handleInputChange} placeholder="Wifi, Pool, Gym..." className="rounded-xl h-11" />
+                <label className="block text-xs font-semibold uppercase text-gray-500 mb-1.5">Amenities (Press Enter to add)</label>
+                <Input 
+                  value={amenityInput} 
+                  onChange={(e) => setAmenityInput(e.target.value)}
+                  onKeyDown={handleAddAmenity}
+                  placeholder="Type e.g. Wifi, Pool and press Enter" 
+                  className="rounded-xl h-11" 
+                />
+                <div className="flex flex-wrap gap-2 mt-3">
+                  {formData.amenity && formData.amenity.split(",").map(a => a.trim()).filter(a => a).map((amenity, idx) => (
+                    <Badge key={idx} variant="secondary" className="px-3 py-1.5 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 border-none flex items-center gap-1.5 group">
+                      {amenity}
+                      <button 
+                        type="button" 
+                        onClick={() => removeAmenity(idx)}
+                        className="text-primary/40 hover:text-red-500 transition-colors"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </Badge>
+                  ))}
+                </div>
+
+                <div className="mt-6 pt-6 border-t border-gray-50">
+                  <p className="text-[10px] font-bold text-gray-400 uppercase mb-3">Quick Add Amenities</p>
+                  <div className="flex flex-wrap gap-2">
+                    {COMMON_AMENITIES.map((item) => {
+                      const isSelected = formData.amenity?.split(",").map(a => a.trim().toLowerCase()).includes(item.toLowerCase());
+                      return (
+                        <button
+                          key={item}
+                          type="button"
+                          onClick={() => toggleAmenity(item)}
+                          className={cn(
+                            "px-3 py-1.5 rounded-xl text-[11px] font-medium transition-all border",
+                            isSelected 
+                              ? "bg-primary border-primary text-white shadow-sm shadow-primary/20" 
+                              : "bg-white border-gray-100 text-gray-500 hover:border-primary/30 hover:text-primary"
+                          )}
+                        >
+                          {item}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
               </div>
             </CardContent>
           </Card>

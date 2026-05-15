@@ -393,10 +393,6 @@ const AdminPropertiesPage = () => {
     }
   };
 
-  if (isLoading) {
-    return <AdminLoader />;
-  }
-
   return (
     <div className="space-y-6">
 

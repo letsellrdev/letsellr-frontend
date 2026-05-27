@@ -188,25 +188,18 @@ export const SearchBar = ({
         setUserCoords(coords);
         setIsLocating(false);
         // Fetch nearby locations from our backend
-        instance.get(`/location/google/nearby?lat=${coords.lat}&lng=${coords.lng}`)
+        instance.get(`/location/nearby?lat=${coords.lat}&lng=${coords.lng}`)
           .then(res => {
-            if (res.data.success) {
+            if (res.data.data) {
               const formatted: NearbyLocation[] = res.data.data.map((p: any) => {
-                const pLat = p.geometry.location.lat;
-                const pLng = p.geometry.location.lng;
-                // Calculate distance manually on frontend for accuracy
-                const dist = getDistanceKM(coords.lat, coords.lng, pLat, pLng);
-                
                 return {
-                  _id: p.place_id,
-                  title: p.name,
-                  distance: dist,
-                  isGoogle: true,
-                  googlePlaceId: p.place_id
+                  _id: p._id,
+                  title: p.title,
+                  distance: p.distance,
+                  isGoogle: false,
                 };
               });
               setGoogleLocSuggestions(formatted.sort((a, b) => a.distance - b.distance));
-
             }
           })
           .catch(() => {});
@@ -249,11 +242,26 @@ export const SearchBar = ({
 
       // In step 1 — filter locations locally
       if (currentStep === 1) {
-        const matchedLocs = trimmed
+        let matchedLocs = trimmed
           ? locations.filter((l) =>
             l.title.toLowerCase().includes(trimmed.toLowerCase())
           )
           : locations; // Show all (up to 5) when empty
+
+        // If we found a match, also suggest nearby locations from the database
+        if (trimmed && matchedLocs.length > 0) {
+          const primaryLoc = matchedLocs[0];
+          if (primaryLoc.latitude && primaryLoc.longitude) {
+            const nearbyLocs = locations.filter((l) => {
+              if (matchedLocs.some(m => m._id === l._id)) return false; // Already included
+              if (!l.latitude || !l.longitude) return false;
+              const dist = getDistanceKM(primaryLoc.latitude!, primaryLoc.longitude!, l.latitude, l.longitude);
+              return dist <= 15; // Within 15km
+            });
+            // Append nearby locations
+            matchedLocs = [...matchedLocs, ...nearbyLocs];
+          }
+        }
 
         // Attach distance from user's current location if available
         const withDistances: NearbyLocation[] = matchedLocs.slice(0, 5).map((l) => ({
@@ -265,22 +273,10 @@ export const SearchBar = ({
         }));
         setLocSuggestions(withDistances);
 
-        // Fetch Google Autocomplete if typing and few local results
+        // Only local locations and nearby locations from DB are shown.
         if (trimmed.length > 2) {
-          instance.get(`/location/google/autocomplete?query=${trimmed}`)
-            .then(res => {
-              if (res.data.success) {
-                const googleResults: NearbyLocation[] = res.data.data.map((p: any) => ({
-                  _id: p.place_id,
-                  title: p.structured_formatting?.main_text || p.description,
-                  distance: 0,
-                  isGoogle: true,
-                  googlePlaceId: p.place_id
-                }));
-                setGoogleLocSuggestions(googleResults);
-              }
-            })
-            .catch(() => {});
+          // Google Autocomplete has been removed as per requirements.
+          // The suggestions will only show nearby coordinates available in the location DB.
         } else if (!trimmed) {
           // If empty query, keep the ones from nearby search (if any)
           // or reset if you prefer.

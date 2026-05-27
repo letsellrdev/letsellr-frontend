@@ -1,7 +1,8 @@
 import { 
   Wifi, Coffee, WashingMachine, Shirt, Camera, 
   Droplet, AirVent, ParkingCircle, CookingPot, 
-  GraduationCap, CheckCircle , Bath
+  GraduationCap, CheckCircle , Bath,
+  Flame, Refrigerator, ShieldCheck, DoorClosed
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -9,7 +10,7 @@ const iconMappings = [
   { keywords: ["wifi", "wi-fi"], icon: Wifi },
   { keywords: ["kettle", "coffee"], icon: Coffee },
   { keywords: ["washing machine", "laundry"], icon: WashingMachine },
-  { keywords: ["iron", "ironbox"], icon: Shirt },
+  { keywords: ["iron", "ironbox", "iron box"], icon: Shirt },
   { keywords: ["24 hours cctv", "cctv", "camera"], icon: Camera },
   { keywords: ["24 hours water", "water", "water purifier"], icon: Droplet },
   { keywords: ["ac", "air conditioner", "air conditioning"], icon: AirVent },
@@ -17,6 +18,10 @@ const iconMappings = [
   { keywords: ["kitchen", "cooking", "bike parking"], icon: CookingPot },
   { keywords: ["study", "study-room"], icon: GraduationCap },
   { keywords: ["bath", "bathroom"], icon: Bath },
+  { keywords: ["gas", "stove", "gas and stove"], icon: Flame },
+  { keywords: ["fridge", "refrigerator"], icon: Refrigerator },
+  { keywords: ["wardrobe", "cupboard", "closet"], icon: DoorClosed },
+  { keywords: ["security", "guard"], icon: ShieldCheck },
 ];
 
 const getAmenityIcon = (amenity: string) => {

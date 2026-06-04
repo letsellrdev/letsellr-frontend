@@ -25,6 +25,7 @@ export interface Property {
   contactNumber?: string;
   vacancyCount?: number;
   status?: string;
+  basePrice?: number;
 }
 
 export default function PropertyCard(data: Property) {
@@ -85,14 +86,21 @@ export default function PropertyCard(data: Property) {
           <h3 className="text-base sm:text-sm font-semibold text-gray-900 line-clamp-2 flex-1 leading-snug">
             {data?.title}
           </h3>
-          {data?.price && data.price.length > 0 && (
+          {data?.price && data.price.length > 0 ? (
             <div className="text-right shrink-0">
               <p className="text-base sm:text-sm font-bold text-primary leading-tight">
                 ₹{data.price[0].amount.toLocaleString()}
               </p>
               <p className="text-[11px] sm:text-[10px] text-gray-400 leading-none">per month</p>
             </div>
-          )}
+          ) : data?.basePrice ? (
+            <div className="text-right shrink-0">
+              <p className="text-base sm:text-sm font-bold text-primary leading-tight">
+                ₹{data.basePrice.toLocaleString()}
+              </p>
+              <p className="text-[11px] sm:text-[10px] text-gray-400 leading-none">per month</p>
+            </div>
+          ) : null}
         </div>
 
         {/* Location */}

@@ -47,14 +47,37 @@ function SearchAutocomplete({
   onChange,
   placeholder = "Search properties...",
   className = "",
+  selectedLocationId,
+  locations,
 }: {
   value: string;
   onChange: (val: string) => void;
   placeholder?: string;
   className?: string;
   selectedLocationId?: string;
-  locations?: { _id: string; title: string }[];
+  locations?: { _id: string; title: string; latitude?: number; longitude?: number }[];
 }) {
+  const [nearestPlaces, setNearestPlaces] = useState<any[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+
+  useEffect(() => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition((pos) => {
+        instance.get(`/location/nearby?lat=${pos.coords.latitude}&lng=${pos.coords.longitude}`)
+          .then(res => {
+            if (res.data.data) {
+              setNearestPlaces(res.data.data.sort((a: any, b: any) => a.distance - b.distance));
+            }
+          })
+          .catch(() => {});
+      });
+    }
+  }, []);
+
+  const filteredNearestPlaces = nearestPlaces
+    .filter(place => locations?.some(loc => loc._id === place._id))
+    .slice(0, 3);
+
   return (
     <div className={`relative ${className}`}>
       <div className="w-full">
@@ -65,6 +88,8 @@ function SearchAutocomplete({
             placeholder={placeholder}
             value={value}
             onChange={(e) => onChange(e.target.value)}
+            onFocus={() => setShowSuggestions(true)}
+            onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
             className="pl-12 h-14 rounded-2xl border-gray-200 focus-visible:ring-primary/20 focus-visible:border-primary transition-all shadow-sm hover:shadow-md bg-white text-base"
             autoComplete="off"
           />
@@ -75,6 +100,35 @@ function SearchAutocomplete({
             >
               <X className="w-4 h-4" />
             </button>
+          )}
+
+          {/* Autocomplete Dropdown */}
+          {showSuggestions && !value && filteredNearestPlaces.length > 0 && (
+            <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden z-50">
+              <div className="px-4 py-2 text-xs font-semibold text-gray-500 bg-gray-50 border-b border-gray-100">
+                Nearest Places
+              </div>
+              <ul className="max-h-60 overflow-y-auto">
+                {filteredNearestPlaces.map((place) => (
+                  <li
+                    key={place._id}
+                    onClick={() => {
+                      onChange(place.title);
+                      setShowSuggestions(false);
+                    }}
+                    className="px-4 py-3 hover:bg-primary/5 cursor-pointer flex items-center gap-3 transition-colors"
+                  >
+                    <div className="bg-primary/10 p-2 rounded-full">
+                      <MapPin className="w-4 h-4 text-primary" />
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-sm font-medium text-gray-900">{place.title}</span>
+                      <span className="text-[10px] text-gray-500">{place.distance?.toFixed(1)} km away</span>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
           )}
         </div>
       </div>
@@ -198,7 +252,8 @@ export default function SearchPage() {
   // Fetch locations from API
   const fetchLocations = async () => {
     try {
-      const res = await instance.get("/location");
+      const queryParam = selectedPropertyType ? `?propertyType=${selectedPropertyType}` : "";
+      const res = await instance.get(`/location${queryParam}`);
       setLocations(res.data.data || []);
     } catch (error) {
       console.error("Error fetching locations:", error);
@@ -464,7 +519,6 @@ export default function SearchPage() {
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "instant" });
-    fetchLocations();
     fetchPropertyTypes();
     instance.get("/category").then((res) => {
       const cats = res.data.data || [];
@@ -473,6 +527,10 @@ export default function SearchPage() {
       console.error("Error fetching categories:", err);
     });
   }, []);
+
+  useEffect(() => {
+    fetchLocations();
+  }, [selectedPropertyType]);
 
   return (
     <div className="relative min-h-screen">

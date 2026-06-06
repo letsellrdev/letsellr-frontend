@@ -47,37 +47,12 @@ function SearchAutocomplete({
   onChange,
   placeholder = "Search properties...",
   className = "",
-  selectedLocationId,
-  locations,
 }: {
   value: string;
   onChange: (val: string) => void;
   placeholder?: string;
   className?: string;
-  selectedLocationId?: string;
-  locations?: { _id: string; title: string; latitude?: number; longitude?: number }[];
 }) {
-  const [nearestPlaces, setNearestPlaces] = useState<any[]>([]);
-  const [showSuggestions, setShowSuggestions] = useState(false);
-
-  useEffect(() => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition((pos) => {
-        instance.get(`/location/nearby?lat=${pos.coords.latitude}&lng=${pos.coords.longitude}`)
-          .then(res => {
-            if (res.data.data) {
-              setNearestPlaces(res.data.data.sort((a: any, b: any) => a.distance - b.distance));
-            }
-          })
-          .catch(() => {});
-      });
-    }
-  }, []);
-
-  const filteredNearestPlaces = nearestPlaces
-    .filter(place => locations?.some(loc => loc._id === place._id))
-    .slice(0, 3);
-
   return (
     <div className={`relative ${className}`}>
       <div className="w-full">
@@ -88,8 +63,6 @@ function SearchAutocomplete({
             placeholder={placeholder}
             value={value}
             onChange={(e) => onChange(e.target.value)}
-            onFocus={() => setShowSuggestions(true)}
-            onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
             className="pl-12 h-14 rounded-2xl border-gray-200 focus-visible:ring-primary/20 focus-visible:border-primary transition-all shadow-sm hover:shadow-md bg-white text-base"
             autoComplete="off"
           />
@@ -100,35 +73,6 @@ function SearchAutocomplete({
             >
               <X className="w-4 h-4" />
             </button>
-          )}
-
-          {/* Autocomplete Dropdown */}
-          {showSuggestions && !value && filteredNearestPlaces.length > 0 && (
-            <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden z-50">
-              <div className="px-4 py-2 text-xs font-semibold text-gray-500 bg-gray-50 border-b border-gray-100">
-                Nearest Places
-              </div>
-              <ul className="max-h-60 overflow-y-auto">
-                {filteredNearestPlaces.map((place) => (
-                  <li
-                    key={place._id}
-                    onClick={() => {
-                      onChange(place.title);
-                      setShowSuggestions(false);
-                    }}
-                    className="px-4 py-3 hover:bg-primary/5 cursor-pointer flex items-center gap-3 transition-colors"
-                  >
-                    <div className="bg-primary/10 p-2 rounded-full">
-                      <MapPin className="w-4 h-4 text-primary" />
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="text-sm font-medium text-gray-900">{place.title}</span>
-                      <span className="text-[10px] text-gray-500">{place.distance?.toFixed(1)} km away</span>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            </div>
           )}
         </div>
       </div>
@@ -237,8 +181,8 @@ export default function SearchPage() {
   const categoryTitle = categories.find(c => c._id === selectedCategory)?.name;
 
   useSeo({
-    title: searchQuery 
-      ? `Search results for "${searchQuery}"${locationTitle ? ` in ${locationTitle}` : ""}` 
+    title: searchQuery
+      ? `Search results for "${searchQuery}"${locationTitle ? ` in ${locationTitle}` : ""}`
       : `${categoryTitle || "Properties"} for Rent in ${locationTitle || "Calicut / Kozhikode"}`,
     description: `Browse verified ${categoryTitle || "rental properties"} in ${locationTitle || "Calicut (Kozhikode)"}. ${searchQuery ? `Search results for ${searchQuery}.` : "Best flats, houses, rooms, and PGs available."} Student and professional friendly.`,
     keywords: `${searchQuery || ""}, ${locationTitle || ""}, ${categoryTitle || ""}, rentals in calicut, rent house kozhikode`
@@ -391,8 +335,8 @@ export default function SearchPage() {
       // 2. Handle Category (map name/slug to ID)
       if (catParam) {
         const matchedCat = categories.find(
-          (c) => 
-            c._id === catParam || 
+          (c) =>
+            c._id === catParam ||
             c.name.toLowerCase() === catParam.toLowerCase() ||
             (c as any).value?.toLowerCase() === catParam.toLowerCase()
         );
@@ -554,8 +498,6 @@ export default function SearchPage() {
                 onChange={setSearchQuery}
                 placeholder="Search for PG, Hostels, Apartments..."
                 className="flex-1"
-                selectedLocationId={selectedLocation}
-                locations={locations}
               />
 
               {/* Location Select */}
@@ -664,8 +606,8 @@ export default function SearchPage() {
                             }}
                             disabled={isLoading}
                             className={`h-7 px-3 rounded-full text-xs font-medium border transition-all whitespace-nowrap ${isActive
-                                ? "bg-primary text-white border-primary shadow-sm"
-                                : "bg-white text-gray-600 border-gray-200 hover:border-primary/50 hover:text-primary"
+                              ? "bg-primary text-white border-primary shadow-sm"
+                              : "bg-white text-gray-600 border-gray-200 hover:border-primary/50 hover:text-primary"
                               }`}
                           >
                             {category.name}
@@ -692,8 +634,8 @@ export default function SearchPage() {
                     }
                     disabled={isLoading}
                     className={`h-7 px-3 rounded-full text-xs font-medium border transition-all whitespace-nowrap ${selectedPropertyTypeCategory === type._id
-                        ? "bg-primary text-white border-primary shadow-sm"
-                        : "bg-white text-gray-600 border-gray-200 hover:border-primary/50 hover:text-primary"
+                      ? "bg-primary text-white border-primary shadow-sm"
+                      : "bg-white text-gray-600 border-gray-200 hover:border-primary/50 hover:text-primary"
                       }`}
                   >
                     {type.name}
@@ -710,8 +652,6 @@ export default function SearchPage() {
               value={searchQuery}
               onChange={setSearchQuery}
               placeholder="Search properties..."
-              selectedLocationId={selectedLocation}
-              locations={locations}
             />
 
             {/* Drawer Based Filters */}
@@ -821,9 +761,8 @@ export default function SearchPage() {
                                 key={`${tx._id}-${category._id}`}
                                 variant={isActive ? "default" : "outline"}
                                 size="sm"
-                                className={`rounded-full h-9 px-4 text-xs transition-all ${
-                                  isActive ? "bg-primary text-white" : ""
-                                }`}
+                                className={`rounded-full h-9 px-4 text-xs transition-all ${isActive ? "bg-primary text-white" : ""
+                                  }`}
                                 onClick={() => {
                                   if (isActive) {
                                     setSelectedPropertyType("");
@@ -1027,8 +966,8 @@ export default function SearchPage() {
                                 size="sm"
                                 onClick={() => handlePageChange(Number(page))}
                                 className={`h-10 w-10 rounded-full transition-all ${currentPage === page
-                                    ? "pointer-events-none shadow-md shadow-primary/20"
-                                    : "hover:bg-primary/5 hover:text-primary"
+                                  ? "pointer-events-none shadow-md shadow-primary/20"
+                                  : "hover:bg-primary/5 hover:text-primary"
                                   }`}
                               >
                                 {page}
